@@ -1,0 +1,1362 @@
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"bsp_CAN.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Bsp/MCU/bsp_CAN.c"
+  20              		.section	.text.CAN_Get_ErrorInfo,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	CAN_Get_ErrorInfo:
+  27              	.LVL0:
+  28              	.LFB169:
+   1:Bsp/MCU/bsp_CAN.c **** /**
+   2:Bsp/MCU/bsp_CAN.c ****  ******************************************************************************
+   3:Bsp/MCU/bsp_CAN.c ****  * @file    bsp_CAN.c
+   4:Bsp/MCU/bsp_CAN.c ****  * @author  Wang Hongxi
+   5:Bsp/MCU/bsp_CAN.c ****  * @version V2.1
+   6:Bsp/MCU/bsp_CAN.c ****  * @date    2026/06/17
+   7:Bsp/MCU/bsp_CAN.c ****  * @brief   CAN通信初始化、接收解析与业务协议发送（精简版：仅底盘电机+�
+   8:Bsp/MCU/bsp_CAN.c ****  ******************************************************************************
+   9:Bsp/MCU/bsp_CAN.c ****  */
+  10:Bsp/MCU/bsp_CAN.c **** 
+  11:Bsp/MCU/bsp_CAN.c **** /* Includes ------------------------------------------------------------------*/
+  12:Bsp/MCU/bsp_CAN.c **** 
+  13:Bsp/MCU/bsp_CAN.c **** #include "bsp_CAN.h"
+  14:Bsp/MCU/bsp_CAN.c **** #include "bsp_dwt.h"
+  15:Bsp/MCU/bsp_CAN.c **** #include "user_lib.h"
+  16:Bsp/MCU/bsp_CAN.c **** #include "chassis_task.h"
+  17:Bsp/MCU/bsp_CAN.c **** #include "remote_control.h"
+  18:Bsp/MCU/bsp_CAN.c **** #include "detect_task.h"
+  19:Bsp/MCU/bsp_CAN.c **** 
+  20:Bsp/MCU/bsp_CAN.c **** /* Private macros ------------------------------------------------------------*/
+  21:Bsp/MCU/bsp_CAN.c **** 
+  22:Bsp/MCU/bsp_CAN.c **** #define CAN_TX_WAIT_MAX 10000U
+  23:Bsp/MCU/bsp_CAN.c **** 
+  24:Bsp/MCU/bsp_CAN.c **** /* Private variables ---------------------------------------------------------*/
+  25:Bsp/MCU/bsp_CAN.c **** 
+  26:Bsp/MCU/bsp_CAN.c **** CAN_ErrorInfo_t CAN1_ErrorInfo = {0};
+  27:Bsp/MCU/bsp_CAN.c **** CAN_ErrorInfo_t CAN2_ErrorInfo = {0};
+  28:Bsp/MCU/bsp_CAN.c **** 
+  29:Bsp/MCU/bsp_CAN.c **** /* Private function declarations ---------------------------------------------*/
+  30:Bsp/MCU/bsp_CAN.c **** 
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 2
+
+
+  31:Bsp/MCU/bsp_CAN.c **** static HAL_StatusTypeDef CAN_Config_Filter(CAN_HandleTypeDef *_hcan, uint32_t filter_bank)
+  32:Bsp/MCU/bsp_CAN.c **** {
+  33:Bsp/MCU/bsp_CAN.c ****     CAN_FilterTypeDef can_filter_st = {0};
+  34:Bsp/MCU/bsp_CAN.c **** 
+  35:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterActivation = ENABLE;
+  36:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterMode = CAN_FILTERMODE_IDMASK;
+  37:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterScale = CAN_FILTERSCALE_32BIT;
+  38:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterIdHigh = 0x0000;
+  39:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterIdLow = 0x0000;
+  40:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterMaskIdHigh = 0x0000;
+  41:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterMaskIdLow = 0x0000;
+  42:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterBank = filter_bank;
+  43:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterFIFOAssignment = CAN_RX_FIFO0;
+  44:Bsp/MCU/bsp_CAN.c ****     can_filter_st.SlaveStartFilterBank = 14;
+  45:Bsp/MCU/bsp_CAN.c **** 
+  46:Bsp/MCU/bsp_CAN.c ****     return HAL_CAN_ConfigFilter(_hcan, &can_filter_st);
+  47:Bsp/MCU/bsp_CAN.c **** }
+  48:Bsp/MCU/bsp_CAN.c **** 
+  49:Bsp/MCU/bsp_CAN.c **** static CAN_ErrorInfo_t *CAN_Get_ErrorInfo(CAN_HandleTypeDef *_hcan)
+  50:Bsp/MCU/bsp_CAN.c **** {
+  29              		.loc 1 50 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  51:Bsp/MCU/bsp_CAN.c ****     if (_hcan == &hcan1)
+  34              		.loc 1 51 5 view .LVU1
+  35              		.loc 1 51 8 is_stmt 0 view .LVU2
+  36 0000 054B     		ldr	r3, .L5
+  37 0002 9842     		cmp	r0, r3
+  38 0004 04D0     		beq	.L3
+  52:Bsp/MCU/bsp_CAN.c ****         return &CAN1_ErrorInfo;
+  53:Bsp/MCU/bsp_CAN.c ****     if (_hcan == &hcan2)
+  39              		.loc 1 53 5 is_stmt 1 view .LVU3
+  40              		.loc 1 53 8 is_stmt 0 view .LVU4
+  41 0006 054B     		ldr	r3, .L5+4
+  42 0008 9842     		cmp	r0, r3
+  43 000a 03D0     		beq	.L4
+  54:Bsp/MCU/bsp_CAN.c ****         return &CAN2_ErrorInfo;
+  55:Bsp/MCU/bsp_CAN.c ****     return NULL;
+  44              		.loc 1 55 12 view .LVU5
+  45 000c 0020     		movs	r0, #0
+  46              	.LVL1:
+  47              		.loc 1 55 12 view .LVU6
+  48 000e 7047     		bx	lr
+  49              	.LVL2:
+  50              	.L3:
+  52:Bsp/MCU/bsp_CAN.c ****         return &CAN1_ErrorInfo;
+  51              		.loc 1 52 16 view .LVU7
+  52 0010 0348     		ldr	r0, .L5+8
+  53              	.LVL3:
+  52:Bsp/MCU/bsp_CAN.c ****         return &CAN1_ErrorInfo;
+  54              		.loc 1 52 16 view .LVU8
+  55 0012 7047     		bx	lr
+  56              	.LVL4:
+  57              	.L4:
+  54:Bsp/MCU/bsp_CAN.c ****         return &CAN2_ErrorInfo;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 3
+
+
+  58              		.loc 1 54 16 view .LVU9
+  59 0014 0348     		ldr	r0, .L5+12
+  60              	.LVL5:
+  56:Bsp/MCU/bsp_CAN.c **** }
+  61              		.loc 1 56 1 view .LVU10
+  62 0016 7047     		bx	lr
+  63              	.L6:
+  64              		.align	2
+  65              	.L5:
+  66 0018 00000000 		.word	hcan1
+  67 001c 00000000 		.word	hcan2
+  68 0020 00000000 		.word	CAN1_ErrorInfo
+  69 0024 00000000 		.word	CAN2_ErrorInfo
+  70              		.cfi_endproc
+  71              	.LFE169:
+  73              		.section	.text.CAN_Config_Filter,"ax",%progbits
+  74              		.align	1
+  75              		.syntax unified
+  76              		.thumb
+  77              		.thumb_func
+  79              	CAN_Config_Filter:
+  80              	.LVL6:
+  81              	.LFB168:
+  32:Bsp/MCU/bsp_CAN.c ****     CAN_FilterTypeDef can_filter_st = {0};
+  82              		.loc 1 32 1 is_stmt 1 view -0
+  83              		.cfi_startproc
+  84              		@ args = 0, pretend = 0, frame = 40
+  85              		@ frame_needed = 0, uses_anonymous_args = 0
+  32:Bsp/MCU/bsp_CAN.c ****     CAN_FilterTypeDef can_filter_st = {0};
+  86              		.loc 1 32 1 is_stmt 0 view .LVU12
+  87 0000 30B5     		push	{r4, r5, lr}
+  88              	.LCFI0:
+  89              		.cfi_def_cfa_offset 12
+  90              		.cfi_offset 4, -12
+  91              		.cfi_offset 5, -8
+  92              		.cfi_offset 14, -4
+  93 0002 8BB0     		sub	sp, sp, #44
+  94              	.LCFI1:
+  95              		.cfi_def_cfa_offset 56
+  96 0004 0446     		mov	r4, r0
+  97 0006 0D46     		mov	r5, r1
+  33:Bsp/MCU/bsp_CAN.c **** 
+  98              		.loc 1 33 5 is_stmt 1 view .LVU13
+  33:Bsp/MCU/bsp_CAN.c **** 
+  99              		.loc 1 33 23 is_stmt 0 view .LVU14
+ 100 0008 2822     		movs	r2, #40
+ 101 000a 0021     		movs	r1, #0
+ 102              	.LVL7:
+  33:Bsp/MCU/bsp_CAN.c **** 
+ 103              		.loc 1 33 23 view .LVU15
+ 104 000c 6846     		mov	r0, sp
+ 105              	.LVL8:
+  33:Bsp/MCU/bsp_CAN.c **** 
+ 106              		.loc 1 33 23 view .LVU16
+ 107 000e FFF7FEFF 		bl	memset
+ 108              	.LVL9:
+  35:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterMode = CAN_FILTERMODE_IDMASK;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 4
+
+
+ 109              		.loc 1 35 5 is_stmt 1 view .LVU17
+  35:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterMode = CAN_FILTERMODE_IDMASK;
+ 110              		.loc 1 35 36 is_stmt 0 view .LVU18
+ 111 0012 0123     		movs	r3, #1
+ 112 0014 0893     		str	r3, [sp, #32]
+  36:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterScale = CAN_FILTERSCALE_32BIT;
+ 113              		.loc 1 36 5 is_stmt 1 view .LVU19
+  37:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterIdHigh = 0x0000;
+ 114              		.loc 1 37 5 view .LVU20
+  37:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterIdHigh = 0x0000;
+ 115              		.loc 1 37 31 is_stmt 0 view .LVU21
+ 116 0016 0793     		str	r3, [sp, #28]
+  38:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterIdLow = 0x0000;
+ 117              		.loc 1 38 5 is_stmt 1 view .LVU22
+  39:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterMaskIdHigh = 0x0000;
+ 118              		.loc 1 39 5 view .LVU23
+  40:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterMaskIdLow = 0x0000;
+ 119              		.loc 1 40 5 view .LVU24
+  41:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterBank = filter_bank;
+ 120              		.loc 1 41 5 view .LVU25
+  42:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterFIFOAssignment = CAN_RX_FIFO0;
+ 121              		.loc 1 42 5 view .LVU26
+  42:Bsp/MCU/bsp_CAN.c ****     can_filter_st.FilterFIFOAssignment = CAN_RX_FIFO0;
+ 122              		.loc 1 42 30 is_stmt 0 view .LVU27
+ 123 0018 0595     		str	r5, [sp, #20]
+  43:Bsp/MCU/bsp_CAN.c ****     can_filter_st.SlaveStartFilterBank = 14;
+ 124              		.loc 1 43 5 is_stmt 1 view .LVU28
+  44:Bsp/MCU/bsp_CAN.c **** 
+ 125              		.loc 1 44 5 view .LVU29
+  44:Bsp/MCU/bsp_CAN.c **** 
+ 126              		.loc 1 44 40 is_stmt 0 view .LVU30
+ 127 001a 0E23     		movs	r3, #14
+ 128 001c 0993     		str	r3, [sp, #36]
+  46:Bsp/MCU/bsp_CAN.c **** }
+ 129              		.loc 1 46 5 is_stmt 1 view .LVU31
+  46:Bsp/MCU/bsp_CAN.c **** }
+ 130              		.loc 1 46 12 is_stmt 0 view .LVU32
+ 131 001e 6946     		mov	r1, sp
+ 132 0020 2046     		mov	r0, r4
+ 133 0022 FFF7FEFF 		bl	HAL_CAN_ConfigFilter
+ 134              	.LVL10:
+  47:Bsp/MCU/bsp_CAN.c **** 
+ 135              		.loc 1 47 1 view .LVU33
+ 136 0026 0BB0     		add	sp, sp, #44
+ 137              	.LCFI2:
+ 138              		.cfi_def_cfa_offset 12
+ 139              		@ sp needed
+ 140 0028 30BD     		pop	{r4, r5, pc}
+  47:Bsp/MCU/bsp_CAN.c **** 
+ 141              		.loc 1 47 1 view .LVU34
+ 142              		.cfi_endproc
+ 143              	.LFE168:
+ 145              		.section	.text.CAN_Send_Data,"ax",%progbits
+ 146              		.align	1
+ 147              		.global	CAN_Send_Data
+ 148              		.syntax unified
+ 149              		.thumb
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 5
+
+
+ 150              		.thumb_func
+ 152              	CAN_Send_Data:
+ 153              	.LVL11:
+ 154              	.LFB170:
+  57:Bsp/MCU/bsp_CAN.c **** 
+  58:Bsp/MCU/bsp_CAN.c **** /* Function prototypes -------------------------------------------------------*/
+  59:Bsp/MCU/bsp_CAN.c **** 
+  60:Bsp/MCU/bsp_CAN.c **** HAL_StatusTypeDef CAN_Send_Data(CAN_HandleTypeDef *_hcan, uint16_t std_id, uint8_t *data, uint8_t l
+  61:Bsp/MCU/bsp_CAN.c **** {
+ 155              		.loc 1 61 1 is_stmt 1 view -0
+ 156              		.cfi_startproc
+ 157              		@ args = 0, pretend = 0, frame = 32
+ 158              		@ frame_needed = 0, uses_anonymous_args = 0
+ 159              		.loc 1 61 1 is_stmt 0 view .LVU36
+ 160 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 161              	.LCFI3:
+ 162              		.cfi_def_cfa_offset 28
+ 163              		.cfi_offset 4, -28
+ 164              		.cfi_offset 5, -24
+ 165              		.cfi_offset 6, -20
+ 166              		.cfi_offset 7, -16
+ 167              		.cfi_offset 8, -12
+ 168              		.cfi_offset 9, -8
+ 169              		.cfi_offset 14, -4
+ 170 0004 89B0     		sub	sp, sp, #36
+ 171              	.LCFI4:
+ 172              		.cfi_def_cfa_offset 64
+ 173 0006 0446     		mov	r4, r0
+ 174 0008 8846     		mov	r8, r1
+ 175 000a 1546     		mov	r5, r2
+ 176 000c 1E46     		mov	r6, r3
+  62:Bsp/MCU/bsp_CAN.c ****     CAN_TxHeaderTypeDef tx_header = {0};
+ 177              		.loc 1 62 5 is_stmt 1 view .LVU37
+ 178              		.loc 1 62 25 is_stmt 0 view .LVU38
+ 179 000e 0023     		movs	r3, #0
+ 180              	.LVL12:
+ 181              		.loc 1 62 25 view .LVU39
+ 182 0010 0293     		str	r3, [sp, #8]
+ 183 0012 0393     		str	r3, [sp, #12]
+ 184 0014 0493     		str	r3, [sp, #16]
+ 185 0016 0593     		str	r3, [sp, #20]
+ 186 0018 0693     		str	r3, [sp, #24]
+ 187 001a 0793     		str	r3, [sp, #28]
+  63:Bsp/MCU/bsp_CAN.c ****     uint32_t send_mail_box = 0;
+ 188              		.loc 1 63 5 is_stmt 1 view .LVU40
+ 189              		.loc 1 63 14 is_stmt 0 view .LVU41
+ 190 001c 0193     		str	r3, [sp, #4]
+  64:Bsp/MCU/bsp_CAN.c ****     uint32_t count = 0;
+ 191              		.loc 1 64 5 is_stmt 1 view .LVU42
+ 192              	.LVL13:
+  65:Bsp/MCU/bsp_CAN.c ****     HAL_StatusTypeDef ret;
+ 193              		.loc 1 65 5 view .LVU43
+  66:Bsp/MCU/bsp_CAN.c ****     CAN_ErrorInfo_t *err = CAN_Get_ErrorInfo(_hcan);
+ 194              		.loc 1 66 5 view .LVU44
+ 195              		.loc 1 66 28 is_stmt 0 view .LVU45
+ 196 001e FFF7FEFF 		bl	CAN_Get_ErrorInfo
+ 197              	.LVL14:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 6
+
+
+  67:Bsp/MCU/bsp_CAN.c **** 
+  68:Bsp/MCU/bsp_CAN.c ****     if (_hcan == NULL || data == NULL || len > 8U)
+ 198              		.loc 1 68 5 is_stmt 1 view .LVU46
+ 199              		.loc 1 68 8 is_stmt 0 view .LVU47
+ 200 0022 002C     		cmp	r4, #0
+ 201 0024 52D0     		beq	.L18
+ 202 0026 0746     		mov	r7, r0
+ 203              		.loc 1 68 23 discriminator 1 view .LVU48
+ 204 0028 002D     		cmp	r5, #0
+ 205 002a 51D0     		beq	.L19
+ 206              		.loc 1 68 39 discriminator 2 view .LVU49
+ 207 002c 082E     		cmp	r6, #8
+ 208 002e 51D8     		bhi	.L20
+  64:Bsp/MCU/bsp_CAN.c ****     HAL_StatusTypeDef ret;
+ 209              		.loc 1 64 14 view .LVU50
+ 210 0030 0023     		movs	r3, #0
+ 211              	.LVL15:
+ 212              	.L11:
+  69:Bsp/MCU/bsp_CAN.c ****         return HAL_ERROR;
+  70:Bsp/MCU/bsp_CAN.c **** 
+  71:Bsp/MCU/bsp_CAN.c ****     while (!((_hcan->State == HAL_CAN_STATE_READY) || (_hcan->State == HAL_CAN_STATE_LISTENING)))
+ 213              		.loc 1 71 12 is_stmt 1 view .LVU51
+ 214              		.loc 1 71 20 is_stmt 0 view .LVU52
+ 215 0032 94F820C0 		ldrb	ip, [r4, #32]	@ zero_extendqisi2
+ 216 0036 5FFA8CFC 		uxtb	ip, ip
+ 217              		.loc 1 71 12 view .LVU53
+ 218 003a BCF1010F 		cmp	ip, #1
+ 219 003e 14D0     		beq	.L21
+ 220              		.loc 1 71 61 discriminator 1 view .LVU54
+ 221 0040 94F820C0 		ldrb	ip, [r4, #32]	@ zero_extendqisi2
+ 222 0044 5FFA8CFC 		uxtb	ip, ip
+ 223              		.loc 1 71 12 discriminator 1 view .LVU55
+ 224 0048 BCF1020F 		cmp	ip, #2
+ 225 004c 0AD0     		beq	.L23
+  72:Bsp/MCU/bsp_CAN.c ****     {
+  73:Bsp/MCU/bsp_CAN.c ****         if (++count > CAN_TX_WAIT_MAX)
+ 226              		.loc 1 73 9 is_stmt 1 view .LVU56
+ 227              		.loc 1 73 12 is_stmt 0 view .LVU57
+ 228 004e 0133     		adds	r3, r3, #1
+ 229              	.LVL16:
+ 230              		.loc 1 73 12 view .LVU58
+ 231 0050 42F21072 		movw	r2, #10000
+ 232 0054 9342     		cmp	r3, r2
+ 233 0056 ECD9     		bls	.L11
+  74:Bsp/MCU/bsp_CAN.c ****         {
+  75:Bsp/MCU/bsp_CAN.c ****             if (err != NULL)
+ 234              		.loc 1 75 13 is_stmt 1 view .LVU59
+ 235              		.loc 1 75 16 is_stmt 0 view .LVU60
+ 236 0058 17B1     		cbz	r7, .L12
+  76:Bsp/MCU/bsp_CAN.c ****                 err->tx_timeout++;
+ 237              		.loc 1 76 17 is_stmt 1 view .LVU61
+ 238              		.loc 1 76 20 is_stmt 0 view .LVU62
+ 239 005a 3B68     		ldr	r3, [r7]
+ 240              	.LVL17:
+ 241              		.loc 1 76 32 view .LVU63
+ 242 005c 0133     		adds	r3, r3, #1
+ 243 005e 3B60     		str	r3, [r7]
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 7
+
+
+ 244              	.L12:
+  77:Bsp/MCU/bsp_CAN.c ****             return HAL_TIMEOUT;
+ 245              		.loc 1 77 13 is_stmt 1 view .LVU64
+ 246              		.loc 1 77 20 is_stmt 0 view .LVU65
+ 247 0060 0325     		movs	r5, #3
+ 248              	.LVL18:
+ 249              		.loc 1 77 20 view .LVU66
+ 250 0062 38E0     		b	.L10
+ 251              	.LVL19:
+ 252              	.L23:
+ 253              		.loc 1 77 20 view .LVU67
+ 254 0064 4FF00009 		mov	r9, #0
+ 255 0068 01E0     		b	.L15
+ 256              	.L21:
+ 257 006a 4FF00009 		mov	r9, #0
+ 258              	.LVL20:
+ 259              	.L15:
+  78:Bsp/MCU/bsp_CAN.c ****         }
+  79:Bsp/MCU/bsp_CAN.c ****     }
+  80:Bsp/MCU/bsp_CAN.c **** 
+  81:Bsp/MCU/bsp_CAN.c ****     count = 0;
+  82:Bsp/MCU/bsp_CAN.c ****     while (HAL_CAN_GetTxMailboxesFreeLevel(_hcan) == 0U)
+ 260              		.loc 1 82 51 is_stmt 1 view .LVU68
+ 261              		.loc 1 82 12 is_stmt 0 view .LVU69
+ 262 006e 2046     		mov	r0, r4
+ 263 0070 FFF7FEFF 		bl	HAL_CAN_GetTxMailboxesFreeLevel
+ 264              	.LVL21:
+ 265              		.loc 1 82 51 discriminator 1 view .LVU70
+ 266 0074 98B9     		cbnz	r0, .L24
+  83:Bsp/MCU/bsp_CAN.c ****     {
+  84:Bsp/MCU/bsp_CAN.c ****         if (++count > CAN_TX_WAIT_MAX)
+ 267              		.loc 1 84 9 is_stmt 1 view .LVU71
+ 268              		.loc 1 84 12 is_stmt 0 view .LVU72
+ 269 0076 09F10109 		add	r9, r9, #1
+ 270              	.LVL22:
+ 271              		.loc 1 84 12 view .LVU73
+ 272 007a 42F21073 		movw	r3, #10000
+ 273 007e 9945     		cmp	r9, r3
+ 274 0080 F5D9     		bls	.L15
+  85:Bsp/MCU/bsp_CAN.c ****         {
+  86:Bsp/MCU/bsp_CAN.c ****             if (err != NULL)
+ 275              		.loc 1 86 13 is_stmt 1 view .LVU74
+ 276              		.loc 1 86 16 is_stmt 0 view .LVU75
+ 277 0082 37B1     		cbz	r7, .L16
+  87:Bsp/MCU/bsp_CAN.c ****             {
+  88:Bsp/MCU/bsp_CAN.c ****                 err->tx_timeout++;
+ 278              		.loc 1 88 17 is_stmt 1 view .LVU76
+ 279              		.loc 1 88 20 is_stmt 0 view .LVU77
+ 280 0084 3B68     		ldr	r3, [r7]
+ 281              		.loc 1 88 32 view .LVU78
+ 282 0086 0133     		adds	r3, r3, #1
+ 283 0088 3B60     		str	r3, [r7]
+  89:Bsp/MCU/bsp_CAN.c ****                 err->last_error = HAL_CAN_GetError(_hcan);
+ 284              		.loc 1 89 17 is_stmt 1 view .LVU79
+ 285              		.loc 1 89 35 is_stmt 0 view .LVU80
+ 286 008a 2046     		mov	r0, r4
+ 287 008c FFF7FEFF 		bl	HAL_CAN_GetError
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 8
+
+
+ 288              	.LVL23:
+ 289              		.loc 1 89 33 discriminator 1 view .LVU81
+ 290 0090 F860     		str	r0, [r7, #12]
+ 291              	.L16:
+  90:Bsp/MCU/bsp_CAN.c ****             }
+  91:Bsp/MCU/bsp_CAN.c ****             HAL_CAN_AbortTxRequest(_hcan,
+ 292              		.loc 1 91 13 is_stmt 1 view .LVU82
+ 293 0092 0721     		movs	r1, #7
+ 294 0094 2046     		mov	r0, r4
+ 295 0096 FFF7FEFF 		bl	HAL_CAN_AbortTxRequest
+ 296              	.LVL24:
+  92:Bsp/MCU/bsp_CAN.c ****                                    CAN_TX_MAILBOX0 | CAN_TX_MAILBOX1 | CAN_TX_MAILBOX2);
+  93:Bsp/MCU/bsp_CAN.c ****             return HAL_TIMEOUT;
+ 297              		.loc 1 93 13 view .LVU83
+ 298              		.loc 1 93 20 is_stmt 0 view .LVU84
+ 299 009a 0325     		movs	r5, #3
+ 300              	.LVL25:
+ 301              		.loc 1 93 20 view .LVU85
+ 302 009c 1BE0     		b	.L10
+ 303              	.LVL26:
+ 304              	.L24:
+  94:Bsp/MCU/bsp_CAN.c ****         }
+  95:Bsp/MCU/bsp_CAN.c ****     }
+  96:Bsp/MCU/bsp_CAN.c **** 
+  97:Bsp/MCU/bsp_CAN.c ****     tx_header.StdId = std_id;
+ 305              		.loc 1 97 5 is_stmt 1 view .LVU86
+ 306              		.loc 1 97 21 is_stmt 0 view .LVU87
+ 307 009e CDF80880 		str	r8, [sp, #8]
+  98:Bsp/MCU/bsp_CAN.c ****     tx_header.IDE = CAN_ID_STD;
+ 308              		.loc 1 98 5 is_stmt 1 view .LVU88
+ 309              		.loc 1 98 19 is_stmt 0 view .LVU89
+ 310 00a2 0023     		movs	r3, #0
+ 311 00a4 0493     		str	r3, [sp, #16]
+  99:Bsp/MCU/bsp_CAN.c ****     tx_header.RTR = CAN_RTR_DATA;
+ 312              		.loc 1 99 5 is_stmt 1 view .LVU90
+ 313              		.loc 1 99 19 is_stmt 0 view .LVU91
+ 314 00a6 0593     		str	r3, [sp, #20]
+ 100:Bsp/MCU/bsp_CAN.c ****     tx_header.DLC = len;
+ 315              		.loc 1 100 5 is_stmt 1 view .LVU92
+ 316              		.loc 1 100 19 is_stmt 0 view .LVU93
+ 317 00a8 0696     		str	r6, [sp, #24]
+ 101:Bsp/MCU/bsp_CAN.c **** 
+ 102:Bsp/MCU/bsp_CAN.c ****     ret = HAL_CAN_AddTxMessage(_hcan, &tx_header, data, &send_mail_box);
+ 318              		.loc 1 102 5 is_stmt 1 view .LVU94
+ 319              		.loc 1 102 11 is_stmt 0 view .LVU95
+ 320 00aa 01AB     		add	r3, sp, #4
+ 321 00ac 2A46     		mov	r2, r5
+ 322 00ae 02A9     		add	r1, sp, #8
+ 323 00b0 2046     		mov	r0, r4
+ 324 00b2 FFF7FEFF 		bl	HAL_CAN_AddTxMessage
+ 325              	.LVL27:
+ 103:Bsp/MCU/bsp_CAN.c ****     if (ret != HAL_OK && err != NULL)
+ 326              		.loc 1 103 5 is_stmt 1 view .LVU96
+ 327              		.loc 1 103 8 is_stmt 0 view .LVU97
+ 328 00b6 0546     		mov	r5, r0
+ 329              	.LVL28:
+ 330              		.loc 1 103 8 view .LVU98
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 9
+
+
+ 331 00b8 68B1     		cbz	r0, .L10
+ 332              		.loc 1 103 23 discriminator 1 view .LVU99
+ 333 00ba 67B1     		cbz	r7, .L10
+ 104:Bsp/MCU/bsp_CAN.c ****     {
+ 105:Bsp/MCU/bsp_CAN.c ****         err->tx_error++;
+ 334              		.loc 1 105 9 is_stmt 1 view .LVU100
+ 335              		.loc 1 105 12 is_stmt 0 view .LVU101
+ 336 00bc 7B68     		ldr	r3, [r7, #4]
+ 337              		.loc 1 105 22 view .LVU102
+ 338 00be 0133     		adds	r3, r3, #1
+ 339 00c0 7B60     		str	r3, [r7, #4]
+ 106:Bsp/MCU/bsp_CAN.c ****         err->last_error = HAL_CAN_GetError(_hcan);
+ 340              		.loc 1 106 9 is_stmt 1 view .LVU103
+ 341              		.loc 1 106 27 is_stmt 0 view .LVU104
+ 342 00c2 2046     		mov	r0, r4
+ 343              	.LVL29:
+ 344              		.loc 1 106 27 view .LVU105
+ 345 00c4 FFF7FEFF 		bl	HAL_CAN_GetError
+ 346              	.LVL30:
+ 347              		.loc 1 106 25 discriminator 1 view .LVU106
+ 348 00c8 F860     		str	r0, [r7, #12]
+ 349 00ca 04E0     		b	.L10
+ 350              	.LVL31:
+ 351              	.L18:
+  69:Bsp/MCU/bsp_CAN.c **** 
+ 352              		.loc 1 69 16 view .LVU107
+ 353 00cc 0125     		movs	r5, #1
+ 354              	.LVL32:
+  69:Bsp/MCU/bsp_CAN.c **** 
+ 355              		.loc 1 69 16 view .LVU108
+ 356 00ce 02E0     		b	.L10
+ 357              	.LVL33:
+ 358              	.L19:
+  69:Bsp/MCU/bsp_CAN.c **** 
+ 359              		.loc 1 69 16 view .LVU109
+ 360 00d0 0125     		movs	r5, #1
+ 361              	.LVL34:
+  69:Bsp/MCU/bsp_CAN.c **** 
+ 362              		.loc 1 69 16 view .LVU110
+ 363 00d2 00E0     		b	.L10
+ 364              	.LVL35:
+ 365              	.L20:
+  69:Bsp/MCU/bsp_CAN.c **** 
+ 366              		.loc 1 69 16 view .LVU111
+ 367 00d4 0125     		movs	r5, #1
+ 368              	.LVL36:
+ 369              	.L10:
+ 107:Bsp/MCU/bsp_CAN.c ****     }
+ 108:Bsp/MCU/bsp_CAN.c **** 
+ 109:Bsp/MCU/bsp_CAN.c ****     return ret;
+ 110:Bsp/MCU/bsp_CAN.c **** }
+ 370              		.loc 1 110 1 view .LVU112
+ 371 00d6 2846     		mov	r0, r5
+ 372 00d8 09B0     		add	sp, sp, #36
+ 373              	.LCFI5:
+ 374              		.cfi_def_cfa_offset 28
+ 375              		@ sp needed
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 10
+
+
+ 376 00da BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 377              		.loc 1 110 1 view .LVU113
+ 378              		.cfi_endproc
+ 379              	.LFE170:
+ 381              		.section	.text.CAN_Device_Init,"ax",%progbits
+ 382              		.align	1
+ 383              		.global	CAN_Device_Init
+ 384              		.syntax unified
+ 385              		.thumb
+ 386              		.thumb_func
+ 388              	CAN_Device_Init:
+ 389              	.LFB171:
+ 111:Bsp/MCU/bsp_CAN.c **** 
+ 112:Bsp/MCU/bsp_CAN.c **** void CAN_Device_Init(void)
+ 113:Bsp/MCU/bsp_CAN.c **** {
+ 390              		.loc 1 113 1 is_stmt 1 view -0
+ 391              		.cfi_startproc
+ 392              		@ args = 0, pretend = 0, frame = 0
+ 393              		@ frame_needed = 0, uses_anonymous_args = 0
+ 394 0000 08B5     		push	{r3, lr}
+ 395              	.LCFI6:
+ 396              		.cfi_def_cfa_offset 8
+ 397              		.cfi_offset 3, -8
+ 398              		.cfi_offset 14, -4
+ 114:Bsp/MCU/bsp_CAN.c ****     if (CAN_Config_Filter(&hcan1, 0) != HAL_OK)
+ 399              		.loc 1 114 5 view .LVU115
+ 400              		.loc 1 114 9 is_stmt 0 view .LVU116
+ 401 0002 0021     		movs	r1, #0
+ 402 0004 1648     		ldr	r0, .L39
+ 403 0006 FFF7FEFF 		bl	CAN_Config_Filter
+ 404              	.LVL37:
+ 405              		.loc 1 114 8 discriminator 1 view .LVU117
+ 406 000a B8B9     		cbnz	r0, .L33
+ 407              	.L26:
+ 115:Bsp/MCU/bsp_CAN.c ****     {
+ 116:Bsp/MCU/bsp_CAN.c ****         Error_Handler();
+ 117:Bsp/MCU/bsp_CAN.c ****     }
+ 118:Bsp/MCU/bsp_CAN.c ****     if (HAL_CAN_Start(&hcan1) != HAL_OK)
+ 408              		.loc 1 118 5 is_stmt 1 view .LVU118
+ 409              		.loc 1 118 9 is_stmt 0 view .LVU119
+ 410 000c 1448     		ldr	r0, .L39
+ 411 000e FFF7FEFF 		bl	HAL_CAN_Start
+ 412              	.LVL38:
+ 413              		.loc 1 118 8 discriminator 1 view .LVU120
+ 414 0012 B0B9     		cbnz	r0, .L34
+ 415              	.L27:
+ 119:Bsp/MCU/bsp_CAN.c ****     {
+ 120:Bsp/MCU/bsp_CAN.c ****         Error_Handler();
+ 121:Bsp/MCU/bsp_CAN.c ****     }
+ 122:Bsp/MCU/bsp_CAN.c ****     if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+ 416              		.loc 1 122 5 is_stmt 1 view .LVU121
+ 417              		.loc 1 122 9 is_stmt 0 view .LVU122
+ 418 0014 0221     		movs	r1, #2
+ 419 0016 1248     		ldr	r0, .L39
+ 420 0018 FFF7FEFF 		bl	HAL_CAN_ActivateNotification
+ 421              	.LVL39:
+ 422              		.loc 1 122 8 discriminator 1 view .LVU123
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 11
+
+
+ 423 001c A0B9     		cbnz	r0, .L35
+ 424              	.L28:
+ 123:Bsp/MCU/bsp_CAN.c ****     {
+ 124:Bsp/MCU/bsp_CAN.c ****         Error_Handler();
+ 125:Bsp/MCU/bsp_CAN.c ****     }
+ 126:Bsp/MCU/bsp_CAN.c **** 
+ 127:Bsp/MCU/bsp_CAN.c ****     if (CAN_Config_Filter(&hcan2, 14) != HAL_OK)
+ 425              		.loc 1 127 5 is_stmt 1 view .LVU124
+ 426              		.loc 1 127 9 is_stmt 0 view .LVU125
+ 427 001e 0E21     		movs	r1, #14
+ 428 0020 1048     		ldr	r0, .L39+4
+ 429 0022 FFF7FEFF 		bl	CAN_Config_Filter
+ 430              	.LVL40:
+ 431              		.loc 1 127 8 discriminator 1 view .LVU126
+ 432 0026 90B9     		cbnz	r0, .L36
+ 433              	.L29:
+ 128:Bsp/MCU/bsp_CAN.c ****     {
+ 129:Bsp/MCU/bsp_CAN.c ****         Error_Handler();
+ 130:Bsp/MCU/bsp_CAN.c ****     }
+ 131:Bsp/MCU/bsp_CAN.c ****     if (HAL_CAN_Start(&hcan2) != HAL_OK)
+ 434              		.loc 1 131 5 is_stmt 1 view .LVU127
+ 435              		.loc 1 131 9 is_stmt 0 view .LVU128
+ 436 0028 0E48     		ldr	r0, .L39+4
+ 437 002a FFF7FEFF 		bl	HAL_CAN_Start
+ 438              	.LVL41:
+ 439              		.loc 1 131 8 discriminator 1 view .LVU129
+ 440 002e 88B9     		cbnz	r0, .L37
+ 441              	.L30:
+ 132:Bsp/MCU/bsp_CAN.c ****     {
+ 133:Bsp/MCU/bsp_CAN.c ****         Error_Handler();
+ 134:Bsp/MCU/bsp_CAN.c ****     }
+ 135:Bsp/MCU/bsp_CAN.c ****     if (HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+ 442              		.loc 1 135 5 is_stmt 1 view .LVU130
+ 443              		.loc 1 135 9 is_stmt 0 view .LVU131
+ 444 0030 0221     		movs	r1, #2
+ 445 0032 0C48     		ldr	r0, .L39+4
+ 446 0034 FFF7FEFF 		bl	HAL_CAN_ActivateNotification
+ 447              	.LVL42:
+ 448              		.loc 1 135 8 discriminator 1 view .LVU132
+ 449 0038 78B9     		cbnz	r0, .L38
+ 450              	.L25:
+ 136:Bsp/MCU/bsp_CAN.c ****     {
+ 137:Bsp/MCU/bsp_CAN.c ****         Error_Handler();
+ 138:Bsp/MCU/bsp_CAN.c ****     }
+ 139:Bsp/MCU/bsp_CAN.c **** }
+ 451              		.loc 1 139 1 view .LVU133
+ 452 003a 08BD     		pop	{r3, pc}
+ 453              	.L33:
+ 116:Bsp/MCU/bsp_CAN.c ****     }
+ 454              		.loc 1 116 9 is_stmt 1 view .LVU134
+ 455 003c FFF7FEFF 		bl	Error_Handler
+ 456              	.LVL43:
+ 457 0040 E4E7     		b	.L26
+ 458              	.L34:
+ 120:Bsp/MCU/bsp_CAN.c ****     }
+ 459              		.loc 1 120 9 view .LVU135
+ 460 0042 FFF7FEFF 		bl	Error_Handler
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 12
+
+
+ 461              	.LVL44:
+ 462 0046 E5E7     		b	.L27
+ 463              	.L35:
+ 124:Bsp/MCU/bsp_CAN.c ****     }
+ 464              		.loc 1 124 9 view .LVU136
+ 465 0048 FFF7FEFF 		bl	Error_Handler
+ 466              	.LVL45:
+ 467 004c E7E7     		b	.L28
+ 468              	.L36:
+ 129:Bsp/MCU/bsp_CAN.c ****     }
+ 469              		.loc 1 129 9 view .LVU137
+ 470 004e FFF7FEFF 		bl	Error_Handler
+ 471              	.LVL46:
+ 472 0052 E9E7     		b	.L29
+ 473              	.L37:
+ 133:Bsp/MCU/bsp_CAN.c ****     }
+ 474              		.loc 1 133 9 view .LVU138
+ 475 0054 FFF7FEFF 		bl	Error_Handler
+ 476              	.LVL47:
+ 477 0058 EAE7     		b	.L30
+ 478              	.L38:
+ 137:Bsp/MCU/bsp_CAN.c ****     }
+ 479              		.loc 1 137 9 view .LVU139
+ 480 005a FFF7FEFF 		bl	Error_Handler
+ 481              	.LVL48:
+ 482              		.loc 1 139 1 is_stmt 0 view .LVU140
+ 483 005e ECE7     		b	.L25
+ 484              	.L40:
+ 485              		.align	2
+ 486              	.L39:
+ 487 0060 00000000 		.word	hcan1
+ 488 0064 00000000 		.word	hcan2
+ 489              		.cfi_endproc
+ 490              	.LFE171:
+ 492              		.section	.text.HAL_CAN_RxFifo0MsgPendingCallback,"ax",%progbits
+ 493              		.align	1
+ 494              		.global	HAL_CAN_RxFifo0MsgPendingCallback
+ 495              		.syntax unified
+ 496              		.thumb
+ 497              		.thumb_func
+ 499              	HAL_CAN_RxFifo0MsgPendingCallback:
+ 500              	.LVL49:
+ 501              	.LFB172:
+ 140:Bsp/MCU/bsp_CAN.c **** 
+ 141:Bsp/MCU/bsp_CAN.c **** /**
+ 142:Bsp/MCU/bsp_CAN.c ****  * @brief HAL库CAN接收FIFO0中断
+ 143:Bsp/MCU/bsp_CAN.c ****  */
+ 144:Bsp/MCU/bsp_CAN.c **** void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *_hcan)
+ 145:Bsp/MCU/bsp_CAN.c **** {
+ 502              		.loc 1 145 1 is_stmt 1 view -0
+ 503              		.cfi_startproc
+ 504              		@ args = 0, pretend = 0, frame = 40
+ 505              		@ frame_needed = 0, uses_anonymous_args = 0
+ 506              		.loc 1 145 1 is_stmt 0 view .LVU142
+ 507 0000 10B5     		push	{r4, lr}
+ 508              	.LCFI7:
+ 509              		.cfi_def_cfa_offset 8
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 13
+
+
+ 510              		.cfi_offset 4, -8
+ 511              		.cfi_offset 14, -4
+ 512 0002 8AB0     		sub	sp, sp, #40
+ 513              	.LCFI8:
+ 514              		.cfi_def_cfa_offset 48
+ 515 0004 0446     		mov	r4, r0
+ 146:Bsp/MCU/bsp_CAN.c ****     CAN_RxHeaderTypeDef rx_header;
+ 516              		.loc 1 146 5 is_stmt 1 view .LVU143
+ 147:Bsp/MCU/bsp_CAN.c ****     uint8_t rx_data[8];
+ 517              		.loc 1 147 5 view .LVU144
+ 148:Bsp/MCU/bsp_CAN.c ****     static uint8_t RC_Data_Buf[16];
+ 518              		.loc 1 148 5 view .LVU145
+ 149:Bsp/MCU/bsp_CAN.c **** 
+ 150:Bsp/MCU/bsp_CAN.c ****     HAL_CAN_GetRxMessage(_hcan, CAN_RX_FIFO0, &rx_header, rx_data);
+ 519              		.loc 1 150 5 view .LVU146
+ 520 0006 01AB     		add	r3, sp, #4
+ 521 0008 03AA     		add	r2, sp, #12
+ 522 000a 0021     		movs	r1, #0
+ 523 000c FFF7FEFF 		bl	HAL_CAN_GetRxMessage
+ 524              	.LVL50:
+ 151:Bsp/MCU/bsp_CAN.c **** 
+ 152:Bsp/MCU/bsp_CAN.c ****     if (_hcan == &hcan1)
+ 525              		.loc 1 152 5 view .LVU147
+ 526              		.loc 1 152 8 is_stmt 0 view .LVU148
+ 527 0010 424B     		ldr	r3, .L57
+ 528 0012 9C42     		cmp	r4, r3
+ 529 0014 04D0     		beq	.L55
+ 530              	.L42:
+ 153:Bsp/MCU/bsp_CAN.c ****     {
+ 154:Bsp/MCU/bsp_CAN.c ****        
+ 155:Bsp/MCU/bsp_CAN.c ****         if (rx_header.StdId >= 0x201 && rx_header.StdId <= 0x204)
+ 156:Bsp/MCU/bsp_CAN.c ****         {
+ 157:Bsp/MCU/bsp_CAN.c ****             if (Chassis.ChassisMotor[rx_header.StdId - 0x201].msg_cnt++ <= 50)
+ 158:Bsp/MCU/bsp_CAN.c ****             {
+ 159:Bsp/MCU/bsp_CAN.c ****                 get_moto_offset(&Chassis.ChassisMotor[rx_header.StdId - 0x201], rx_data);
+ 160:Bsp/MCU/bsp_CAN.c ****             }
+ 161:Bsp/MCU/bsp_CAN.c ****             else
+ 162:Bsp/MCU/bsp_CAN.c ****             {
+ 163:Bsp/MCU/bsp_CAN.c ****                 get_moto_info(&Chassis.ChassisMotor[rx_header.StdId - 0x201], rx_data);
+ 164:Bsp/MCU/bsp_CAN.c ****             }
+ 165:Bsp/MCU/bsp_CAN.c ****             switch (rx_header.StdId)
+ 166:Bsp/MCU/bsp_CAN.c ****             {
+ 167:Bsp/MCU/bsp_CAN.c ****             case 0x201: Detect_Hook(CHASSIS_MOTOR1_TOE); break;
+ 168:Bsp/MCU/bsp_CAN.c ****             case 0x202: Detect_Hook(CHASSIS_MOTOR2_TOE); break;
+ 169:Bsp/MCU/bsp_CAN.c ****             case 0x203: Detect_Hook(CHASSIS_MOTOR3_TOE); break;
+ 170:Bsp/MCU/bsp_CAN.c ****             case 0x204: Detect_Hook(CHASSIS_MOTOR4_TOE); break;
+ 171:Bsp/MCU/bsp_CAN.c ****             }
+ 172:Bsp/MCU/bsp_CAN.c ****         }
+ 173:Bsp/MCU/bsp_CAN.c ****     }
+ 174:Bsp/MCU/bsp_CAN.c **** 
+ 175:Bsp/MCU/bsp_CAN.c ****     if (_hcan == &hcan2)
+ 531              		.loc 1 175 5 is_stmt 1 view .LVU149
+ 532              		.loc 1 175 8 is_stmt 0 view .LVU150
+ 533 0016 424B     		ldr	r3, .L57+4
+ 534 0018 9C42     		cmp	r4, r3
+ 535 001a 40D0     		beq	.L56
+ 536              	.L41:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 14
+
+
+ 176:Bsp/MCU/bsp_CAN.c ****     {
+ 177:Bsp/MCU/bsp_CAN.c ****         switch (rx_header.StdId)
+ 178:Bsp/MCU/bsp_CAN.c ****         {
+ 179:Bsp/MCU/bsp_CAN.c ****         case CAN_RC_DATA_Frame_0:
+ 180:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[0] = rx_data[0];
+ 181:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[1] = rx_data[1];
+ 182:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[2] = rx_data[2];
+ 183:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[3] = rx_data[3];
+ 184:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[4] = rx_data[4];
+ 185:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[5] = rx_data[5];
+ 186:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[6] = rx_data[6];
+ 187:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[7] = rx_data[7];
+ 188:Bsp/MCU/bsp_CAN.c ****             break;
+ 189:Bsp/MCU/bsp_CAN.c ****         case CAN_RC_DATA_Frame_1:
+ 190:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[8] = rx_data[0];
+ 191:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[9] = rx_data[1];
+ 192:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[10] = rx_data[2];
+ 193:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[11] = rx_data[3];
+ 194:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[12] = rx_data[4];
+ 195:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[13] = rx_data[5];
+ 196:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[14] = rx_data[6];
+ 197:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[15] = rx_data[7];
+ 198:Bsp/MCU/bsp_CAN.c ****             Callback_RC_Handle(&remote_control, RC_Data_Buf);
+ 199:Bsp/MCU/bsp_CAN.c ****             break;
+ 200:Bsp/MCU/bsp_CAN.c ****         }
+ 201:Bsp/MCU/bsp_CAN.c ****     }
+ 202:Bsp/MCU/bsp_CAN.c **** }
+ 537              		.loc 1 202 1 view .LVU151
+ 538 001c 0AB0     		add	sp, sp, #40
+ 539              	.LCFI9:
+ 540              		.cfi_remember_state
+ 541              		.cfi_def_cfa_offset 8
+ 542              		@ sp needed
+ 543 001e 10BD     		pop	{r4, pc}
+ 544              	.LVL51:
+ 545              	.L55:
+ 546              	.LCFI10:
+ 547              		.cfi_restore_state
+ 155:Bsp/MCU/bsp_CAN.c ****         {
+ 548              		.loc 1 155 9 is_stmt 1 view .LVU152
+ 155:Bsp/MCU/bsp_CAN.c ****         {
+ 549              		.loc 1 155 22 is_stmt 0 view .LVU153
+ 550 0020 0398     		ldr	r0, [sp, #12]
+ 155:Bsp/MCU/bsp_CAN.c ****         {
+ 551              		.loc 1 155 38 view .LVU154
+ 552 0022 A0F20120 		subw	r0, r0, #513
+ 155:Bsp/MCU/bsp_CAN.c ****         {
+ 553              		.loc 1 155 12 view .LVU155
+ 554 0026 0328     		cmp	r0, #3
+ 555 0028 F5D8     		bhi	.L42
+ 157:Bsp/MCU/bsp_CAN.c ****             {
+ 556              		.loc 1 157 13 is_stmt 1 view .LVU156
+ 157:Bsp/MCU/bsp_CAN.c ****             {
+ 557              		.loc 1 157 62 is_stmt 0 view .LVU157
+ 558 002a 3E4B     		ldr	r3, .L57+8
+ 559 002c 4FF4A462 		mov	r2, #1312
+ 560 0030 02FB0033 		mla	r3, r2, r0, r3
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 15
+
+
+ 561 0034 D3F88020 		ldr	r2, [r3, #128]
+ 157:Bsp/MCU/bsp_CAN.c ****             {
+ 562              		.loc 1 157 70 view .LVU158
+ 563 0038 511C     		adds	r1, r2, #1
+ 564 003a C3F88010 		str	r1, [r3, #128]
+ 157:Bsp/MCU/bsp_CAN.c ****             {
+ 565              		.loc 1 157 16 view .LVU159
+ 566 003e 322A     		cmp	r2, #50
+ 567 0040 12DC     		bgt	.L43
+ 159:Bsp/MCU/bsp_CAN.c ****             }
+ 568              		.loc 1 159 17 is_stmt 1 view .LVU160
+ 569 0042 4FF4A463 		mov	r3, #1312
+ 570 0046 03FB00F0 		mul	r0, r3, r0
+ 571 004a 3030     		adds	r0, r0, #48
+ 572 004c 01A9     		add	r1, sp, #4
+ 573 004e 354B     		ldr	r3, .L57+8
+ 574 0050 1844     		add	r0, r0, r3
+ 575 0052 FFF7FEFF 		bl	get_moto_offset
+ 576              	.LVL52:
+ 577              	.L44:
+ 165:Bsp/MCU/bsp_CAN.c ****             {
+ 578              		.loc 1 165 13 view .LVU161
+ 165:Bsp/MCU/bsp_CAN.c ****             {
+ 579              		.loc 1 165 30 is_stmt 0 view .LVU162
+ 580 0056 039B     		ldr	r3, [sp, #12]
+ 165:Bsp/MCU/bsp_CAN.c ****             {
+ 581              		.loc 1 165 13 view .LVU163
+ 582 0058 A3F20123 		subw	r3, r3, #513
+ 583 005c 032B     		cmp	r3, #3
+ 584 005e DAD8     		bhi	.L42
+ 585 0060 DFE803F0 		tbb	[pc, r3]
+ 586              	.L46:
+ 587 0064 0D       		.byte	(.L49-.L46)/2
+ 588 0065 11       		.byte	(.L48-.L46)/2
+ 589 0066 15       		.byte	(.L47-.L46)/2
+ 590 0067 19       		.byte	(.L45-.L46)/2
+ 591              		.p2align 1
+ 592              	.L43:
+ 163:Bsp/MCU/bsp_CAN.c ****             }
+ 593              		.loc 1 163 17 is_stmt 1 view .LVU164
+ 594 0068 4FF4A463 		mov	r3, #1312
+ 595 006c 03FB00F0 		mul	r0, r3, r0
+ 596 0070 3030     		adds	r0, r0, #48
+ 597 0072 01A9     		add	r1, sp, #4
+ 598 0074 2B4B     		ldr	r3, .L57+8
+ 599 0076 1844     		add	r0, r0, r3
+ 600 0078 FFF7FEFF 		bl	get_moto_info
+ 601              	.LVL53:
+ 602 007c EBE7     		b	.L44
+ 603              	.L49:
+ 167:Bsp/MCU/bsp_CAN.c ****             case 0x202: Detect_Hook(CHASSIS_MOTOR2_TOE); break;
+ 604              		.loc 1 167 25 view .LVU165
+ 605 007e 0A20     		movs	r0, #10
+ 606 0080 FFF7FEFF 		bl	Detect_Hook
+ 607              	.LVL54:
+ 167:Bsp/MCU/bsp_CAN.c ****             case 0x202: Detect_Hook(CHASSIS_MOTOR2_TOE); break;
+ 608              		.loc 1 167 58 discriminator 1 view .LVU166
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 16
+
+
+ 167:Bsp/MCU/bsp_CAN.c ****             case 0x202: Detect_Hook(CHASSIS_MOTOR2_TOE); break;
+ 609              		.loc 1 167 58 is_stmt 0 view .LVU167
+ 610 0084 C7E7     		b	.L42
+ 611              	.L48:
+ 168:Bsp/MCU/bsp_CAN.c ****             case 0x203: Detect_Hook(CHASSIS_MOTOR3_TOE); break;
+ 612              		.loc 1 168 25 is_stmt 1 view .LVU168
+ 613 0086 0B20     		movs	r0, #11
+ 614 0088 FFF7FEFF 		bl	Detect_Hook
+ 615              	.LVL55:
+ 168:Bsp/MCU/bsp_CAN.c ****             case 0x203: Detect_Hook(CHASSIS_MOTOR3_TOE); break;
+ 616              		.loc 1 168 58 discriminator 1 view .LVU169
+ 168:Bsp/MCU/bsp_CAN.c ****             case 0x203: Detect_Hook(CHASSIS_MOTOR3_TOE); break;
+ 617              		.loc 1 168 58 is_stmt 0 view .LVU170
+ 618 008c C3E7     		b	.L42
+ 619              	.L47:
+ 169:Bsp/MCU/bsp_CAN.c ****             case 0x204: Detect_Hook(CHASSIS_MOTOR4_TOE); break;
+ 620              		.loc 1 169 25 is_stmt 1 view .LVU171
+ 621 008e 0C20     		movs	r0, #12
+ 622 0090 FFF7FEFF 		bl	Detect_Hook
+ 623              	.LVL56:
+ 169:Bsp/MCU/bsp_CAN.c ****             case 0x204: Detect_Hook(CHASSIS_MOTOR4_TOE); break;
+ 624              		.loc 1 169 58 discriminator 1 view .LVU172
+ 169:Bsp/MCU/bsp_CAN.c ****             case 0x204: Detect_Hook(CHASSIS_MOTOR4_TOE); break;
+ 625              		.loc 1 169 58 is_stmt 0 view .LVU173
+ 626 0094 BFE7     		b	.L42
+ 627              	.L45:
+ 170:Bsp/MCU/bsp_CAN.c ****             }
+ 628              		.loc 1 170 25 is_stmt 1 view .LVU174
+ 629 0096 0D20     		movs	r0, #13
+ 630 0098 FFF7FEFF 		bl	Detect_Hook
+ 631              	.LVL57:
+ 170:Bsp/MCU/bsp_CAN.c ****             }
+ 632              		.loc 1 170 58 discriminator 1 view .LVU175
+ 170:Bsp/MCU/bsp_CAN.c ****             }
+ 633              		.loc 1 170 58 is_stmt 0 view .LVU176
+ 634 009c BBE7     		b	.L42
+ 635              	.L56:
+ 177:Bsp/MCU/bsp_CAN.c ****         {
+ 636              		.loc 1 177 9 is_stmt 1 view .LVU177
+ 177:Bsp/MCU/bsp_CAN.c ****         {
+ 637              		.loc 1 177 26 is_stmt 0 view .LVU178
+ 638 009e 039B     		ldr	r3, [sp, #12]
+ 177:Bsp/MCU/bsp_CAN.c ****         {
+ 639              		.loc 1 177 9 view .LVU179
+ 640 00a0 40F23112 		movw	r2, #305
+ 641 00a4 9342     		cmp	r3, r2
+ 642 00a6 1FD0     		beq	.L51
+ 643 00a8 B3F5997F 		cmp	r3, #306
+ 644 00ac B6D1     		bne	.L41
+ 190:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[9] = rx_data[1];
+ 645              		.loc 1 190 13 is_stmt 1 view .LVU180
+ 190:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[9] = rx_data[1];
+ 646              		.loc 1 190 37 is_stmt 0 view .LVU181
+ 647 00ae 9DF80430 		ldrb	r3, [sp, #4]	@ zero_extendqisi2
+ 190:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[9] = rx_data[1];
+ 648              		.loc 1 190 28 view .LVU182
+ 649 00b2 1D49     		ldr	r1, .L57+12
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 17
+
+
+ 650 00b4 0B72     		strb	r3, [r1, #8]
+ 191:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[10] = rx_data[2];
+ 651              		.loc 1 191 13 is_stmt 1 view .LVU183
+ 191:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[10] = rx_data[2];
+ 652              		.loc 1 191 37 is_stmt 0 view .LVU184
+ 653 00b6 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
+ 191:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[10] = rx_data[2];
+ 654              		.loc 1 191 28 view .LVU185
+ 655 00ba 4B72     		strb	r3, [r1, #9]
+ 192:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[11] = rx_data[3];
+ 656              		.loc 1 192 13 is_stmt 1 view .LVU186
+ 192:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[11] = rx_data[3];
+ 657              		.loc 1 192 38 is_stmt 0 view .LVU187
+ 658 00bc 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
+ 192:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[11] = rx_data[3];
+ 659              		.loc 1 192 29 view .LVU188
+ 660 00c0 8B72     		strb	r3, [r1, #10]
+ 193:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[12] = rx_data[4];
+ 661              		.loc 1 193 13 is_stmt 1 view .LVU189
+ 193:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[12] = rx_data[4];
+ 662              		.loc 1 193 38 is_stmt 0 view .LVU190
+ 663 00c2 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 193:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[12] = rx_data[4];
+ 664              		.loc 1 193 29 view .LVU191
+ 665 00c6 CB72     		strb	r3, [r1, #11]
+ 194:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[13] = rx_data[5];
+ 666              		.loc 1 194 13 is_stmt 1 view .LVU192
+ 194:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[13] = rx_data[5];
+ 667              		.loc 1 194 38 is_stmt 0 view .LVU193
+ 668 00c8 9DF80830 		ldrb	r3, [sp, #8]	@ zero_extendqisi2
+ 194:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[13] = rx_data[5];
+ 669              		.loc 1 194 29 view .LVU194
+ 670 00cc 0B73     		strb	r3, [r1, #12]
+ 195:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[14] = rx_data[6];
+ 671              		.loc 1 195 13 is_stmt 1 view .LVU195
+ 195:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[14] = rx_data[6];
+ 672              		.loc 1 195 38 is_stmt 0 view .LVU196
+ 673 00ce 9DF80930 		ldrb	r3, [sp, #9]	@ zero_extendqisi2
+ 195:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[14] = rx_data[6];
+ 674              		.loc 1 195 29 view .LVU197
+ 675 00d2 4B73     		strb	r3, [r1, #13]
+ 196:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[15] = rx_data[7];
+ 676              		.loc 1 196 13 is_stmt 1 view .LVU198
+ 196:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[15] = rx_data[7];
+ 677              		.loc 1 196 38 is_stmt 0 view .LVU199
+ 678 00d4 9DF80A30 		ldrb	r3, [sp, #10]	@ zero_extendqisi2
+ 196:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[15] = rx_data[7];
+ 679              		.loc 1 196 29 view .LVU200
+ 680 00d8 8B73     		strb	r3, [r1, #14]
+ 197:Bsp/MCU/bsp_CAN.c ****             Callback_RC_Handle(&remote_control, RC_Data_Buf);
+ 681              		.loc 1 197 13 is_stmt 1 view .LVU201
+ 197:Bsp/MCU/bsp_CAN.c ****             Callback_RC_Handle(&remote_control, RC_Data_Buf);
+ 682              		.loc 1 197 38 is_stmt 0 view .LVU202
+ 683 00da 9DF80B30 		ldrb	r3, [sp, #11]	@ zero_extendqisi2
+ 197:Bsp/MCU/bsp_CAN.c ****             Callback_RC_Handle(&remote_control, RC_Data_Buf);
+ 684              		.loc 1 197 29 view .LVU203
+ 685 00de CB73     		strb	r3, [r1, #15]
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 18
+
+
+ 198:Bsp/MCU/bsp_CAN.c ****             break;
+ 686              		.loc 1 198 13 is_stmt 1 view .LVU204
+ 687 00e0 1248     		ldr	r0, .L57+16
+ 688 00e2 FFF7FEFF 		bl	Callback_RC_Handle
+ 689              	.LVL58:
+ 199:Bsp/MCU/bsp_CAN.c ****         }
+ 690              		.loc 1 199 13 view .LVU205
+ 691              		.loc 1 202 1 is_stmt 0 view .LVU206
+ 692 00e6 99E7     		b	.L41
+ 693              	.L51:
+ 180:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[1] = rx_data[1];
+ 694              		.loc 1 180 13 is_stmt 1 view .LVU207
+ 180:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[1] = rx_data[1];
+ 695              		.loc 1 180 37 is_stmt 0 view .LVU208
+ 696 00e8 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
+ 180:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[1] = rx_data[1];
+ 697              		.loc 1 180 28 view .LVU209
+ 698 00ec 0E4B     		ldr	r3, .L57+12
+ 699 00ee 1A70     		strb	r2, [r3]
+ 181:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[2] = rx_data[2];
+ 700              		.loc 1 181 13 is_stmt 1 view .LVU210
+ 181:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[2] = rx_data[2];
+ 701              		.loc 1 181 37 is_stmt 0 view .LVU211
+ 702 00f0 9DF80520 		ldrb	r2, [sp, #5]	@ zero_extendqisi2
+ 181:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[2] = rx_data[2];
+ 703              		.loc 1 181 28 view .LVU212
+ 704 00f4 5A70     		strb	r2, [r3, #1]
+ 182:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[3] = rx_data[3];
+ 705              		.loc 1 182 13 is_stmt 1 view .LVU213
+ 182:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[3] = rx_data[3];
+ 706              		.loc 1 182 37 is_stmt 0 view .LVU214
+ 707 00f6 9DF80620 		ldrb	r2, [sp, #6]	@ zero_extendqisi2
+ 182:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[3] = rx_data[3];
+ 708              		.loc 1 182 28 view .LVU215
+ 709 00fa 9A70     		strb	r2, [r3, #2]
+ 183:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[4] = rx_data[4];
+ 710              		.loc 1 183 13 is_stmt 1 view .LVU216
+ 183:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[4] = rx_data[4];
+ 711              		.loc 1 183 37 is_stmt 0 view .LVU217
+ 712 00fc 9DF80720 		ldrb	r2, [sp, #7]	@ zero_extendqisi2
+ 183:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[4] = rx_data[4];
+ 713              		.loc 1 183 28 view .LVU218
+ 714 0100 DA70     		strb	r2, [r3, #3]
+ 184:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[5] = rx_data[5];
+ 715              		.loc 1 184 13 is_stmt 1 view .LVU219
+ 184:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[5] = rx_data[5];
+ 716              		.loc 1 184 37 is_stmt 0 view .LVU220
+ 717 0102 9DF80820 		ldrb	r2, [sp, #8]	@ zero_extendqisi2
+ 184:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[5] = rx_data[5];
+ 718              		.loc 1 184 28 view .LVU221
+ 719 0106 1A71     		strb	r2, [r3, #4]
+ 185:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[6] = rx_data[6];
+ 720              		.loc 1 185 13 is_stmt 1 view .LVU222
+ 185:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[6] = rx_data[6];
+ 721              		.loc 1 185 37 is_stmt 0 view .LVU223
+ 722 0108 9DF80920 		ldrb	r2, [sp, #9]	@ zero_extendqisi2
+ 185:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[6] = rx_data[6];
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 19
+
+
+ 723              		.loc 1 185 28 view .LVU224
+ 724 010c 5A71     		strb	r2, [r3, #5]
+ 186:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[7] = rx_data[7];
+ 725              		.loc 1 186 13 is_stmt 1 view .LVU225
+ 186:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[7] = rx_data[7];
+ 726              		.loc 1 186 37 is_stmt 0 view .LVU226
+ 727 010e 9DF80A20 		ldrb	r2, [sp, #10]	@ zero_extendqisi2
+ 186:Bsp/MCU/bsp_CAN.c ****             RC_Data_Buf[7] = rx_data[7];
+ 728              		.loc 1 186 28 view .LVU227
+ 729 0112 9A71     		strb	r2, [r3, #6]
+ 187:Bsp/MCU/bsp_CAN.c ****             break;
+ 730              		.loc 1 187 13 is_stmt 1 view .LVU228
+ 187:Bsp/MCU/bsp_CAN.c ****             break;
+ 731              		.loc 1 187 37 is_stmt 0 view .LVU229
+ 732 0114 9DF80B20 		ldrb	r2, [sp, #11]	@ zero_extendqisi2
+ 187:Bsp/MCU/bsp_CAN.c ****             break;
+ 733              		.loc 1 187 28 view .LVU230
+ 734 0118 DA71     		strb	r2, [r3, #7]
+ 188:Bsp/MCU/bsp_CAN.c ****         case CAN_RC_DATA_Frame_1:
+ 735              		.loc 1 188 13 is_stmt 1 view .LVU231
+ 736 011a 7FE7     		b	.L41
+ 737              	.L58:
+ 738              		.align	2
+ 739              	.L57:
+ 740 011c 00000000 		.word	hcan1
+ 741 0120 00000000 		.word	hcan2
+ 742 0124 00000000 		.word	Chassis
+ 743 0128 00000000 		.word	RC_Data_Buf.0
+ 744 012c 00000000 		.word	remote_control
+ 745              		.cfi_endproc
+ 746              	.LFE172:
+ 748              		.section	.text.Send_RC_Data,"ax",%progbits
+ 749              		.align	1
+ 750              		.global	Send_RC_Data
+ 751              		.syntax unified
+ 752              		.thumb
+ 753              		.thumb_func
+ 755              	Send_RC_Data:
+ 756              	.LVL59:
+ 757              	.LFB173:
+ 203:Bsp/MCU/bsp_CAN.c **** 
+ 204:Bsp/MCU/bsp_CAN.c **** void Send_RC_Data(CAN_HandleTypeDef *_hcan, uint8_t *rc_data)
+ 205:Bsp/MCU/bsp_CAN.c **** {
+ 758              		.loc 1 205 1 view -0
+ 759              		.cfi_startproc
+ 760              		@ args = 0, pretend = 0, frame = 8
+ 761              		@ frame_needed = 0, uses_anonymous_args = 0
+ 206:Bsp/MCU/bsp_CAN.c ****     uint8_t can_send_data[8];
+ 762              		.loc 1 206 5 view .LVU233
+ 207:Bsp/MCU/bsp_CAN.c **** 
+ 208:Bsp/MCU/bsp_CAN.c ****     if (rc_data == NULL)
+ 763              		.loc 1 208 5 view .LVU234
+ 764              		.loc 1 208 8 is_stmt 0 view .LVU235
+ 765 0000 29B1     		cbz	r1, .L69
+ 205:Bsp/MCU/bsp_CAN.c ****     uint8_t can_send_data[8];
+ 766              		.loc 1 205 1 view .LVU236
+ 767 0002 30B5     		push	{r4, r5, lr}
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 20
+
+
+ 768              	.LCFI11:
+ 769              		.cfi_def_cfa_offset 12
+ 770              		.cfi_offset 4, -12
+ 771              		.cfi_offset 5, -8
+ 772              		.cfi_offset 14, -4
+ 773 0004 83B0     		sub	sp, sp, #12
+ 774              	.LCFI12:
+ 775              		.cfi_def_cfa_offset 24
+ 776 0006 0546     		mov	r5, r0
+ 777 0008 0C46     		mov	r4, r1
+ 778              	.LBB2:
+ 209:Bsp/MCU/bsp_CAN.c ****         return;
+ 210:Bsp/MCU/bsp_CAN.c **** 
+ 211:Bsp/MCU/bsp_CAN.c ****     for (uint8_t i = 0; i < 8U; i++)
+ 779              		.loc 1 211 18 view .LVU237
+ 780 000a 0023     		movs	r3, #0
+ 781 000c 08E0     		b	.L60
+ 782              	.L69:
+ 783              	.LCFI13:
+ 784              		.cfi_def_cfa_offset 0
+ 785              		.cfi_restore 4
+ 786              		.cfi_restore 5
+ 787              		.cfi_restore 14
+ 788              		.loc 1 211 18 view .LVU238
+ 789              	.LBE2:
+ 790 000e 7047     		bx	lr
+ 791              	.LVL60:
+ 792              	.L62:
+ 793              	.LCFI14:
+ 794              		.cfi_def_cfa_offset 24
+ 795              		.cfi_offset 4, -12
+ 796              		.cfi_offset 5, -8
+ 797              		.cfi_offset 14, -4
+ 798              	.LBB3:
+ 212:Bsp/MCU/bsp_CAN.c ****         can_send_data[i] = rc_data[i];
+ 799              		.loc 1 212 9 is_stmt 1 view .LVU239
+ 800              		.loc 1 212 35 is_stmt 0 view .LVU240
+ 801 0010 E15C     		ldrb	r1, [r4, r3]	@ zero_extendqisi2
+ 802              		.loc 1 212 26 view .LVU241
+ 803 0012 03F10802 		add	r2, r3, #8
+ 804 0016 6A44     		add	r2, sp, r2
+ 805 0018 02F8081C 		strb	r1, [r2, #-8]
+ 211:Bsp/MCU/bsp_CAN.c ****         can_send_data[i] = rc_data[i];
+ 806              		.loc 1 211 34 is_stmt 1 discriminator 3 view .LVU242
+ 807 001c 0133     		adds	r3, r3, #1
+ 808              	.LVL61:
+ 211:Bsp/MCU/bsp_CAN.c ****         can_send_data[i] = rc_data[i];
+ 809              		.loc 1 211 34 is_stmt 0 discriminator 3 view .LVU243
+ 810 001e DBB2     		uxtb	r3, r3
+ 811              	.LVL62:
+ 812              	.L60:
+ 211:Bsp/MCU/bsp_CAN.c ****         can_send_data[i] = rc_data[i];
+ 813              		.loc 1 211 27 is_stmt 1 discriminator 1 view .LVU244
+ 814 0020 072B     		cmp	r3, #7
+ 815 0022 F5D9     		bls	.L62
+ 816              	.LBE3:
+ 213:Bsp/MCU/bsp_CAN.c ****     CAN_Send_Data(_hcan, CAN_RC_DATA_Frame_0, can_send_data, 8);
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 21
+
+
+ 817              		.loc 1 213 5 view .LVU245
+ 818 0024 0823     		movs	r3, #8
+ 819              	.LVL63:
+ 820              		.loc 1 213 5 is_stmt 0 view .LVU246
+ 821 0026 6A46     		mov	r2, sp
+ 822 0028 40F23111 		movw	r1, #305
+ 823 002c 2846     		mov	r0, r5
+ 824              	.LVL64:
+ 825              		.loc 1 213 5 view .LVU247
+ 826 002e FFF7FEFF 		bl	CAN_Send_Data
+ 827              	.LVL65:
+ 214:Bsp/MCU/bsp_CAN.c **** 
+ 215:Bsp/MCU/bsp_CAN.c ****     for (uint8_t i = 0; i < 8U; i++)
+ 828              		.loc 1 215 5 is_stmt 1 view .LVU248
+ 829              	.LBB4:
+ 830              		.loc 1 215 10 view .LVU249
+ 831              		.loc 1 215 18 is_stmt 0 view .LVU250
+ 832 0032 0023     		movs	r3, #0
+ 833              		.loc 1 215 5 view .LVU251
+ 834 0034 08E0     		b	.L63
+ 835              	.LVL66:
+ 836              	.L64:
+ 216:Bsp/MCU/bsp_CAN.c ****         can_send_data[i] = rc_data[i + 8U];
+ 837              		.loc 1 216 9 is_stmt 1 view .LVU252
+ 838              		.loc 1 216 35 is_stmt 0 view .LVU253
+ 839 0036 E218     		adds	r2, r4, r3
+ 840 0038 117A     		ldrb	r1, [r2, #8]	@ zero_extendqisi2
+ 841              		.loc 1 216 26 view .LVU254
+ 842 003a 03F10802 		add	r2, r3, #8
+ 843 003e 6A44     		add	r2, sp, r2
+ 844 0040 02F8081C 		strb	r1, [r2, #-8]
+ 215:Bsp/MCU/bsp_CAN.c ****         can_send_data[i] = rc_data[i + 8U];
+ 845              		.loc 1 215 34 is_stmt 1 discriminator 3 view .LVU255
+ 846 0044 0133     		adds	r3, r3, #1
+ 847              	.LVL67:
+ 215:Bsp/MCU/bsp_CAN.c ****         can_send_data[i] = rc_data[i + 8U];
+ 848              		.loc 1 215 34 is_stmt 0 discriminator 3 view .LVU256
+ 849 0046 DBB2     		uxtb	r3, r3
+ 850              	.LVL68:
+ 851              	.L63:
+ 215:Bsp/MCU/bsp_CAN.c ****         can_send_data[i] = rc_data[i + 8U];
+ 852              		.loc 1 215 27 is_stmt 1 discriminator 1 view .LVU257
+ 853 0048 072B     		cmp	r3, #7
+ 854 004a F4D9     		bls	.L64
+ 855              	.LBE4:
+ 217:Bsp/MCU/bsp_CAN.c ****     CAN_Send_Data(_hcan, CAN_RC_DATA_Frame_1, can_send_data, 8);
+ 856              		.loc 1 217 5 view .LVU258
+ 857 004c 0823     		movs	r3, #8
+ 858              	.LVL69:
+ 859              		.loc 1 217 5 is_stmt 0 view .LVU259
+ 860 004e 6A46     		mov	r2, sp
+ 861 0050 4FF49971 		mov	r1, #306
+ 862 0054 2846     		mov	r0, r5
+ 863 0056 FFF7FEFF 		bl	CAN_Send_Data
+ 864              	.LVL70:
+ 218:Bsp/MCU/bsp_CAN.c **** }
+ 865              		.loc 1 218 1 view .LVU260
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 22
+
+
+ 866 005a 03B0     		add	sp, sp, #12
+ 867              	.LCFI15:
+ 868              		.cfi_def_cfa_offset 12
+ 869              		@ sp needed
+ 870 005c 30BD     		pop	{r4, r5, pc}
+ 871              		.loc 1 218 1 view .LVU261
+ 872              		.cfi_endproc
+ 873              	.LFE173:
+ 875              		.section	.bss.RC_Data_Buf.0,"aw",%nobits
+ 876              		.align	2
+ 879              	RC_Data_Buf.0:
+ 880 0000 00000000 		.space	16
+ 880      00000000 
+ 880      00000000 
+ 880      00000000 
+ 881              		.global	CAN2_ErrorInfo
+ 882              		.section	.bss.CAN2_ErrorInfo,"aw",%nobits
+ 883              		.align	2
+ 886              	CAN2_ErrorInfo:
+ 887 0000 00000000 		.space	16
+ 887      00000000 
+ 887      00000000 
+ 887      00000000 
+ 888              		.global	CAN1_ErrorInfo
+ 889              		.section	.bss.CAN1_ErrorInfo,"aw",%nobits
+ 890              		.align	2
+ 893              	CAN1_ErrorInfo:
+ 894 0000 00000000 		.space	16
+ 894      00000000 
+ 894      00000000 
+ 894      00000000 
+ 895              		.text
+ 896              	.Letext0:
+ 897              		.file 2 "C:/msys64/mingw64/arm-none-eabi/include/machine/_default_types.h"
+ 898              		.file 3 "C:/msys64/mingw64/arm-none-eabi/include/sys/_stdint.h"
+ 899              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 900              		.file 5 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h"
+ 901              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 902              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 903              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_can.h"
+ 904              		.file 9 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h"
+ 905              		.file 10 "Core/Inc/can.h"
+ 906              		.file 11 "Bsp/MCU/bsp_CAN.h"
+ 907              		.file 12 "Middlewares/Algorithm/Include/user_lib.h"
+ 908              		.file 13 "Middlewares/Controller/controller.h"
+ 909              		.file 14 "Bsp/Motor/motor.h"
+ 910              		.file 15 "Bsp/RemoteControl/remote_control.h"
+ 911              		.file 16 "Application/ChassisTask/chassis_task.h"
+ 912              		.file 17 "Application/DetectTask/detect_task.h"
+ 913              		.file 18 "Core/Inc/main.h"
+ 914              		.file 19 "<built-in>"
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s 			page 23
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 bsp_CAN.c
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:21     .text.CAN_Get_ErrorInfo:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:26     .text.CAN_Get_ErrorInfo:00000000 CAN_Get_ErrorInfo
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:66     .text.CAN_Get_ErrorInfo:00000018 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:893    .bss.CAN1_ErrorInfo:00000000 CAN1_ErrorInfo
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:886    .bss.CAN2_ErrorInfo:00000000 CAN2_ErrorInfo
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:74     .text.CAN_Config_Filter:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:79     .text.CAN_Config_Filter:00000000 CAN_Config_Filter
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:146    .text.CAN_Send_Data:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:152    .text.CAN_Send_Data:00000000 CAN_Send_Data
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:382    .text.CAN_Device_Init:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:388    .text.CAN_Device_Init:00000000 CAN_Device_Init
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:487    .text.CAN_Device_Init:00000060 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:493    .text.HAL_CAN_RxFifo0MsgPendingCallback:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:499    .text.HAL_CAN_RxFifo0MsgPendingCallback:00000000 HAL_CAN_RxFifo0MsgPendingCallback
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:587    .text.HAL_CAN_RxFifo0MsgPendingCallback:00000064 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:591    .text.HAL_CAN_RxFifo0MsgPendingCallback:00000068 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:740    .text.HAL_CAN_RxFifo0MsgPendingCallback:0000011c $d
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:879    .bss.RC_Data_Buf.0:00000000 RC_Data_Buf.0
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:749    .text.Send_RC_Data:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:755    .text.Send_RC_Data:00000000 Send_RC_Data
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:876    .bss.RC_Data_Buf.0:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:883    .bss.CAN2_ErrorInfo:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccqN7WpX.s:890    .bss.CAN1_ErrorInfo:00000000 $d
+
+UNDEFINED SYMBOLS
+hcan1
+hcan2
+memset
+HAL_CAN_ConfigFilter
+HAL_CAN_GetTxMailboxesFreeLevel
+HAL_CAN_GetError
+HAL_CAN_AbortTxRequest
+HAL_CAN_AddTxMessage
+HAL_CAN_Start
+HAL_CAN_ActivateNotification
+Error_Handler
+HAL_CAN_GetRxMessage
+get_moto_offset
+get_moto_info
+Detect_Hook
+Callback_RC_Handle
+Chassis
+remote_control

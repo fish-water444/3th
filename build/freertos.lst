@@ -1,0 +1,613 @@
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"freertos.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/freertos.c"
+  20              		.section	.text.StartINSTask,"ax",%progbits
+  21              		.align	1
+  22              		.global	StartINSTask
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	StartINSTask:
+  28              	.LVL0:
+  29              	.LFB171:
+   1:Core/Src/freertos.c **** /* USER CODE BEGIN Header */
+   2:Core/Src/freertos.c **** /**
+   3:Core/Src/freertos.c ****  ******************************************************************************
+   4:Core/Src/freertos.c ****  * File Name          : freertos.c
+   5:Core/Src/freertos.c ****  * Description        : Code for freertos applications
+   6:Core/Src/freertos.c ****  ******************************************************************************
+   7:Core/Src/freertos.c ****  */
+   8:Core/Src/freertos.c **** /* USER CODE END Header */
+   9:Core/Src/freertos.c **** 
+  10:Core/Src/freertos.c **** /* Includes ------------------------------------------------------------------*/
+  11:Core/Src/freertos.c **** #include "FreeRTOS.h"
+  12:Core/Src/freertos.c **** #include "task.h"
+  13:Core/Src/freertos.c **** #include "main.h"
+  14:Core/Src/freertos.c **** #include "cmsis_os.h"
+  15:Core/Src/freertos.c **** 
+  16:Core/Src/freertos.c **** /* Private includes ----------------------------------------------------------*/
+  17:Core/Src/freertos.c **** /* USER CODE BEGIN Includes */
+  18:Core/Src/freertos.c **** #include "can.h"
+  19:Core/Src/freertos.c **** #include "iwdg.h"
+  20:Core/Src/freertos.c **** #include "remote_control.h"
+  21:Core/Src/freertos.c **** #include "chassis_task.h"
+  22:Core/Src/freertos.c **** #include "bsp_CAN.h"
+  23:Core/Src/freertos.c **** #include "detect_task.h"
+  24:Core/Src/freertos.c **** #include "ins_task.h"
+  25:Core/Src/freertos.c **** /* USER CODE END Includes */
+  26:Core/Src/freertos.c **** 
+  27:Core/Src/freertos.c **** /* Private variables ---------------------------------------------------------*/
+  28:Core/Src/freertos.c **** /* USER CODE BEGIN Variables */
+  29:Core/Src/freertos.c **** /* USER CODE END Variables */
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 2
+
+
+  30:Core/Src/freertos.c **** osThreadId ChassisTaskHandle;
+  31:Core/Src/freertos.c **** osThreadId DetectTaskHandle;
+  32:Core/Src/freertos.c **** osThreadId INSTaskHandle;
+  33:Core/Src/freertos.c **** 
+  34:Core/Src/freertos.c **** /* Private function prototypes -----------------------------------------------*/
+  35:Core/Src/freertos.c **** void StartChassisTask(void const *argument);      /* 底盘任务 */
+  36:Core/Src/freertos.c **** void StartDetectTask(void const *argument);       /* 离线检测任务 */
+  37:Core/Src/freertos.c **** void StartINSTask(void const *argument);          /* IMU姿态任务 */
+  38:Core/Src/freertos.c **** 
+  39:Core/Src/freertos.c **** void MX_FREERTOS_Init(void);
+  40:Core/Src/freertos.c **** 
+  41:Core/Src/freertos.c **** /* GetIdleTaskMemory prototype (linked to static allocation support) */
+  42:Core/Src/freertos.c **** void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskSt
+  43:Core/Src/freertos.c **** 
+  44:Core/Src/freertos.c **** /* GetTimerTaskMemory prototype (linked to static allocation support) */
+  45:Core/Src/freertos.c **** void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTas
+  46:Core/Src/freertos.c **** 
+  47:Core/Src/freertos.c **** /* USER CODE BEGIN GET_IDLE_TASK_MEMORY */
+  48:Core/Src/freertos.c **** static StaticTask_t xIdleTaskTCBBuffer;
+  49:Core/Src/freertos.c **** static StackType_t xIdleStack[configMINIMAL_STACK_SIZE];
+  50:Core/Src/freertos.c **** 
+  51:Core/Src/freertos.c **** void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskSt
+  52:Core/Src/freertos.c **** {
+  53:Core/Src/freertos.c ****   *ppxIdleTaskTCBBuffer = &xIdleTaskTCBBuffer;
+  54:Core/Src/freertos.c ****   *ppxIdleTaskStackBuffer = &xIdleStack[0];
+  55:Core/Src/freertos.c ****   *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+  56:Core/Src/freertos.c **** }
+  57:Core/Src/freertos.c **** /* USER CODE END GET_IDLE_TASK_MEMORY */
+  58:Core/Src/freertos.c **** 
+  59:Core/Src/freertos.c **** /* USER CODE BEGIN GET_TIMER_TASK_MEMORY */
+  60:Core/Src/freertos.c **** static StaticTask_t xTimerTaskTCBBuffer;
+  61:Core/Src/freertos.c **** static StackType_t xTimerStack[configTIMER_TASK_STACK_DEPTH];
+  62:Core/Src/freertos.c **** 
+  63:Core/Src/freertos.c **** void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTas
+  64:Core/Src/freertos.c **** {
+  65:Core/Src/freertos.c ****   *ppxTimerTaskTCBBuffer = &xTimerTaskTCBBuffer;
+  66:Core/Src/freertos.c ****   *ppxTimerTaskStackBuffer = &xTimerStack[0];
+  67:Core/Src/freertos.c ****   *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+  68:Core/Src/freertos.c **** }
+  69:Core/Src/freertos.c **** /* USER CODE END GET_TIMER_TASK_MEMORY */
+  70:Core/Src/freertos.c **** 
+  71:Core/Src/freertos.c **** void MX_FREERTOS_Init(void)
+  72:Core/Src/freertos.c **** {
+  73:Core/Src/freertos.c ****   /* definition and creation of INSTask */
+  74:Core/Src/freertos.c ****   osThreadDef(INSTask, StartINSTask, osPriorityAboveNormal, 0, 512);
+  75:Core/Src/freertos.c ****   INSTaskHandle = osThreadCreate(osThread(INSTask), NULL);
+  76:Core/Src/freertos.c **** 
+  77:Core/Src/freertos.c ****   /* definition and creation of DetectTask */
+  78:Core/Src/freertos.c ****   osThreadDef(DetectTask, StartDetectTask, osPriorityBelowNormal, 0, 512);
+  79:Core/Src/freertos.c ****   DetectTaskHandle = osThreadCreate(osThread(DetectTask), NULL);
+  80:Core/Src/freertos.c **** 
+  81:Core/Src/freertos.c ****   /* definition and creation of ChassisTask */
+  82:Core/Src/freertos.c ****   osThreadDef(ChassisTask, StartChassisTask, osPriorityAboveNormal, 0, 512);
+  83:Core/Src/freertos.c ****   ChassisTaskHandle = osThreadCreate(osThread(ChassisTask), NULL);
+  84:Core/Src/freertos.c **** }
+  85:Core/Src/freertos.c **** 
+  86:Core/Src/freertos.c **** void StartINSTask(void const *argument)
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 3
+
+
+  87:Core/Src/freertos.c **** {
+  30              		.loc 1 87 1 view -0
+  31              		.cfi_startproc
+  32              		@ Volatile: function does not return.
+  33              		@ args = 0, pretend = 0, frame = 0
+  34              		@ frame_needed = 0, uses_anonymous_args = 0
+  35              		.loc 1 87 1 is_stmt 0 view .LVU1
+  36 0000 08B5     		push	{r3, lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 8
+  39              		.cfi_offset 3, -8
+  40              		.cfi_offset 14, -4
+  88:Core/Src/freertos.c ****   INS_Init();
+  41              		.loc 1 88 3 is_stmt 1 view .LVU2
+  42 0002 FFF7FEFF 		bl	INS_Init
+  43              	.LVL1:
+  44              	.L2:
+  89:Core/Src/freertos.c ****   for (;;)
+  45              		.loc 1 89 3 view .LVU3
+  90:Core/Src/freertos.c ****   {
+  91:Core/Src/freertos.c ****     INS_Task();
+  46              		.loc 1 91 5 view .LVU4
+  47 0006 FFF7FEFF 		bl	INS_Task
+  48              	.LVL2:
+  92:Core/Src/freertos.c ****     osDelay(INS_TASK_PERIOD);
+  49              		.loc 1 92 5 discriminator 1 view .LVU5
+  50 000a 0120     		movs	r0, #1
+  51 000c FFF7FEFF 		bl	osDelay
+  52              	.LVL3:
+  89:Core/Src/freertos.c ****   for (;;)
+  53              		.loc 1 89 3 view .LVU6
+  54 0010 F9E7     		b	.L2
+  55              		.cfi_endproc
+  56              	.LFE171:
+  58              		.section	.text.StartDetectTask,"ax",%progbits
+  59              		.align	1
+  60              		.global	StartDetectTask
+  61              		.syntax unified
+  62              		.thumb
+  63              		.thumb_func
+  65              	StartDetectTask:
+  66              	.LVL4:
+  67              	.LFB172:
+  93:Core/Src/freertos.c ****   }
+  94:Core/Src/freertos.c **** }
+  95:Core/Src/freertos.c **** 
+  96:Core/Src/freertos.c **** void StartDetectTask(void const *argument)
+  97:Core/Src/freertos.c **** {
+  68              		.loc 1 97 1 view -0
+  69              		.cfi_startproc
+  70              		@ Volatile: function does not return.
+  71              		@ args = 0, pretend = 0, frame = 0
+  72              		@ frame_needed = 0, uses_anonymous_args = 0
+  73              		.loc 1 97 1 is_stmt 0 view .LVU8
+  74 0000 08B5     		push	{r3, lr}
+  75              	.LCFI1:
+  76              		.cfi_def_cfa_offset 8
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 4
+
+
+  77              		.cfi_offset 3, -8
+  78              		.cfi_offset 14, -4
+  98:Core/Src/freertos.c ****   Detect_Task_Init();
+  79              		.loc 1 98 3 is_stmt 1 view .LVU9
+  80 0002 FFF7FEFF 		bl	Detect_Task_Init
+  81              	.LVL5:
+  82              	.L5:
+  99:Core/Src/freertos.c ****   for (;;)
+  83              		.loc 1 99 3 view .LVU10
+ 100:Core/Src/freertos.c ****   {
+ 101:Core/Src/freertos.c ****     Detect_Task();
+  84              		.loc 1 101 5 view .LVU11
+  85 0006 FFF7FEFF 		bl	Detect_Task
+  86              	.LVL6:
+ 102:Core/Src/freertos.c ****     osDelay(DETECT_TASK_PERIOD);
+  87              		.loc 1 102 5 discriminator 1 view .LVU12
+  88 000a 0520     		movs	r0, #5
+  89 000c FFF7FEFF 		bl	osDelay
+  90              	.LVL7:
+  99:Core/Src/freertos.c ****   for (;;)
+  91              		.loc 1 99 3 view .LVU13
+  92 0010 F9E7     		b	.L5
+  93              		.cfi_endproc
+  94              	.LFE172:
+  96              		.section	.text.StartChassisTask,"ax",%progbits
+  97              		.align	1
+  98              		.global	StartChassisTask
+  99              		.syntax unified
+ 100              		.thumb
+ 101              		.thumb_func
+ 103              	StartChassisTask:
+ 104              	.LVL8:
+ 105              	.LFB173:
+ 103:Core/Src/freertos.c ****   }
+ 104:Core/Src/freertos.c **** }
+ 105:Core/Src/freertos.c **** 
+ 106:Core/Src/freertos.c **** void StartChassisTask(void const *argument)
+ 107:Core/Src/freertos.c **** {
+ 106              		.loc 1 107 1 view -0
+ 107              		.cfi_startproc
+ 108              		@ Volatile: function does not return.
+ 109              		@ args = 0, pretend = 0, frame = 0
+ 110              		@ frame_needed = 0, uses_anonymous_args = 0
+ 111              		.loc 1 107 1 is_stmt 0 view .LVU15
+ 112 0000 08B5     		push	{r3, lr}
+ 113              	.LCFI2:
+ 114              		.cfi_def_cfa_offset 8
+ 115              		.cfi_offset 3, -8
+ 116              		.cfi_offset 14, -4
+ 108:Core/Src/freertos.c ****   osDelay(1000);
+ 117              		.loc 1 108 3 is_stmt 1 view .LVU16
+ 118 0002 4FF47A70 		mov	r0, #1000
+ 119              	.LVL9:
+ 120              		.loc 1 108 3 is_stmt 0 view .LVU17
+ 121 0006 FFF7FEFF 		bl	osDelay
+ 122              	.LVL10:
+ 109:Core/Src/freertos.c ****   Chassis_Init();
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 5
+
+
+ 123              		.loc 1 109 3 is_stmt 1 view .LVU18
+ 124 000a FFF7FEFF 		bl	Chassis_Init
+ 125              	.LVL11:
+ 126              	.L8:
+ 110:Core/Src/freertos.c **** 
+ 111:Core/Src/freertos.c ****   for (;;)
+ 127              		.loc 1 111 3 view .LVU19
+ 112:Core/Src/freertos.c ****   {
+ 113:Core/Src/freertos.c ****     Chassis_Control();
+ 128              		.loc 1 113 5 view .LVU20
+ 129 000e FFF7FEFF 		bl	Chassis_Control
+ 130              	.LVL12:
+ 114:Core/Src/freertos.c ****     osDelay(CHASSIS_TASK_PERIOD);
+ 131              		.loc 1 114 5 discriminator 1 view .LVU21
+ 132 0012 0220     		movs	r0, #2
+ 133 0014 FFF7FEFF 		bl	osDelay
+ 134              	.LVL13:
+ 111:Core/Src/freertos.c ****   {
+ 135              		.loc 1 111 3 view .LVU22
+ 136 0018 F9E7     		b	.L8
+ 137              		.cfi_endproc
+ 138              	.LFE173:
+ 140              		.section	.text.vApplicationGetIdleTaskMemory,"ax",%progbits
+ 141              		.align	1
+ 142              		.global	vApplicationGetIdleTaskMemory
+ 143              		.syntax unified
+ 144              		.thumb
+ 145              		.thumb_func
+ 147              	vApplicationGetIdleTaskMemory:
+ 148              	.LVL14:
+ 149              	.LFB168:
+  52:Core/Src/freertos.c ****   *ppxIdleTaskTCBBuffer = &xIdleTaskTCBBuffer;
+ 150              		.loc 1 52 1 view -0
+ 151              		.cfi_startproc
+ 152              		@ args = 0, pretend = 0, frame = 0
+ 153              		@ frame_needed = 0, uses_anonymous_args = 0
+ 154              		@ link register save eliminated.
+  53:Core/Src/freertos.c ****   *ppxIdleTaskStackBuffer = &xIdleStack[0];
+ 155              		.loc 1 53 3 view .LVU24
+  53:Core/Src/freertos.c ****   *ppxIdleTaskStackBuffer = &xIdleStack[0];
+ 156              		.loc 1 53 25 is_stmt 0 view .LVU25
+ 157 0000 034B     		ldr	r3, .L11
+ 158 0002 0360     		str	r3, [r0]
+  54:Core/Src/freertos.c ****   *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+ 159              		.loc 1 54 3 is_stmt 1 view .LVU26
+  54:Core/Src/freertos.c ****   *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+ 160              		.loc 1 54 27 is_stmt 0 view .LVU27
+ 161 0004 034B     		ldr	r3, .L11+4
+ 162 0006 0B60     		str	r3, [r1]
+  55:Core/Src/freertos.c **** }
+ 163              		.loc 1 55 3 is_stmt 1 view .LVU28
+  55:Core/Src/freertos.c **** }
+ 164              		.loc 1 55 25 is_stmt 0 view .LVU29
+ 165 0008 8023     		movs	r3, #128
+ 166 000a 1360     		str	r3, [r2]
+  56:Core/Src/freertos.c **** /* USER CODE END GET_IDLE_TASK_MEMORY */
+ 167              		.loc 1 56 1 view .LVU30
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 6
+
+
+ 168 000c 7047     		bx	lr
+ 169              	.L12:
+ 170 000e 00BF     		.align	2
+ 171              	.L11:
+ 172 0010 00000000 		.word	xIdleTaskTCBBuffer
+ 173 0014 00000000 		.word	xIdleStack
+ 174              		.cfi_endproc
+ 175              	.LFE168:
+ 177              		.section	.text.vApplicationGetTimerTaskMemory,"ax",%progbits
+ 178              		.align	1
+ 179              		.global	vApplicationGetTimerTaskMemory
+ 180              		.syntax unified
+ 181              		.thumb
+ 182              		.thumb_func
+ 184              	vApplicationGetTimerTaskMemory:
+ 185              	.LVL15:
+ 186              	.LFB169:
+  64:Core/Src/freertos.c ****   *ppxTimerTaskTCBBuffer = &xTimerTaskTCBBuffer;
+ 187              		.loc 1 64 1 is_stmt 1 view -0
+ 188              		.cfi_startproc
+ 189              		@ args = 0, pretend = 0, frame = 0
+ 190              		@ frame_needed = 0, uses_anonymous_args = 0
+ 191              		@ link register save eliminated.
+  65:Core/Src/freertos.c ****   *ppxTimerTaskStackBuffer = &xTimerStack[0];
+ 192              		.loc 1 65 3 view .LVU32
+  65:Core/Src/freertos.c ****   *ppxTimerTaskStackBuffer = &xTimerStack[0];
+ 193              		.loc 1 65 26 is_stmt 0 view .LVU33
+ 194 0000 034B     		ldr	r3, .L14
+ 195 0002 0360     		str	r3, [r0]
+  66:Core/Src/freertos.c ****   *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+ 196              		.loc 1 66 3 is_stmt 1 view .LVU34
+  66:Core/Src/freertos.c ****   *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+ 197              		.loc 1 66 28 is_stmt 0 view .LVU35
+ 198 0004 034B     		ldr	r3, .L14+4
+ 199 0006 0B60     		str	r3, [r1]
+  67:Core/Src/freertos.c **** }
+ 200              		.loc 1 67 3 is_stmt 1 view .LVU36
+  67:Core/Src/freertos.c **** }
+ 201              		.loc 1 67 26 is_stmt 0 view .LVU37
+ 202 0008 4FF48073 		mov	r3, #256
+ 203 000c 1360     		str	r3, [r2]
+  68:Core/Src/freertos.c **** /* USER CODE END GET_TIMER_TASK_MEMORY */
+ 204              		.loc 1 68 1 view .LVU38
+ 205 000e 7047     		bx	lr
+ 206              	.L15:
+ 207              		.align	2
+ 208              	.L14:
+ 209 0010 00000000 		.word	xTimerTaskTCBBuffer
+ 210 0014 00000000 		.word	xTimerStack
+ 211              		.cfi_endproc
+ 212              	.LFE169:
+ 214              		.section	.text.MX_FREERTOS_Init,"ax",%progbits
+ 215              		.align	1
+ 216              		.global	MX_FREERTOS_Init
+ 217              		.syntax unified
+ 218              		.thumb
+ 219              		.thumb_func
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 7
+
+
+ 221              	MX_FREERTOS_Init:
+ 222              	.LFB170:
+  72:Core/Src/freertos.c ****   /* definition and creation of INSTask */
+ 223              		.loc 1 72 1 is_stmt 1 view -0
+ 224              		.cfi_startproc
+ 225              		@ args = 0, pretend = 0, frame = 88
+ 226              		@ frame_needed = 0, uses_anonymous_args = 0
+ 227 0000 10B5     		push	{r4, lr}
+ 228              	.LCFI3:
+ 229              		.cfi_def_cfa_offset 8
+ 230              		.cfi_offset 4, -8
+ 231              		.cfi_offset 14, -4
+ 232 0002 96B0     		sub	sp, sp, #88
+ 233              	.LCFI4:
+ 234              		.cfi_def_cfa_offset 96
+  74:Core/Src/freertos.c ****   INSTaskHandle = osThreadCreate(osThread(INSTask), NULL);
+ 235              		.loc 1 74 3 view .LVU40
+ 236 0004 1B4C     		ldr	r4, .L18
+ 237 0006 0DF13C0C 		add	ip, sp, #60
+ 238 000a A646     		mov	lr, r4
+ 239 000c BEE80F00 		ldmia	lr!, {r0, r1, r2, r3}
+ 240 0010 ACE80F00 		stmia	ip!, {r0, r1, r2, r3}
+ 241 0014 9EE80700 		ldm	lr, {r0, r1, r2}
+ 242 0018 8CE80700 		stm	ip, {r0, r1, r2}
+  75:Core/Src/freertos.c **** 
+ 243              		.loc 1 75 3 view .LVU41
+  75:Core/Src/freertos.c **** 
+ 244              		.loc 1 75 19 is_stmt 0 view .LVU42
+ 245 001c 0021     		movs	r1, #0
+ 246 001e 0FA8     		add	r0, sp, #60
+ 247 0020 FFF7FEFF 		bl	osThreadCreate
+ 248              	.LVL16:
+  75:Core/Src/freertos.c **** 
+ 249              		.loc 1 75 17 discriminator 1 view .LVU43
+ 250 0024 144B     		ldr	r3, .L18+4
+ 251 0026 1860     		str	r0, [r3]
+  78:Core/Src/freertos.c ****   DetectTaskHandle = osThreadCreate(osThread(DetectTask), NULL);
+ 252              		.loc 1 78 3 is_stmt 1 view .LVU44
+ 253 0028 0DF1200C 		add	ip, sp, #32
+ 254 002c 04F11C0E 		add	lr, r4, #28
+ 255 0030 BEE80F00 		ldmia	lr!, {r0, r1, r2, r3}
+ 256 0034 ACE80F00 		stmia	ip!, {r0, r1, r2, r3}
+ 257 0038 9EE80700 		ldm	lr, {r0, r1, r2}
+ 258 003c 8CE80700 		stm	ip, {r0, r1, r2}
+  79:Core/Src/freertos.c **** 
+ 259              		.loc 1 79 3 view .LVU45
+  79:Core/Src/freertos.c **** 
+ 260              		.loc 1 79 22 is_stmt 0 view .LVU46
+ 261 0040 0021     		movs	r1, #0
+ 262 0042 08A8     		add	r0, sp, #32
+ 263 0044 FFF7FEFF 		bl	osThreadCreate
+ 264              	.LVL17:
+  79:Core/Src/freertos.c **** 
+ 265              		.loc 1 79 20 discriminator 1 view .LVU47
+ 266 0048 0C4B     		ldr	r3, .L18+8
+ 267 004a 1860     		str	r0, [r3]
+  82:Core/Src/freertos.c ****   ChassisTaskHandle = osThreadCreate(osThread(ChassisTask), NULL);
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 8
+
+
+ 268              		.loc 1 82 3 is_stmt 1 view .LVU48
+ 269 004c 0DF1040E 		add	lr, sp, #4
+ 270 0050 04F1380C 		add	ip, r4, #56
+ 271 0054 BCE80F00 		ldmia	ip!, {r0, r1, r2, r3}
+ 272 0058 AEE80F00 		stmia	lr!, {r0, r1, r2, r3}
+ 273 005c 9CE80700 		ldm	ip, {r0, r1, r2}
+ 274 0060 8EE80700 		stm	lr, {r0, r1, r2}
+  83:Core/Src/freertos.c **** }
+ 275              		.loc 1 83 3 view .LVU49
+  83:Core/Src/freertos.c **** }
+ 276              		.loc 1 83 23 is_stmt 0 view .LVU50
+ 277 0064 0021     		movs	r1, #0
+ 278 0066 01A8     		add	r0, sp, #4
+ 279 0068 FFF7FEFF 		bl	osThreadCreate
+ 280              	.LVL18:
+  83:Core/Src/freertos.c **** }
+ 281              		.loc 1 83 21 discriminator 1 view .LVU51
+ 282 006c 044B     		ldr	r3, .L18+12
+ 283 006e 1860     		str	r0, [r3]
+  84:Core/Src/freertos.c **** 
+ 284              		.loc 1 84 1 view .LVU52
+ 285 0070 16B0     		add	sp, sp, #88
+ 286              	.LCFI5:
+ 287              		.cfi_def_cfa_offset 8
+ 288              		@ sp needed
+ 289 0072 10BD     		pop	{r4, pc}
+ 290              	.L19:
+ 291              		.align	2
+ 292              	.L18:
+ 293 0074 00000000 		.word	.LANCHOR0
+ 294 0078 00000000 		.word	INSTaskHandle
+ 295 007c 00000000 		.word	DetectTaskHandle
+ 296 0080 00000000 		.word	ChassisTaskHandle
+ 297              		.cfi_endproc
+ 298              	.LFE170:
+ 300              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 301              		.align	2
+ 302              	.LC4:
+ 303 0000 43686173 		.ascii	"ChassisTask\000"
+ 303      73697354 
+ 303      61736B00 
+ 304              		.align	2
+ 305              	.LC2:
+ 306 000c 44657465 		.ascii	"DetectTask\000"
+ 306      63745461 
+ 306      736B00
+ 307 0017 00       		.align	2
+ 308              	.LC0:
+ 309 0018 494E5354 		.ascii	"INSTask\000"
+ 309      61736B00 
+ 310              		.section	.bss.xTimerStack,"aw",%nobits
+ 311              		.align	2
+ 314              	xTimerStack:
+ 315 0000 00000000 		.space	1024
+ 315      00000000 
+ 315      00000000 
+ 315      00000000 
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 9
+
+
+ 315      00000000 
+ 316              		.section	.bss.xTimerTaskTCBBuffer,"aw",%nobits
+ 317              		.align	2
+ 320              	xTimerTaskTCBBuffer:
+ 321 0000 00000000 		.space	84
+ 321      00000000 
+ 321      00000000 
+ 321      00000000 
+ 321      00000000 
+ 322              		.section	.bss.xIdleStack,"aw",%nobits
+ 323              		.align	2
+ 326              	xIdleStack:
+ 327 0000 00000000 		.space	512
+ 327      00000000 
+ 327      00000000 
+ 327      00000000 
+ 327      00000000 
+ 328              		.section	.bss.xIdleTaskTCBBuffer,"aw",%nobits
+ 329              		.align	2
+ 332              	xIdleTaskTCBBuffer:
+ 333 0000 00000000 		.space	84
+ 333      00000000 
+ 333      00000000 
+ 333      00000000 
+ 333      00000000 
+ 334              		.global	INSTaskHandle
+ 335              		.section	.bss.INSTaskHandle,"aw",%nobits
+ 336              		.align	2
+ 339              	INSTaskHandle:
+ 340 0000 00000000 		.space	4
+ 341              		.global	DetectTaskHandle
+ 342              		.section	.bss.DetectTaskHandle,"aw",%nobits
+ 343              		.align	2
+ 346              	DetectTaskHandle:
+ 347 0000 00000000 		.space	4
+ 348              		.global	ChassisTaskHandle
+ 349              		.section	.bss.ChassisTaskHandle,"aw",%nobits
+ 350              		.align	2
+ 353              	ChassisTaskHandle:
+ 354 0000 00000000 		.space	4
+ 355              		.section	.rodata
+ 356              		.align	2
+ 357              		.set	.LANCHOR0,. + 0
+ 358              	.LC6:
+ 359 0000 18000000 		.word	.LC0
+ 360 0004 00000000 		.word	StartINSTask
+ 361 0008 0100     		.short	1
+ 362 000a 0000     		.space	2
+ 363 000c 00000000 		.word	0
+ 364 0010 00020000 		.word	512
+ 365 0014 00000000 		.word	0
+ 366 0018 00000000 		.word	0
+ 367              	.LC7:
+ 368 001c 0C000000 		.word	.LC2
+ 369 0020 00000000 		.word	StartDetectTask
+ 370 0024 FFFF     		.short	-1
+ 371 0026 0000     		.space	2
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 10
+
+
+ 372 0028 00000000 		.word	0
+ 373 002c 00020000 		.word	512
+ 374 0030 00000000 		.word	0
+ 375 0034 00000000 		.word	0
+ 376              	.LC8:
+ 377 0038 00000000 		.word	.LC4
+ 378 003c 00000000 		.word	StartChassisTask
+ 379 0040 0100     		.short	1
+ 380 0042 0000     		.space	2
+ 381 0044 00000000 		.word	0
+ 382 0048 00020000 		.word	512
+ 383 004c 00000000 		.word	0
+ 384 0050 00000000 		.word	0
+ 385              		.text
+ 386              	.Letext0:
+ 387              		.file 2 "C:/msys64/mingw64/arm-none-eabi/include/machine/_default_types.h"
+ 388              		.file 3 "C:/msys64/mingw64/arm-none-eabi/include/sys/_stdint.h"
+ 389              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 390              		.file 5 "Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h"
+ 391              		.file 6 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ 392              		.file 7 "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h"
+ 393              		.file 8 "Application/ChassisTask/chassis_task.h"
+ 394              		.file 9 "Application/DetectTask/detect_task.h"
+ 395              		.file 10 "Application/INSTask/ins_task.h"
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s 			page 11
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 freertos.c
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:21     .text.StartINSTask:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:27     .text.StartINSTask:00000000 StartINSTask
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:59     .text.StartDetectTask:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:65     .text.StartDetectTask:00000000 StartDetectTask
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:97     .text.StartChassisTask:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:103    .text.StartChassisTask:00000000 StartChassisTask
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:141    .text.vApplicationGetIdleTaskMemory:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:147    .text.vApplicationGetIdleTaskMemory:00000000 vApplicationGetIdleTaskMemory
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:172    .text.vApplicationGetIdleTaskMemory:00000010 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:332    .bss.xIdleTaskTCBBuffer:00000000 xIdleTaskTCBBuffer
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:326    .bss.xIdleStack:00000000 xIdleStack
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:178    .text.vApplicationGetTimerTaskMemory:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:184    .text.vApplicationGetTimerTaskMemory:00000000 vApplicationGetTimerTaskMemory
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:209    .text.vApplicationGetTimerTaskMemory:00000010 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:320    .bss.xTimerTaskTCBBuffer:00000000 xTimerTaskTCBBuffer
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:314    .bss.xTimerStack:00000000 xTimerStack
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:215    .text.MX_FREERTOS_Init:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:221    .text.MX_FREERTOS_Init:00000000 MX_FREERTOS_Init
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:293    .text.MX_FREERTOS_Init:00000074 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:339    .bss.INSTaskHandle:00000000 INSTaskHandle
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:346    .bss.DetectTaskHandle:00000000 DetectTaskHandle
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:353    .bss.ChassisTaskHandle:00000000 ChassisTaskHandle
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:301    .rodata.str1.4:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:311    .bss.xTimerStack:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:317    .bss.xTimerTaskTCBBuffer:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:323    .bss.xIdleStack:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:329    .bss.xIdleTaskTCBBuffer:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:336    .bss.INSTaskHandle:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:343    .bss.DetectTaskHandle:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:350    .bss.ChassisTaskHandle:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccuvWu5q.s:356    .rodata:00000000 $d
+
+UNDEFINED SYMBOLS
+INS_Init
+INS_Task
+osDelay
+Detect_Task_Init
+Detect_Task
+Chassis_Init
+Chassis_Control
+osThreadCreate

@@ -1,0 +1,633 @@
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/main.c"
+  20              		.section	.text.SystemClock_Config,"ax",%progbits
+  21              		.align	1
+  22              		.global	SystemClock_Config
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	SystemClock_Config:
+  28              	.LFB136:
+   1:Core/Src/main.c **** /* USER CODE BEGIN Header */
+   2:Core/Src/main.c **** /**
+   3:Core/Src/main.c ****  ******************************************************************************
+   4:Core/Src/main.c ****  * @file           : main.c
+   5:Core/Src/main.c ****  * @brief          : Main program body
+   6:Core/Src/main.c ****  ******************************************************************************
+   7:Core/Src/main.c ****  */
+   8:Core/Src/main.c **** /* USER CODE END Header */
+   9:Core/Src/main.c **** /* Includes ------------------------------------------------------------------*/
+  10:Core/Src/main.c **** #include "main.h"
+  11:Core/Src/main.c **** #include "cmsis_os.h"
+  12:Core/Src/main.c **** #include "adc.h"
+  13:Core/Src/main.c **** #include "can.h"
+  14:Core/Src/main.c **** #include "dma.h"
+  15:Core/Src/main.c **** #include "i2c.h"
+  16:Core/Src/main.c **** #include "iwdg.h"
+  17:Core/Src/main.c **** #include "spi.h"
+  18:Core/Src/main.c **** #include "tim.h"
+  19:Core/Src/main.c **** #include "usart.h"
+  20:Core/Src/main.c **** #include "gpio.h"
+  21:Core/Src/main.c **** 
+  22:Core/Src/main.c **** /* Private includes ----------------------------------------------------------*/
+  23:Core/Src/main.c **** /* USER CODE BEGIN Includes */
+  24:Core/Src/main.c **** #include "bsp_CAN.h"
+  25:Core/Src/main.c **** #include "bsp_dwt.h"
+  26:Core/Src/main.c **** #include "remote_control.h"
+  27:Core/Src/main.c **** #include "BMI088driver.h"
+  28:Core/Src/main.c **** /* USER CODE END Includes */
+  29:Core/Src/main.c **** 
+  30:Core/Src/main.c **** /* Private variables ---------------------------------------------------------*/
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 2
+
+
+  31:Core/Src/main.c **** /* USER CODE BEGIN PV */
+  32:Core/Src/main.c **** uint32_t timeStamp[50] = {0};
+  33:Core/Src/main.c **** /* USER CODE END PV */
+  34:Core/Src/main.c **** 
+  35:Core/Src/main.c **** /* Private function prototypes -----------------------------------------------*/
+  36:Core/Src/main.c **** void SystemClock_Config(void);
+  37:Core/Src/main.c **** void MX_FREERTOS_Init(void);
+  38:Core/Src/main.c **** 
+  39:Core/Src/main.c **** int main(void)
+  40:Core/Src/main.c **** {
+  41:Core/Src/main.c ****   HAL_Init();
+  42:Core/Src/main.c ****   SystemClock_Config();
+  43:Core/Src/main.c **** 
+  44:Core/Src/main.c ****   /* Initialize all configured peripherals */
+  45:Core/Src/main.c ****   MX_GPIO_Init();
+  46:Core/Src/main.c ****   MX_DMA_Init();
+  47:Core/Src/main.c ****   MX_ADC1_Init();
+  48:Core/Src/main.c ****   MX_ADC3_Init();
+  49:Core/Src/main.c ****   MX_CAN1_Init();
+  50:Core/Src/main.c ****   MX_CAN2_Init();
+  51:Core/Src/main.c ****   MX_I2C1_Init();
+  52:Core/Src/main.c ****   MX_SPI1_Init();
+  53:Core/Src/main.c ****   MX_TIM4_Init();
+  54:Core/Src/main.c ****   MX_TIM5_Init();
+  55:Core/Src/main.c ****   MX_USART3_UART_Init();
+  56:Core/Src/main.c ****   MX_TIM8_Init();
+  57:Core/Src/main.c ****   MX_I2C2_Init();
+  58:Core/Src/main.c ****   MX_I2C3_Init();
+  59:Core/Src/main.c ****   MX_SPI2_Init();
+  60:Core/Src/main.c ****   MX_TIM1_Init();
+  61:Core/Src/main.c ****   MX_TIM3_Init();
+  62:Core/Src/main.c ****   MX_TIM10_Init();
+  63:Core/Src/main.c ****   MX_USART1_UART_Init();
+  64:Core/Src/main.c ****   MX_USART6_UART_Init();
+  65:Core/Src/main.c **** 
+  66:Core/Src/main.c ****   /* USER CODE BEGIN 2 */
+  67:Core/Src/main.c ****   DWT_Init(168);
+  68:Core/Src/main.c ****   HAL_Delay(800);
+  69:Core/Src/main.c ****   while (BMI088_init(&hspi1) != BMI088_NO_ERROR)
+  70:Core/Src/main.c ****     ;
+  71:Core/Src/main.c ****   CAN_Device_Init();
+  72:Core/Src/main.c ****   Remote_Control_Init(&huart3);
+  73:Core/Src/main.c ****   /* USER CODE END 2 */
+  74:Core/Src/main.c **** 
+  75:Core/Src/main.c ****   MX_FREERTOS_Init();
+  76:Core/Src/main.c ****   osKernelStart();
+  77:Core/Src/main.c **** 
+  78:Core/Src/main.c ****   while (1)
+  79:Core/Src/main.c ****   {
+  80:Core/Src/main.c ****   }
+  81:Core/Src/main.c **** }
+  82:Core/Src/main.c **** 
+  83:Core/Src/main.c **** void SystemClock_Config(void)
+  84:Core/Src/main.c **** {
+  29              		.loc 1 84 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 80
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 3
+
+
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 30B5     		push	{r4, r5, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 12
+  36              		.cfi_offset 4, -12
+  37              		.cfi_offset 5, -8
+  38              		.cfi_offset 14, -4
+  39 0002 95B0     		sub	sp, sp, #84
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 96
+  85:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  42              		.loc 1 85 3 view .LVU1
+  43              		.loc 1 85 22 is_stmt 0 view .LVU2
+  44 0004 3022     		movs	r2, #48
+  45 0006 0021     		movs	r1, #0
+  46 0008 08A8     		add	r0, sp, #32
+  47 000a FFF7FEFF 		bl	memset
+  48              	.LVL0:
+  86:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  49              		.loc 1 86 3 is_stmt 1 view .LVU3
+  50              		.loc 1 86 22 is_stmt 0 view .LVU4
+  51 000e 0024     		movs	r4, #0
+  52 0010 0394     		str	r4, [sp, #12]
+  53 0012 0494     		str	r4, [sp, #16]
+  54 0014 0594     		str	r4, [sp, #20]
+  55 0016 0694     		str	r4, [sp, #24]
+  56 0018 0794     		str	r4, [sp, #28]
+  87:Core/Src/main.c **** 
+  88:Core/Src/main.c ****   __HAL_RCC_PWR_CLK_ENABLE();
+  57              		.loc 1 88 3 is_stmt 1 view .LVU5
+  58              	.LBB2:
+  59              		.loc 1 88 3 view .LVU6
+  60 001a 0194     		str	r4, [sp, #4]
+  61              		.loc 1 88 3 view .LVU7
+  62 001c 1D4B     		ldr	r3, .L3
+  63 001e 1A6C     		ldr	r2, [r3, #64]
+  64 0020 42F08052 		orr	r2, r2, #268435456
+  65 0024 1A64     		str	r2, [r3, #64]
+  66              		.loc 1 88 3 view .LVU8
+  67 0026 1B6C     		ldr	r3, [r3, #64]
+  68 0028 03F08053 		and	r3, r3, #268435456
+  69 002c 0193     		str	r3, [sp, #4]
+  70              		.loc 1 88 3 view .LVU9
+  71 002e 019B     		ldr	r3, [sp, #4]
+  72              	.LBE2:
+  73              		.loc 1 88 3 view .LVU10
+  89:Core/Src/main.c ****   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  74              		.loc 1 89 3 view .LVU11
+  75              	.LBB3:
+  76              		.loc 1 89 3 view .LVU12
+  77 0030 0294     		str	r4, [sp, #8]
+  78              		.loc 1 89 3 view .LVU13
+  79 0032 194B     		ldr	r3, .L3+4
+  80 0034 1A68     		ldr	r2, [r3]
+  81 0036 42F48042 		orr	r2, r2, #16384
+  82 003a 1A60     		str	r2, [r3]
+  83              		.loc 1 89 3 view .LVU14
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 4
+
+
+  84 003c 1B68     		ldr	r3, [r3]
+  85 003e 03F48043 		and	r3, r3, #16384
+  86 0042 0293     		str	r3, [sp, #8]
+  87              		.loc 1 89 3 view .LVU15
+  88 0044 029B     		ldr	r3, [sp, #8]
+  89              	.LBE3:
+  90              		.loc 1 89 3 view .LVU16
+  90:Core/Src/main.c **** 
+  91:Core/Src/main.c ****   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_HSE;
+  91              		.loc 1 91 3 view .LVU17
+  92              		.loc 1 91 36 is_stmt 0 view .LVU18
+  93 0046 0923     		movs	r3, #9
+  94 0048 0893     		str	r3, [sp, #32]
+  92:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  95              		.loc 1 92 3 is_stmt 1 view .LVU19
+  96              		.loc 1 92 30 is_stmt 0 view .LVU20
+  97 004a 4FF48033 		mov	r3, #65536
+  98 004e 0993     		str	r3, [sp, #36]
+  93:Core/Src/main.c ****   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  99              		.loc 1 93 3 is_stmt 1 view .LVU21
+ 100              		.loc 1 93 30 is_stmt 0 view .LVU22
+ 101 0050 0123     		movs	r3, #1
+ 102 0052 0D93     		str	r3, [sp, #52]
+  94:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+ 103              		.loc 1 94 3 is_stmt 1 view .LVU23
+ 104              		.loc 1 94 34 is_stmt 0 view .LVU24
+ 105 0054 0225     		movs	r5, #2
+ 106 0056 0E95     		str	r5, [sp, #56]
+  95:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+ 107              		.loc 1 95 3 is_stmt 1 view .LVU25
+ 108              		.loc 1 95 35 is_stmt 0 view .LVU26
+ 109 0058 4FF48003 		mov	r3, #4194304
+ 110 005c 0F93     		str	r3, [sp, #60]
+  96:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 6;
+ 111              		.loc 1 96 3 is_stmt 1 view .LVU27
+ 112              		.loc 1 96 30 is_stmt 0 view .LVU28
+ 113 005e 0623     		movs	r3, #6
+ 114 0060 1093     		str	r3, [sp, #64]
+  97:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 168;
+ 115              		.loc 1 97 3 is_stmt 1 view .LVU29
+ 116              		.loc 1 97 30 is_stmt 0 view .LVU30
+ 117 0062 A823     		movs	r3, #168
+ 118 0064 1193     		str	r3, [sp, #68]
+  98:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+ 119              		.loc 1 98 3 is_stmt 1 view .LVU31
+ 120              		.loc 1 98 30 is_stmt 0 view .LVU32
+ 121 0066 1295     		str	r5, [sp, #72]
+  99:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 7;
+ 122              		.loc 1 99 3 is_stmt 1 view .LVU33
+ 123              		.loc 1 99 30 is_stmt 0 view .LVU34
+ 124 0068 0723     		movs	r3, #7
+ 125 006a 1393     		str	r3, [sp, #76]
+ 100:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+ 126              		.loc 1 100 3 is_stmt 1 view .LVU35
+ 127              		.loc 1 100 7 is_stmt 0 view .LVU36
+ 128 006c 08A8     		add	r0, sp, #32
+ 129 006e FFF7FEFF 		bl	HAL_RCC_OscConfig
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 5
+
+
+ 130              	.LVL1:
+ 101:Core/Src/main.c ****   {
+ 102:Core/Src/main.c ****     Error_Handler();
+ 131              		.loc 1 102 5 is_stmt 1 view .LVU37
+ 103:Core/Src/main.c ****   }
+ 104:Core/Src/main.c **** 
+ 105:Core/Src/main.c ****   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | R
+ 132              		.loc 1 105 3 view .LVU38
+ 133              		.loc 1 105 31 is_stmt 0 view .LVU39
+ 134 0072 0F23     		movs	r3, #15
+ 135 0074 0393     		str	r3, [sp, #12]
+ 106:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+ 136              		.loc 1 106 3 is_stmt 1 view .LVU40
+ 137              		.loc 1 106 34 is_stmt 0 view .LVU41
+ 138 0076 0495     		str	r5, [sp, #16]
+ 107:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+ 139              		.loc 1 107 3 is_stmt 1 view .LVU42
+ 140              		.loc 1 107 35 is_stmt 0 view .LVU43
+ 141 0078 0594     		str	r4, [sp, #20]
+ 108:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+ 142              		.loc 1 108 3 is_stmt 1 view .LVU44
+ 143              		.loc 1 108 36 is_stmt 0 view .LVU45
+ 144 007a 4FF4A053 		mov	r3, #5120
+ 145 007e 0693     		str	r3, [sp, #24]
+ 109:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+ 146              		.loc 1 109 3 is_stmt 1 view .LVU46
+ 147              		.loc 1 109 36 is_stmt 0 view .LVU47
+ 148 0080 4FF48053 		mov	r3, #4096
+ 149 0084 0793     		str	r3, [sp, #28]
+ 110:Core/Src/main.c **** 
+ 111:Core/Src/main.c ****   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+ 150              		.loc 1 111 3 is_stmt 1 view .LVU48
+ 151              		.loc 1 111 7 is_stmt 0 view .LVU49
+ 152 0086 0521     		movs	r1, #5
+ 153 0088 03A8     		add	r0, sp, #12
+ 154 008a FFF7FEFF 		bl	HAL_RCC_ClockConfig
+ 155              	.LVL2:
+ 112:Core/Src/main.c ****   {
+ 113:Core/Src/main.c ****     Error_Handler();
+ 156              		.loc 1 113 5 is_stmt 1 view .LVU50
+ 114:Core/Src/main.c ****   }
+ 115:Core/Src/main.c **** }
+ 157              		.loc 1 115 1 is_stmt 0 view .LVU51
+ 158 008e 15B0     		add	sp, sp, #84
+ 159              	.LCFI2:
+ 160              		.cfi_def_cfa_offset 12
+ 161              		@ sp needed
+ 162 0090 30BD     		pop	{r4, r5, pc}
+ 163              	.L4:
+ 164 0092 00BF     		.align	2
+ 165              	.L3:
+ 166 0094 00380240 		.word	1073887232
+ 167 0098 00700040 		.word	1073770496
+ 168              		.cfi_endproc
+ 169              	.LFE136:
+ 171              		.section	.text.main,"ax",%progbits
+ 172              		.align	1
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 6
+
+
+ 173              		.global	main
+ 174              		.syntax unified
+ 175              		.thumb
+ 176              		.thumb_func
+ 178              	main:
+ 179              	.LFB135:
+  40:Core/Src/main.c ****   HAL_Init();
+ 180              		.loc 1 40 1 is_stmt 1 view -0
+ 181              		.cfi_startproc
+ 182              		@ Volatile: function does not return.
+ 183              		@ args = 0, pretend = 0, frame = 0
+ 184              		@ frame_needed = 0, uses_anonymous_args = 0
+ 185 0000 08B5     		push	{r3, lr}
+ 186              	.LCFI3:
+ 187              		.cfi_def_cfa_offset 8
+ 188              		.cfi_offset 3, -8
+ 189              		.cfi_offset 14, -4
+  41:Core/Src/main.c ****   SystemClock_Config();
+ 190              		.loc 1 41 3 view .LVU53
+ 191 0002 FFF7FEFF 		bl	HAL_Init
+ 192              	.LVL3:
+  42:Core/Src/main.c **** 
+ 193              		.loc 1 42 3 view .LVU54
+ 194 0006 FFF7FEFF 		bl	SystemClock_Config
+ 195              	.LVL4:
+  45:Core/Src/main.c ****   MX_DMA_Init();
+ 196              		.loc 1 45 3 view .LVU55
+ 197 000a FFF7FEFF 		bl	MX_GPIO_Init
+ 198              	.LVL5:
+  46:Core/Src/main.c ****   MX_ADC1_Init();
+ 199              		.loc 1 46 3 view .LVU56
+ 200 000e FFF7FEFF 		bl	MX_DMA_Init
+ 201              	.LVL6:
+  47:Core/Src/main.c ****   MX_ADC3_Init();
+ 202              		.loc 1 47 3 view .LVU57
+ 203 0012 FFF7FEFF 		bl	MX_ADC1_Init
+ 204              	.LVL7:
+  48:Core/Src/main.c ****   MX_CAN1_Init();
+ 205              		.loc 1 48 3 view .LVU58
+ 206 0016 FFF7FEFF 		bl	MX_ADC3_Init
+ 207              	.LVL8:
+  49:Core/Src/main.c ****   MX_CAN2_Init();
+ 208              		.loc 1 49 3 view .LVU59
+ 209 001a FFF7FEFF 		bl	MX_CAN1_Init
+ 210              	.LVL9:
+  50:Core/Src/main.c ****   MX_I2C1_Init();
+ 211              		.loc 1 50 3 view .LVU60
+ 212 001e FFF7FEFF 		bl	MX_CAN2_Init
+ 213              	.LVL10:
+  51:Core/Src/main.c ****   MX_SPI1_Init();
+ 214              		.loc 1 51 3 view .LVU61
+ 215 0022 FFF7FEFF 		bl	MX_I2C1_Init
+ 216              	.LVL11:
+  52:Core/Src/main.c ****   MX_TIM4_Init();
+ 217              		.loc 1 52 3 view .LVU62
+ 218 0026 FFF7FEFF 		bl	MX_SPI1_Init
+ 219              	.LVL12:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 7
+
+
+  53:Core/Src/main.c ****   MX_TIM5_Init();
+ 220              		.loc 1 53 3 view .LVU63
+ 221 002a FFF7FEFF 		bl	MX_TIM4_Init
+ 222              	.LVL13:
+  54:Core/Src/main.c ****   MX_USART3_UART_Init();
+ 223              		.loc 1 54 3 view .LVU64
+ 224 002e FFF7FEFF 		bl	MX_TIM5_Init
+ 225              	.LVL14:
+  55:Core/Src/main.c ****   MX_TIM8_Init();
+ 226              		.loc 1 55 3 view .LVU65
+ 227 0032 FFF7FEFF 		bl	MX_USART3_UART_Init
+ 228              	.LVL15:
+  56:Core/Src/main.c ****   MX_I2C2_Init();
+ 229              		.loc 1 56 3 view .LVU66
+ 230 0036 FFF7FEFF 		bl	MX_TIM8_Init
+ 231              	.LVL16:
+  57:Core/Src/main.c ****   MX_I2C3_Init();
+ 232              		.loc 1 57 3 view .LVU67
+ 233 003a FFF7FEFF 		bl	MX_I2C2_Init
+ 234              	.LVL17:
+  58:Core/Src/main.c ****   MX_SPI2_Init();
+ 235              		.loc 1 58 3 view .LVU68
+ 236 003e FFF7FEFF 		bl	MX_I2C3_Init
+ 237              	.LVL18:
+  59:Core/Src/main.c ****   MX_TIM1_Init();
+ 238              		.loc 1 59 3 view .LVU69
+ 239 0042 FFF7FEFF 		bl	MX_SPI2_Init
+ 240              	.LVL19:
+  60:Core/Src/main.c ****   MX_TIM3_Init();
+ 241              		.loc 1 60 3 view .LVU70
+ 242 0046 FFF7FEFF 		bl	MX_TIM1_Init
+ 243              	.LVL20:
+  61:Core/Src/main.c ****   MX_TIM10_Init();
+ 244              		.loc 1 61 3 view .LVU71
+ 245 004a FFF7FEFF 		bl	MX_TIM3_Init
+ 246              	.LVL21:
+  62:Core/Src/main.c ****   MX_USART1_UART_Init();
+ 247              		.loc 1 62 3 view .LVU72
+ 248 004e FFF7FEFF 		bl	MX_TIM10_Init
+ 249              	.LVL22:
+  63:Core/Src/main.c ****   MX_USART6_UART_Init();
+ 250              		.loc 1 63 3 view .LVU73
+ 251 0052 FFF7FEFF 		bl	MX_USART1_UART_Init
+ 252              	.LVL23:
+  64:Core/Src/main.c **** 
+ 253              		.loc 1 64 3 view .LVU74
+ 254 0056 FFF7FEFF 		bl	MX_USART6_UART_Init
+ 255              	.LVL24:
+  67:Core/Src/main.c ****   HAL_Delay(800);
+ 256              		.loc 1 67 3 view .LVU75
+ 257 005a A820     		movs	r0, #168
+ 258 005c FFF7FEFF 		bl	DWT_Init
+ 259              	.LVL25:
+  68:Core/Src/main.c ****   while (BMI088_init(&hspi1) != BMI088_NO_ERROR)
+ 260              		.loc 1 68 3 view .LVU76
+ 261 0060 4FF44870 		mov	r0, #800
+ 262 0064 FFF7FEFF 		bl	HAL_Delay
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 8
+
+
+ 263              	.LVL26:
+  69:Core/Src/main.c ****     ;
+ 264              		.loc 1 69 3 view .LVU77
+ 265              	.L6:
+  69:Core/Src/main.c ****     ;
+ 266              		.loc 1 69 30 discriminator 1 view .LVU78
+  69:Core/Src/main.c ****     ;
+ 267              		.loc 1 69 10 is_stmt 0 discriminator 1 view .LVU79
+ 268 0068 0748     		ldr	r0, .L9
+ 269 006a FFF7FEFF 		bl	BMI088_init
+ 270              	.LVL27:
+  69:Core/Src/main.c ****     ;
+ 271              		.loc 1 69 30 discriminator 1 view .LVU80
+ 272 006e 0028     		cmp	r0, #0
+ 273 0070 FAD1     		bne	.L6
+  71:Core/Src/main.c ****   Remote_Control_Init(&huart3);
+ 274              		.loc 1 71 3 is_stmt 1 view .LVU81
+ 275 0072 FFF7FEFF 		bl	CAN_Device_Init
+ 276              	.LVL28:
+  72:Core/Src/main.c ****   /* USER CODE END 2 */
+ 277              		.loc 1 72 3 view .LVU82
+ 278 0076 0548     		ldr	r0, .L9+4
+ 279 0078 FFF7FEFF 		bl	Remote_Control_Init
+ 280              	.LVL29:
+  75:Core/Src/main.c ****   osKernelStart();
+ 281              		.loc 1 75 3 view .LVU83
+ 282 007c FFF7FEFF 		bl	MX_FREERTOS_Init
+ 283              	.LVL30:
+  76:Core/Src/main.c **** 
+ 284              		.loc 1 76 3 view .LVU84
+ 285 0080 FFF7FEFF 		bl	osKernelStart
+ 286              	.LVL31:
+ 287              	.L7:
+  78:Core/Src/main.c ****   {
+ 288              		.loc 1 78 3 view .LVU85
+  80:Core/Src/main.c **** }
+ 289              		.loc 1 80 3 view .LVU86
+  78:Core/Src/main.c ****   {
+ 290              		.loc 1 78 9 view .LVU87
+ 291 0084 FEE7     		b	.L7
+ 292              	.L10:
+ 293 0086 00BF     		.align	2
+ 294              	.L9:
+ 295 0088 00000000 		.word	hspi1
+ 296 008c 00000000 		.word	huart3
+ 297              		.cfi_endproc
+ 298              	.LFE135:
+ 300              		.section	.text.HAL_TIM_PeriodElapsedCallback,"ax",%progbits
+ 301              		.align	1
+ 302              		.global	HAL_TIM_PeriodElapsedCallback
+ 303              		.syntax unified
+ 304              		.thumb
+ 305              		.thumb_func
+ 307              	HAL_TIM_PeriodElapsedCallback:
+ 308              	.LVL32:
+ 309              	.LFB137:
+ 116:Core/Src/main.c **** 
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 9
+
+
+ 117:Core/Src/main.c **** void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+ 118:Core/Src/main.c **** {
+ 310              		.loc 1 118 1 view -0
+ 311              		.cfi_startproc
+ 312              		@ args = 0, pretend = 0, frame = 0
+ 313              		@ frame_needed = 0, uses_anonymous_args = 0
+ 314              		.loc 1 118 1 is_stmt 0 view .LVU89
+ 315 0000 08B5     		push	{r3, lr}
+ 316              	.LCFI4:
+ 317              		.cfi_def_cfa_offset 8
+ 318              		.cfi_offset 3, -8
+ 319              		.cfi_offset 14, -4
+ 119:Core/Src/main.c ****   if (htim->Instance == TIM2)
+ 320              		.loc 1 119 3 is_stmt 1 view .LVU90
+ 321              		.loc 1 119 11 is_stmt 0 view .LVU91
+ 322 0002 0368     		ldr	r3, [r0]
+ 323              		.loc 1 119 6 view .LVU92
+ 324 0004 B3F1804F 		cmp	r3, #1073741824
+ 325 0008 00D0     		beq	.L14
+ 326              	.LVL33:
+ 327              	.L11:
+ 120:Core/Src/main.c ****   {
+ 121:Core/Src/main.c ****     HAL_IncTick();
+ 122:Core/Src/main.c ****   }
+ 123:Core/Src/main.c **** }
+ 328              		.loc 1 123 1 view .LVU93
+ 329 000a 08BD     		pop	{r3, pc}
+ 330              	.LVL34:
+ 331              	.L14:
+ 121:Core/Src/main.c ****   }
+ 332              		.loc 1 121 5 is_stmt 1 view .LVU94
+ 333 000c FFF7FEFF 		bl	HAL_IncTick
+ 334              	.LVL35:
+ 335              		.loc 1 123 1 is_stmt 0 view .LVU95
+ 336 0010 FBE7     		b	.L11
+ 337              		.cfi_endproc
+ 338              	.LFE137:
+ 340              		.section	.text.Error_Handler,"ax",%progbits
+ 341              		.align	1
+ 342              		.global	Error_Handler
+ 343              		.syntax unified
+ 344              		.thumb
+ 345              		.thumb_func
+ 347              	Error_Handler:
+ 348              	.LFB138:
+ 124:Core/Src/main.c **** 
+ 125:Core/Src/main.c **** void Error_Handler(void)
+ 126:Core/Src/main.c **** {
+ 349              		.loc 1 126 1 is_stmt 1 view -0
+ 350              		.cfi_startproc
+ 351              		@ args = 0, pretend = 0, frame = 0
+ 352              		@ frame_needed = 0, uses_anonymous_args = 0
+ 353              		@ link register save eliminated.
+ 127:Core/Src/main.c **** }
+ 354              		.loc 1 127 1 view .LVU97
+ 355 0000 7047     		bx	lr
+ 356              		.cfi_endproc
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 10
+
+
+ 357              	.LFE138:
+ 359              		.global	timeStamp
+ 360              		.section	.bss.timeStamp,"aw",%nobits
+ 361              		.align	2
+ 364              	timeStamp:
+ 365 0000 00000000 		.space	200
+ 365      00000000 
+ 365      00000000 
+ 365      00000000 
+ 365      00000000 
+ 366              		.text
+ 367              	.Letext0:
+ 368              		.file 2 "C:/msys64/mingw64/arm-none-eabi/include/machine/_default_types.h"
+ 369              		.file 3 "C:/msys64/mingw64/arm-none-eabi/include/sys/_stdint.h"
+ 370              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 371              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 372              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h"
+ 373              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h"
+ 374              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 375              		.file 9 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h"
+ 376              		.file 10 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h"
+ 377              		.file 11 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h"
+ 378              		.file 12 "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h"
+ 379              		.file 13 "Core/Inc/spi.h"
+ 380              		.file 14 "Core/Inc/usart.h"
+ 381              		.file 15 "Bsp/BMI088/BMI088driver.h"
+ 382              		.file 16 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 383              		.file 17 "Bsp/MCU/bsp_CAN.h"
+ 384              		.file 18 "Bsp/RemoteControl/remote_control.h"
+ 385              		.file 19 "Core/Inc/bsp_dwt.h"
+ 386              		.file 20 "Core/Inc/tim.h"
+ 387              		.file 21 "Core/Inc/i2c.h"
+ 388              		.file 22 "Core/Inc/can.h"
+ 389              		.file 23 "Core/Inc/adc.h"
+ 390              		.file 24 "Core/Inc/dma.h"
+ 391              		.file 25 "Core/Inc/gpio.h"
+ 392              		.file 26 "<built-in>"
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s 			page 11
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:21     .text.SystemClock_Config:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:27     .text.SystemClock_Config:00000000 SystemClock_Config
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:166    .text.SystemClock_Config:00000094 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:172    .text.main:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:178    .text.main:00000000 main
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:295    .text.main:00000088 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:301    .text.HAL_TIM_PeriodElapsedCallback:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:307    .text.HAL_TIM_PeriodElapsedCallback:00000000 HAL_TIM_PeriodElapsedCallback
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:341    .text.Error_Handler:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:347    .text.Error_Handler:00000000 Error_Handler
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:364    .bss.timeStamp:00000000 timeStamp
+C:\Users\LENOVO\AppData\Local\Temp\ccLgkbnS.s:361    .bss.timeStamp:00000000 $d
+
+UNDEFINED SYMBOLS
+memset
+HAL_RCC_OscConfig
+HAL_RCC_ClockConfig
+HAL_Init
+MX_GPIO_Init
+MX_DMA_Init
+MX_ADC1_Init
+MX_ADC3_Init
+MX_CAN1_Init
+MX_CAN2_Init
+MX_I2C1_Init
+MX_SPI1_Init
+MX_TIM4_Init
+MX_TIM5_Init
+MX_USART3_UART_Init
+MX_TIM8_Init
+MX_I2C2_Init
+MX_I2C3_Init
+MX_SPI2_Init
+MX_TIM1_Init
+MX_TIM3_Init
+MX_TIM10_Init
+MX_USART1_UART_Init
+MX_USART6_UART_Init
+DWT_Init
+HAL_Delay
+BMI088_init
+CAN_Device_Init
+Remote_Control_Init
+MX_FREERTOS_Init
+osKernelStart
+hspi1
+huart3
+HAL_IncTick

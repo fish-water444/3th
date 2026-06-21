@@ -1,0 +1,304 @@
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"ins_task.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Application/INSTask/ins_task.c"
+  20              		.section	.text.INS_Init,"ax",%progbits
+  21              		.align	1
+  22              		.global	INS_Init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	INS_Init:
+  28              	.LFB168:
+   1:Application/INSTask/ins_task.c **** /**
+   2:Application/INSTask/ins_task.c ****  ******************************************************************************
+   3:Application/INSTask/ins_task.c ****  * @file    ins_task.c
+   4:Application/INSTask/ins_task.c ****  * @brief   INS任务 — 从百零一移植(简化版，无PWM温控)
+   5:Application/INSTask/ins_task.c ****  ******************************************************************************
+   6:Application/INSTask/ins_task.c ****  */
+   7:Application/INSTask/ins_task.c **** #include "ins_task.h"
+   8:Application/INSTask/ins_task.c **** #include "QuaternionAHRS.h"
+   9:Application/INSTask/ins_task.c **** #include "BMI088driver.h"
+  10:Application/INSTask/ins_task.c **** #include "bsp_dwt.h"
+  11:Application/INSTask/ins_task.c **** #include "user_lib.h"
+  12:Application/INSTask/ins_task.c **** #include "GravityEstimateKF.h"
+  13:Application/INSTask/ins_task.c **** #include "cmsis_os.h"
+  14:Application/INSTask/ins_task.c **** 
+  15:Application/INSTask/ins_task.c **** #define USER_GetTick xTaskGetTickCount
+  16:Application/INSTask/ins_task.c **** 
+  17:Application/INSTask/ins_task.c **** uint32_t INS_DWT_Count = 0;
+  18:Application/INSTask/ins_task.c **** static float dt = 0, t = 0;
+  19:Application/INSTask/ins_task.c **** 
+  20:Application/INSTask/ins_task.c **** void INS_Init(void)
+  21:Application/INSTask/ins_task.c **** {
+  29              		.loc 1 21 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 08B5     		push	{r3, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 3, -8
+  37              		.cfi_offset 14, -4
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s 			page 2
+
+
+  22:Application/INSTask/ins_task.c ****     // 重力估计卡尔曼滤波器初始化
+  23:Application/INSTask/ins_task.c ****     gEstimateKF_Init(0.01, 100000);
+  38              		.loc 1 23 5 view .LVU1
+  39 0002 DFED030A 		vldr.32	s1, .L3
+  40 0006 9FED030A 		vldr.32	s0, .L3+4
+  41 000a FFF7FEFF 		bl	gEstimateKF_Init
+  42              	.LVL0:
+  24:Application/INSTask/ins_task.c **** }
+  43              		.loc 1 24 1 is_stmt 0 view .LVU2
+  44 000e 08BD     		pop	{r3, pc}
+  45              	.L4:
+  46              		.align	2
+  47              	.L3:
+  48 0010 0050C347 		.word	1203982336
+  49 0014 0AD7233C 		.word	1008981770
+  50              		.cfi_endproc
+  51              	.LFE168:
+  53              		.section	.text.INS_Task,"ax",%progbits
+  54              		.align	1
+  55              		.global	INS_Task
+  56              		.syntax unified
+  57              		.thumb
+  58              		.thumb_func
+  60              	INS_Task:
+  61              	.LFB169:
+  25:Application/INSTask/ins_task.c **** 
+  26:Application/INSTask/ins_task.c **** void INS_Task(void)
+  27:Application/INSTask/ins_task.c **** {
+  62              		.loc 1 27 1 is_stmt 1 view -0
+  63              		.cfi_startproc
+  64              		@ args = 0, pretend = 0, frame = 0
+  65              		@ frame_needed = 0, uses_anonymous_args = 0
+  66 0000 38B5     		push	{r3, r4, r5, lr}
+  67              	.LCFI1:
+  68              		.cfi_def_cfa_offset 16
+  69              		.cfi_offset 3, -16
+  70              		.cfi_offset 4, -12
+  71              		.cfi_offset 5, -8
+  72              		.cfi_offset 14, -4
+  28:Application/INSTask/ins_task.c ****     dt = DWT_GetDeltaT(&INS_DWT_Count);
+  73              		.loc 1 28 5 view .LVU4
+  74              		.loc 1 28 10 is_stmt 0 view .LVU5
+  75 0002 2E48     		ldr	r0, .L9
+  76 0004 FFF7FEFF 		bl	DWT_GetDeltaT
+  77              	.LVL1:
+  78              		.loc 1 28 8 discriminator 1 view .LVU6
+  79 0008 2D4B     		ldr	r3, .L9+4
+  80 000a 83ED000A 		vstr.32	s0, [r3]
+  29:Application/INSTask/ins_task.c ****     t += dt;
+  81              		.loc 1 29 5 is_stmt 1 view .LVU7
+  82              		.loc 1 29 7 is_stmt 0 view .LVU8
+  83 000e 2D4B     		ldr	r3, .L9+8
+  84 0010 D3ED007A 		vldr.32	s15, [r3]
+  85 0014 77EE807A 		vadd.f32	s15, s15, s0
+  86 0018 C3ED007A 		vstr.32	s15, [r3]
+  30:Application/INSTask/ins_task.c **** 
+  31:Application/INSTask/ins_task.c ****     // 读取BMI088 IMU数据
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s 			page 3
+
+
+  32:Application/INSTask/ins_task.c ****     BMI088_Read(&BMI088);
+  87              		.loc 1 32 5 is_stmt 1 view .LVU9
+  88 001c 2A48     		ldr	r0, .L9+12
+  89 001e FFF7FEFF 		bl	BMI088_Read
+  90              	.LVL2:
+  33:Application/INSTask/ins_task.c **** 
+  34:Application/INSTask/ins_task.c ****     for (uint8_t i = 0; i < 3; i++)
+  91              		.loc 1 34 5 view .LVU10
+  92              	.LBB2:
+  93              		.loc 1 34 10 view .LVU11
+  94              		.loc 1 34 18 is_stmt 0 view .LVU12
+  95 0022 0023     		movs	r3, #0
+  96              		.loc 1 34 5 view .LVU13
+  97 0024 12E0     		b	.L6
+  98              	.LVL3:
+  99              	.L7:
+  35:Application/INSTask/ins_task.c ****     {
+  36:Application/INSTask/ins_task.c ****         AHRS.Accel[i] = BMI088.Accel[i];
+ 100              		.loc 1 36 9 is_stmt 1 view .LVU14
+ 101              		.loc 1 36 37 is_stmt 0 view .LVU15
+ 102 0026 2849     		ldr	r1, .L9+12
+ 103 0028 01EB8302 		add	r2, r1, r3, lsl #2
+ 104 002c 1468     		ldr	r4, [r2]	@ float
+ 105              		.loc 1 36 23 view .LVU16
+ 106 002e 274A     		ldr	r2, .L9+16
+ 107 0030 181D     		adds	r0, r3, #4
+ 108 0032 02EB8000 		add	r0, r2, r0, lsl #2
+ 109 0036 0460     		str	r4, [r0]	@ float
+  37:Application/INSTask/ins_task.c ****         AHRS.Gyro[i] = BMI088.Gyro[i];
+ 110              		.loc 1 37 9 is_stmt 1 view .LVU17
+ 111              		.loc 1 37 35 is_stmt 0 view .LVU18
+ 112 0038 981C     		adds	r0, r3, #2
+ 113 003a 01EB8001 		add	r1, r1, r0, lsl #2
+ 114 003e 4968     		ldr	r1, [r1, #4]	@ float
+ 115              		.loc 1 37 22 view .LVU19
+ 116 0040 981D     		adds	r0, r3, #6
+ 117 0042 02EB8002 		add	r2, r2, r0, lsl #2
+ 118 0046 5160     		str	r1, [r2, #4]	@ float
+  34:Application/INSTask/ins_task.c ****     {
+ 119              		.loc 1 34 33 is_stmt 1 discriminator 3 view .LVU20
+ 120 0048 0133     		adds	r3, r3, #1
+ 121              	.LVL4:
+  34:Application/INSTask/ins_task.c ****     {
+ 122              		.loc 1 34 33 is_stmt 0 discriminator 3 view .LVU21
+ 123 004a DBB2     		uxtb	r3, r3
+ 124              	.LVL5:
+ 125              	.L6:
+  34:Application/INSTask/ins_task.c ****     {
+ 126              		.loc 1 34 27 is_stmt 1 discriminator 1 view .LVU22
+ 127 004c 022B     		cmp	r3, #2
+ 128 004e EAD9     		bls	.L7
+ 129              	.LBE2:
+  38:Application/INSTask/ins_task.c ****     }
+  39:Application/INSTask/ins_task.c **** 
+  40:Application/INSTask/ins_task.c ****     // 重力估计 + AHRS姿态解算
+  41:Application/INSTask/ins_task.c ****     gEstimateKF_Update(BMI088.Gyro[X], BMI088.Gyro[Y], BMI088.Gyro[Z],
+ 130              		.loc 1 41 5 view .LVU23
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s 			page 4
+
+
+ 131 0050 1B4D     		ldr	r5, .L9+4
+ 132 0052 1D4C     		ldr	r4, .L9+12
+ 133 0054 95ED003A 		vldr.32	s6, [r5]
+ 134 0058 D4ED022A 		vldr.32	s5, [r4, #8]
+ 135 005c 94ED012A 		vldr.32	s4, [r4, #4]
+ 136 0060 D4ED001A 		vldr.32	s3, [r4]
+ 137 0064 94ED051A 		vldr.32	s2, [r4, #20]
+ 138 0068 D4ED040A 		vldr.32	s1, [r4, #16]
+ 139 006c 94ED030A 		vldr.32	s0, [r4, #12]
+ 140 0070 FFF7FEFF 		bl	gEstimateKF_Update
+ 141              	.LVL6:
+  42:Application/INSTask/ins_task.c ****                        BMI088.Accel[X], BMI088.Accel[Y], BMI088.Accel[Z], dt);
+  43:Application/INSTask/ins_task.c ****     Quaternion_AHRS_UpdateIMU(BMI088.Gyro[X], BMI088.Gyro[Y], BMI088.Gyro[Z],
+ 142              		.loc 1 43 5 view .LVU24
+ 143 0074 164B     		ldr	r3, .L9+20
+ 144 0076 95ED003A 		vldr.32	s6, [r5]
+ 145 007a D3ED022A 		vldr.32	s5, [r3, #8]
+ 146 007e 93ED012A 		vldr.32	s4, [r3, #4]
+ 147 0082 D3ED001A 		vldr.32	s3, [r3]
+ 148 0086 94ED051A 		vldr.32	s2, [r4, #20]
+ 149 008a D4ED040A 		vldr.32	s1, [r4, #16]
+ 150 008e 94ED030A 		vldr.32	s0, [r4, #12]
+ 151 0092 FFF7FEFF 		bl	Quaternion_AHRS_UpdateIMU
+ 152              	.LVL7:
+  44:Application/INSTask/ins_task.c ****                                gVec[X], gVec[Y], gVec[Z], dt);
+  45:Application/INSTask/ins_task.c ****     InsertQuaternionFrame(&QuaternionBuffer, AHRS.q, USER_GetTick() / 1000.0f);
+ 153              		.loc 1 45 5 view .LVU25
+ 154              		.loc 1 45 54 is_stmt 0 view .LVU26
+ 155 0096 FFF7FEFF 		bl	xTaskGetTickCount
+ 156              	.LVL8:
+ 157 009a 07EE900A 		vmov	s15, r0	@ int
+ 158              		.loc 1 45 5 discriminator 1 view .LVU27
+ 159 009e F8EE677A 		vcvt.f32.u32	s15, s15
+ 160 00a2 0A4C     		ldr	r4, .L9+16
+ 161 00a4 9FED0B0A 		vldr.32	s0, .L9+24
+ 162 00a8 87EE800A 		vdiv.f32	s0, s15, s0
+ 163 00ac 2146     		mov	r1, r4
+ 164 00ae 0A48     		ldr	r0, .L9+28
+ 165 00b0 FFF7FEFF 		bl	InsertQuaternionFrame
+ 166              	.LVL9:
+  46:Application/INSTask/ins_task.c **** 
+  47:Application/INSTask/ins_task.c ****     // 计算欧拉角 (AHRS.Yaw, AHRS.YawTotalAngle)
+  48:Application/INSTask/ins_task.c ****     Get_EulerAngle(AHRS.q);
+ 167              		.loc 1 48 5 is_stmt 1 view .LVU28
+ 168 00b4 2046     		mov	r0, r4
+ 169 00b6 FFF7FEFF 		bl	Get_EulerAngle
+ 170              	.LVL10:
+  49:Application/INSTask/ins_task.c **** }
+ 171              		.loc 1 49 1 is_stmt 0 view .LVU29
+ 172 00ba 38BD     		pop	{r3, r4, r5, pc}
+ 173              	.L10:
+ 174              		.align	2
+ 175              	.L9:
+ 176 00bc 00000000 		.word	INS_DWT_Count
+ 177 00c0 00000000 		.word	dt
+ 178 00c4 00000000 		.word	t
+ 179 00c8 00000000 		.word	BMI088
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s 			page 5
+
+
+ 180 00cc 00000000 		.word	AHRS
+ 181 00d0 00000000 		.word	gVec
+ 182 00d4 00007A44 		.word	1148846080
+ 183 00d8 00000000 		.word	QuaternionBuffer
+ 184              		.cfi_endproc
+ 185              	.LFE169:
+ 187              		.section	.bss.t,"aw",%nobits
+ 188              		.align	2
+ 191              	t:
+ 192 0000 00000000 		.space	4
+ 193              		.section	.bss.dt,"aw",%nobits
+ 194              		.align	2
+ 197              	dt:
+ 198 0000 00000000 		.space	4
+ 199              		.global	INS_DWT_Count
+ 200              		.section	.bss.INS_DWT_Count,"aw",%nobits
+ 201              		.align	2
+ 204              	INS_DWT_Count:
+ 205 0000 00000000 		.space	4
+ 206              		.text
+ 207              	.Letext0:
+ 208              		.file 2 "C:/msys64/mingw64/arm-none-eabi/include/machine/_default_types.h"
+ 209              		.file 3 "C:/msys64/mingw64/arm-none-eabi/include/sys/_stdint.h"
+ 210              		.file 4 "Application/INSTask/QuaternionAHRS.h"
+ 211              		.file 5 "Bsp/BMI088/BMI088driver.h"
+ 212              		.file 6 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 213              		.file 7 "Application/INSTask/GravityEstimateKF.h"
+ 214              		.file 8 "Application/INSTask/ins_task.h"
+ 215              		.file 9 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ 216              		.file 10 "Core/Inc/bsp_dwt.h"
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s 			page 6
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 ins_task.c
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:21     .text.INS_Init:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:27     .text.INS_Init:00000000 INS_Init
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:48     .text.INS_Init:00000010 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:54     .text.INS_Task:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:60     .text.INS_Task:00000000 INS_Task
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:176    .text.INS_Task:000000bc $d
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:204    .bss.INS_DWT_Count:00000000 INS_DWT_Count
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:197    .bss.dt:00000000 dt
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:191    .bss.t:00000000 t
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:188    .bss.t:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:194    .bss.dt:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccfQsy2o.s:201    .bss.INS_DWT_Count:00000000 $d
+
+UNDEFINED SYMBOLS
+gEstimateKF_Init
+DWT_GetDeltaT
+BMI088_Read
+gEstimateKF_Update
+Quaternion_AHRS_UpdateIMU
+xTaskGetTickCount
+InsertQuaternionFrame
+Get_EulerAngle
+BMI088
+AHRS
+gVec
+QuaternionBuffer

@@ -1,0 +1,412 @@
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"bsp_adc.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Bsp/MCU/bsp_adc.c"
+  20              		.section	.text.adcx_get_chx_value,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	adcx_get_chx_value:
+  27              	.LVL0:
+  28              	.LFB130:
+   1:Bsp/MCU/bsp_adc.c **** #include "bsp_adc.h"
+   2:Bsp/MCU/bsp_adc.c **** #include "main.h"
+   3:Bsp/MCU/bsp_adc.c **** extern ADC_HandleTypeDef hadc1;
+   4:Bsp/MCU/bsp_adc.c **** extern ADC_HandleTypeDef hadc3;
+   5:Bsp/MCU/bsp_adc.c **** 
+   6:Bsp/MCU/bsp_adc.c **** volatile float voltage_vrefint_proportion = 8.0586080586080586080586080586081e-4f;
+   7:Bsp/MCU/bsp_adc.c **** 
+   8:Bsp/MCU/bsp_adc.c **** static uint16_t adcx_get_chx_value(ADC_HandleTypeDef *ADCx, uint32_t ch)
+   9:Bsp/MCU/bsp_adc.c **** {
+  29              		.loc 1 9 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 9 1 is_stmt 0 view .LVU1
+  34 0000 10B5     		push	{r4, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 8
+  37              		.cfi_offset 4, -8
+  38              		.cfi_offset 14, -4
+  39 0002 0446     		mov	r4, r0
+  10:Bsp/MCU/bsp_adc.c ****     static ADC_ChannelConfTypeDef sConfig = {0};
+  40              		.loc 1 10 5 is_stmt 1 view .LVU2
+  11:Bsp/MCU/bsp_adc.c ****     sConfig.Channel = ch;
+  41              		.loc 1 11 5 view .LVU3
+  42              		.loc 1 11 21 is_stmt 0 view .LVU4
+  43 0004 0C4B     		ldr	r3, .L5
+  44 0006 1960     		str	r1, [r3]
+  12:Bsp/MCU/bsp_adc.c ****     sConfig.Rank = 1;
+  45              		.loc 1 12 5 is_stmt 1 view .LVU5
+  46              		.loc 1 12 18 is_stmt 0 view .LVU6
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s 			page 2
+
+
+  47 0008 0122     		movs	r2, #1
+  48 000a 5A60     		str	r2, [r3, #4]
+  13:Bsp/MCU/bsp_adc.c ****     sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES; // ADC_SAMPLETIME_3CYCLES;
+  49              		.loc 1 13 5 is_stmt 1 view .LVU7
+  50              		.loc 1 13 26 is_stmt 0 view .LVU8
+  51 000c 0022     		movs	r2, #0
+  52 000e 9A60     		str	r2, [r3, #8]
+  14:Bsp/MCU/bsp_adc.c **** 
+  15:Bsp/MCU/bsp_adc.c ****     if (HAL_ADC_ConfigChannel(ADCx, &sConfig) != HAL_OK)
+  53              		.loc 1 15 5 is_stmt 1 view .LVU9
+  54              		.loc 1 15 9 is_stmt 0 view .LVU10
+  55 0010 1946     		mov	r1, r3
+  56              	.LVL1:
+  57              		.loc 1 15 9 view .LVU11
+  58 0012 FFF7FEFF 		bl	HAL_ADC_ConfigChannel
+  59              	.LVL2:
+  60              		.loc 1 15 8 discriminator 1 view .LVU12
+  61 0016 58B9     		cbnz	r0, .L4
+  62              	.L2:
+  16:Bsp/MCU/bsp_adc.c ****     {
+  17:Bsp/MCU/bsp_adc.c ****         Error_Handler();
+  18:Bsp/MCU/bsp_adc.c ****     }
+  19:Bsp/MCU/bsp_adc.c **** 
+  20:Bsp/MCU/bsp_adc.c ****     HAL_ADC_Start(ADCx);
+  63              		.loc 1 20 5 is_stmt 1 view .LVU13
+  64 0018 2046     		mov	r0, r4
+  65 001a FFF7FEFF 		bl	HAL_ADC_Start
+  66              	.LVL3:
+  21:Bsp/MCU/bsp_adc.c **** 
+  22:Bsp/MCU/bsp_adc.c ****     HAL_ADC_PollForConversion(ADCx, 10);
+  67              		.loc 1 22 5 view .LVU14
+  68 001e 0A21     		movs	r1, #10
+  69 0020 2046     		mov	r0, r4
+  70 0022 FFF7FEFF 		bl	HAL_ADC_PollForConversion
+  71              	.LVL4:
+  23:Bsp/MCU/bsp_adc.c ****     return (uint16_t)HAL_ADC_GetValue(ADCx);
+  72              		.loc 1 23 5 view .LVU15
+  73              		.loc 1 23 22 is_stmt 0 view .LVU16
+  74 0026 2046     		mov	r0, r4
+  75 0028 FFF7FEFF 		bl	HAL_ADC_GetValue
+  76              	.LVL5:
+  24:Bsp/MCU/bsp_adc.c **** }
+  77              		.loc 1 24 1 view .LVU17
+  78 002c 80B2     		uxth	r0, r0
+  79 002e 10BD     		pop	{r4, pc}
+  80              	.LVL6:
+  81              	.L4:
+  17:Bsp/MCU/bsp_adc.c ****     }
+  82              		.loc 1 17 9 is_stmt 1 view .LVU18
+  83 0030 FFF7FEFF 		bl	Error_Handler
+  84              	.LVL7:
+  85 0034 F0E7     		b	.L2
+  86              	.L6:
+  87 0036 00BF     		.align	2
+  88              	.L5:
+  89 0038 00000000 		.word	sConfig.0
+  90              		.cfi_endproc
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s 			page 3
+
+
+  91              	.LFE130:
+  93              		.section	.text.init_vrefint_reciprocal,"ax",%progbits
+  94              		.align	1
+  95              		.global	init_vrefint_reciprocal
+  96              		.syntax unified
+  97              		.thumb
+  98              		.thumb_func
+ 100              	init_vrefint_reciprocal:
+ 101              	.LFB131:
+  25:Bsp/MCU/bsp_adc.c **** void init_vrefint_reciprocal(void)
+  26:Bsp/MCU/bsp_adc.c **** {
+ 102              		.loc 1 26 1 view -0
+ 103              		.cfi_startproc
+ 104              		@ args = 0, pretend = 0, frame = 0
+ 105              		@ frame_needed = 0, uses_anonymous_args = 0
+ 106 0000 38B5     		push	{r3, r4, r5, lr}
+ 107              	.LCFI1:
+ 108              		.cfi_def_cfa_offset 16
+ 109              		.cfi_offset 3, -16
+ 110              		.cfi_offset 4, -12
+ 111              		.cfi_offset 5, -8
+ 112              		.cfi_offset 14, -4
+  27:Bsp/MCU/bsp_adc.c ****     uint8_t i = 0;
+ 113              		.loc 1 27 5 view .LVU20
+ 114              	.LVL8:
+  28:Bsp/MCU/bsp_adc.c ****     uint32_t total_adc = 0;
+ 115              		.loc 1 28 5 view .LVU21
+  29:Bsp/MCU/bsp_adc.c ****     for (i = 0; i < 200; i++)
+ 116              		.loc 1 29 5 view .LVU22
+  28:Bsp/MCU/bsp_adc.c ****     uint32_t total_adc = 0;
+ 117              		.loc 1 28 14 is_stmt 0 view .LVU23
+ 118 0002 0025     		movs	r5, #0
+ 119              		.loc 1 29 12 view .LVU24
+ 120 0004 2C46     		mov	r4, r5
+ 121              		.loc 1 29 5 view .LVU25
+ 122 0006 06E0     		b	.L8
+ 123              	.LVL9:
+ 124              	.L9:
+  30:Bsp/MCU/bsp_adc.c ****     {
+  31:Bsp/MCU/bsp_adc.c ****         total_adc += adcx_get_chx_value(&hadc1, ADC_CHANNEL_VREFINT);
+ 125              		.loc 1 31 9 is_stmt 1 view .LVU26
+ 126              		.loc 1 31 22 is_stmt 0 view .LVU27
+ 127 0008 1121     		movs	r1, #17
+ 128 000a 0A48     		ldr	r0, .L11
+ 129 000c FFF7FEFF 		bl	adcx_get_chx_value
+ 130              	.LVL10:
+ 131              		.loc 1 31 19 discriminator 1 view .LVU28
+ 132 0010 0544     		add	r5, r5, r0
+ 133              	.LVL11:
+  29:Bsp/MCU/bsp_adc.c ****     for (i = 0; i < 200; i++)
+ 134              		.loc 1 29 27 is_stmt 1 discriminator 3 view .LVU29
+ 135 0012 0134     		adds	r4, r4, #1
+ 136              	.LVL12:
+  29:Bsp/MCU/bsp_adc.c ****     for (i = 0; i < 200; i++)
+ 137              		.loc 1 29 27 is_stmt 0 discriminator 3 view .LVU30
+ 138 0014 E4B2     		uxtb	r4, r4
+ 139              	.LVL13:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s 			page 4
+
+
+ 140              	.L8:
+  29:Bsp/MCU/bsp_adc.c ****     for (i = 0; i < 200; i++)
+ 141              		.loc 1 29 19 is_stmt 1 discriminator 1 view .LVU31
+ 142 0016 C72C     		cmp	r4, #199
+ 143 0018 F6D9     		bls	.L9
+  32:Bsp/MCU/bsp_adc.c ****     }
+  33:Bsp/MCU/bsp_adc.c **** 
+  34:Bsp/MCU/bsp_adc.c ****     voltage_vrefint_proportion = 200 * 1.2f / total_adc;
+ 144              		.loc 1 34 5 view .LVU32
+ 145              		.loc 1 34 45 is_stmt 0 view .LVU33
+ 146 001a 07EE905A 		vmov	s15, r5	@ int
+ 147 001e F8EE677A 		vcvt.f32.u32	s15, s15
+ 148 0022 DFED056A 		vldr.32	s13, .L11+4
+ 149 0026 86EEA77A 		vdiv.f32	s14, s13, s15
+ 150              		.loc 1 34 32 view .LVU34
+ 151 002a 044B     		ldr	r3, .L11+8
+ 152 002c 83ED007A 		vstr.32	s14, [r3]
+  35:Bsp/MCU/bsp_adc.c **** }
+ 153              		.loc 1 35 1 view .LVU35
+ 154 0030 38BD     		pop	{r3, r4, r5, pc}
+ 155              	.LVL14:
+ 156              	.L12:
+ 157              		.loc 1 35 1 view .LVU36
+ 158 0032 00BF     		.align	2
+ 159              	.L11:
+ 160 0034 00000000 		.word	hadc1
+ 161 0038 01007043 		.word	1131413505
+ 162 003c 00000000 		.word	voltage_vrefint_proportion
+ 163              		.cfi_endproc
+ 164              	.LFE131:
+ 166              		.section	.text.get_temprate,"ax",%progbits
+ 167              		.align	1
+ 168              		.global	get_temprate
+ 169              		.syntax unified
+ 170              		.thumb
+ 171              		.thumb_func
+ 173              	get_temprate:
+ 174              	.LFB132:
+  36:Bsp/MCU/bsp_adc.c **** float get_temprate(void)
+  37:Bsp/MCU/bsp_adc.c **** {
+ 175              		.loc 1 37 1 is_stmt 1 view -0
+ 176              		.cfi_startproc
+ 177              		@ args = 0, pretend = 0, frame = 0
+ 178              		@ frame_needed = 0, uses_anonymous_args = 0
+ 179 0000 08B5     		push	{r3, lr}
+ 180              	.LCFI2:
+ 181              		.cfi_def_cfa_offset 8
+ 182              		.cfi_offset 3, -8
+ 183              		.cfi_offset 14, -4
+  38:Bsp/MCU/bsp_adc.c ****     uint16_t adcx = 0;
+ 184              		.loc 1 38 5 view .LVU38
+ 185              	.LVL15:
+  39:Bsp/MCU/bsp_adc.c ****     float temperate;
+ 186              		.loc 1 39 5 view .LVU39
+  40:Bsp/MCU/bsp_adc.c **** 
+  41:Bsp/MCU/bsp_adc.c ****     adcx = adcx_get_chx_value(&hadc1, ADC_CHANNEL_TEMPSENSOR);
+ 187              		.loc 1 41 5 view .LVU40
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s 			page 5
+
+
+ 188              		.loc 1 41 12 is_stmt 0 view .LVU41
+ 189 0002 1021     		movs	r1, #16
+ 190 0004 0C48     		ldr	r0, .L15
+ 191 0006 FFF7FEFF 		bl	adcx_get_chx_value
+ 192              	.LVL16:
+ 193 000a 07EE900A 		vmov	s15, r0	@ int
+ 194              	.LVL17:
+  42:Bsp/MCU/bsp_adc.c ****     temperate = (float)adcx * voltage_vrefint_proportion;
+ 195              		.loc 1 42 5 is_stmt 1 view .LVU42
+ 196              		.loc 1 42 17 is_stmt 0 view .LVU43
+ 197 000e F8EE677A 		vcvt.f32.u32	s15, s15
+ 198              	.LVL18:
+ 199              		.loc 1 42 29 view .LVU44
+ 200 0012 0A4B     		ldr	r3, .L15+4
+ 201 0014 93ED007A 		vldr.32	s14, [r3]
+ 202              		.loc 1 42 15 view .LVU45
+ 203 0018 67EE877A 		vmul.f32	s15, s15, s14
+ 204              	.LVL19:
+  43:Bsp/MCU/bsp_adc.c ****     temperate = (temperate - 0.76f) * 400.0f + 25.0f;
+ 205              		.loc 1 43 5 is_stmt 1 view .LVU46
+ 206              		.loc 1 43 28 is_stmt 0 view .LVU47
+ 207 001c 9FED087A 		vldr.32	s14, .L15+8
+ 208 0020 77EEC77A 		vsub.f32	s15, s15, s14
+ 209              	.LVL20:
+ 210              		.loc 1 43 37 view .LVU48
+ 211 0024 9FED077A 		vldr.32	s14, .L15+12
+ 212 0028 67EE877A 		vmul.f32	s15, s15, s14
+ 213              	.LVL21:
+  44:Bsp/MCU/bsp_adc.c **** 
+  45:Bsp/MCU/bsp_adc.c ****     return temperate;
+ 214              		.loc 1 45 5 is_stmt 1 view .LVU49
+  46:Bsp/MCU/bsp_adc.c **** }
+ 215              		.loc 1 46 1 is_stmt 0 view .LVU50
+ 216 002c B3EE090A 		vmov.f32	s0, #2.5e+1
+ 217 0030 37EE800A 		vadd.f32	s0, s15, s0
+ 218              	.LVL22:
+ 219              		.loc 1 46 1 view .LVU51
+ 220 0034 08BD     		pop	{r3, pc}
+ 221              	.L16:
+ 222 0036 00BF     		.align	2
+ 223              	.L15:
+ 224 0038 00000000 		.word	hadc1
+ 225 003c 00000000 		.word	voltage_vrefint_proportion
+ 226 0040 5C8F423F 		.word	1061326684
+ 227 0044 0000C843 		.word	1137180672
+ 228              		.cfi_endproc
+ 229              	.LFE132:
+ 231              		.section	.text.get_battery_voltage,"ax",%progbits
+ 232              		.align	1
+ 233              		.global	get_battery_voltage
+ 234              		.syntax unified
+ 235              		.thumb
+ 236              		.thumb_func
+ 238              	get_battery_voltage:
+ 239              	.LFB133:
+  47:Bsp/MCU/bsp_adc.c **** 
+  48:Bsp/MCU/bsp_adc.c **** float get_battery_voltage(void)
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s 			page 6
+
+
+  49:Bsp/MCU/bsp_adc.c **** {
+ 240              		.loc 1 49 1 is_stmt 1 view -0
+ 241              		.cfi_startproc
+ 242              		@ args = 0, pretend = 0, frame = 0
+ 243              		@ frame_needed = 0, uses_anonymous_args = 0
+ 244 0000 08B5     		push	{r3, lr}
+ 245              	.LCFI3:
+ 246              		.cfi_def_cfa_offset 8
+ 247              		.cfi_offset 3, -8
+ 248              		.cfi_offset 14, -4
+  50:Bsp/MCU/bsp_adc.c ****     float voltage;
+ 249              		.loc 1 50 5 view .LVU53
+  51:Bsp/MCU/bsp_adc.c ****     uint16_t adcx = 0;
+ 250              		.loc 1 51 5 view .LVU54
+ 251              	.LVL23:
+  52:Bsp/MCU/bsp_adc.c **** 
+  53:Bsp/MCU/bsp_adc.c ****     adcx = adcx_get_chx_value(&hadc3, ADC_CHANNEL_8);
+ 252              		.loc 1 53 5 view .LVU55
+ 253              		.loc 1 53 12 is_stmt 0 view .LVU56
+ 254 0002 0821     		movs	r1, #8
+ 255 0004 0848     		ldr	r0, .L19
+ 256 0006 FFF7FEFF 		bl	adcx_get_chx_value
+ 257              	.LVL24:
+ 258 000a 07EE900A 		vmov	s15, r0	@ int
+ 259              	.LVL25:
+  54:Bsp/MCU/bsp_adc.c ****     //(22K ¦¸ + 200K ¦¸)  / 22K ¦¸ = 10.090909090909090909090909090909
+  55:Bsp/MCU/bsp_adc.c ****     voltage = (float)adcx * voltage_vrefint_proportion * 10.090909090909090909090909090909f;
+ 260              		.loc 1 55 5 is_stmt 1 view .LVU57
+ 261              		.loc 1 55 15 is_stmt 0 view .LVU58
+ 262 000e F8EE677A 		vcvt.f32.u32	s15, s15
+ 263              	.LVL26:
+ 264              		.loc 1 55 27 view .LVU59
+ 265 0012 064B     		ldr	r3, .L19+4
+ 266 0014 93ED007A 		vldr.32	s14, [r3]
+ 267 0018 67EE877A 		vmul.f32	s15, s15, s14
+ 268              	.LVL27:
+  56:Bsp/MCU/bsp_adc.c **** 
+  57:Bsp/MCU/bsp_adc.c ****     return voltage;
+ 269              		.loc 1 57 5 is_stmt 1 view .LVU60
+  58:Bsp/MCU/bsp_adc.c **** }
+ 270              		.loc 1 58 1 is_stmt 0 view .LVU61
+ 271 001c 9FED040A 		vldr.32	s0, .L19+8
+ 272 0020 27EE800A 		vmul.f32	s0, s15, s0
+ 273              	.LVL28:
+ 274              		.loc 1 58 1 view .LVU62
+ 275 0024 08BD     		pop	{r3, pc}
+ 276              	.L20:
+ 277 0026 00BF     		.align	2
+ 278              	.L19:
+ 279 0028 00000000 		.word	hadc3
+ 280 002c 00000000 		.word	voltage_vrefint_proportion
+ 281 0030 5D742141 		.word	1092711517
+ 282              		.cfi_endproc
+ 283              	.LFE133:
+ 285              		.section	.bss.sConfig.0,"aw",%nobits
+ 286              		.align	2
+ 289              	sConfig.0:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s 			page 7
+
+
+ 290 0000 00000000 		.space	16
+ 290      00000000 
+ 290      00000000 
+ 290      00000000 
+ 291              		.global	voltage_vrefint_proportion
+ 292              		.section	.data.voltage_vrefint_proportion,"aw"
+ 293              		.align	2
+ 296              	voltage_vrefint_proportion:
+ 297 0000 6740533A 		.word	978534503
+ 298              		.text
+ 299              	.Letext0:
+ 300              		.file 2 "C:/msys64/mingw64/arm-none-eabi/include/machine/_default_types.h"
+ 301              		.file 3 "C:/msys64/mingw64/arm-none-eabi/include/sys/_stdint.h"
+ 302              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 303              		.file 5 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h"
+ 304              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 305              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 306              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc.h"
+ 307              		.file 9 "Core/Inc/main.h"
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 bsp_adc.c
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:21     .text.adcx_get_chx_value:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:26     .text.adcx_get_chx_value:00000000 adcx_get_chx_value
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:89     .text.adcx_get_chx_value:00000038 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:289    .bss.sConfig.0:00000000 sConfig.0
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:94     .text.init_vrefint_reciprocal:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:100    .text.init_vrefint_reciprocal:00000000 init_vrefint_reciprocal
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:160    .text.init_vrefint_reciprocal:00000034 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:296    .data.voltage_vrefint_proportion:00000000 voltage_vrefint_proportion
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:167    .text.get_temprate:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:173    .text.get_temprate:00000000 get_temprate
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:224    .text.get_temprate:00000038 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:232    .text.get_battery_voltage:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:238    .text.get_battery_voltage:00000000 get_battery_voltage
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:279    .text.get_battery_voltage:00000028 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:286    .bss.sConfig.0:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccJqiZ0T.s:293    .data.voltage_vrefint_proportion:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_ADC_ConfigChannel
+HAL_ADC_Start
+HAL_ADC_PollForConversion
+HAL_ADC_GetValue
+Error_Handler
+hadc1
+hadc3
