@@ -1,0 +1,2700 @@
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"kalman_filter.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Middlewares/Filter/KalmanFilter/kalman_filter.c"
+  20              		.section	.text.H_K_R_Adjustment,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	H_K_R_Adjustment:
+  27              	.LVL0:
+  28              	.LFB170:
+   1:Middlewares/Filter/KalmanFilter/kalman_filter.c **** /**
+   2:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  ******************************************************************************
+   3:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * @file    kalman filter.c
+   4:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * @author  Wang Hongxi
+   5:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * @version V1.1.5
+   6:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * @date    2020/2/16
+   7:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * @brief   C implementation of kalman filter
+   8:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  ******************************************************************************
+   9:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * @attention
+  10:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * �ÿ������˲��������ڴ���������Ƶ�ʲ�ͬ��
+  11:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * This implementation of kalman filter can dynamically adjust dimension and
+  12:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * value of matrix H R and K according to the measurement validity under any
+  13:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * circumstance that the sampling rate of component sensors are different.
+  14:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  15:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * ��˾���H��R�ĳ�ʼ���������P A��Q������ͬ��
+  16:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * �봫������������Ӧ��״̬���������ķ�ʽ���
+  17:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * Therefore, the initialization of matrix P, F, and Q is sometimes different
+  18:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * from that of matrices H R. when initialization. Additionally, the corresponding
+  19:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * state and the method of the measurement should be provided when initializing
+  20:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * measurement vector z. For more details, please see the example.
+  21:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  22:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * ������Ҫ��̬������������z���ɼ򵥽��ṹ���
+  23:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * ʼ������P�����ó��淽ʽ��ʼ��z H R���ɡ�
+  24:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * If automatic adjustment is not required, assign zero to the UseAutoAdjustment
+  25:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * and initialize z H R in the normal way as matrix P.
+  26:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  27:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * Ҫ����������z���������u�ڴ������ص����
+  28:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * �˲����º��޴��������ݸ��¡������������
+  29:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * MeasuredVector and ControlVector are required to be updated in the sensor
+  30:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * callback function. Integer 0 in measurement vector z indicates the invalidity
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 2
+
+
+  31:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * of current measurement, so MeasuredVector and ControlVector will be reset
+  32:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * (to 0) during each update.
+  33:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  34:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * ���⣬����P�����������˲������������
+  35:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * ͨ�����ƾ���P��Сֵ�ķ���������Ч�����˲��
+  36:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * Additionally, the excessive convergence of matrix P will make filter incapable
+  37:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * of adopting the slowly changing state. This implementation can effectively
+  38:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * suppress filter excessive convergence through boundary limiting for matrix P.
+  39:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * For more details, please see the example.
+  40:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  41:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * @example:
+  42:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * x =
+  43:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *   |   height   |
+  44:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *   |  velocity  |
+  45:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *   |acceleration|
+  46:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  47:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * KalmanFilter_t Height_KF;
+  48:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  49:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * void INS_Task_Init(void)
+  50:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * {
+  51:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     static float P_Init[9] =
+  52:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     {
+  53:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         10, 0, 0,
+  54:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         0, 30, 0,
+  55:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         0, 0, 10,
+  56:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     };
+  57:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     static float F_Init[9] =
+  58:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     {
+  59:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         1, dt, 0.5*dt*dt,
+  60:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         0, 1, dt,
+  61:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         0, 0, 1,
+  62:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     };
+  63:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     static float Q_Init[9] =
+  64:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     {
+  65:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         0.25*dt*dt*dt*dt, 0.5*dt*dt*dt, 0.5*dt*dt,
+  66:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         0.5*dt*dt*dt,        dt*dt,         dt,
+  67:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *         0.5*dt*dt,              dt,         1,
+  68:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     };
+  69:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  70:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     // ������С����
+  71:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     static float state_min_variance[3] = {0.03, 0.005, 0.1};
+  72:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  73:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     // �����Զ�����
+  74:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     Height_KF.UseAutoAdjustment = 1;
+  75:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  76:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     // ��ѹ��ø߶� GPS��ø߶� ���ٶȼƲ��z���˶����ٶ�
+  77:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     static uint8_t measurement_reference[3] = {1, 1, 3}
+  78:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  79:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     static float measurement_degree[3] = {1, 1, 1}
+  80:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     // ����measurement_reference��measurement_degree����H�������
+  81:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *       |1   0   0|
+  82:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *       |1   0   0|
+  83:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *       |0   0   1|
+  84:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  85:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     static float mat_R_diagonal_elements = {30, 25, 35}
+  86:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     //����mat_R_diagonal_elements����R�������£��ڵ�ǰ��
+  87:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *       |30   0   0|
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 3
+
+
+  88:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *       | 0  25   0|
+  89:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *       | 0   0  35|
+  90:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  91:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     Kalman_Filter_Init(&Height_KF, 3, 0, 3);
+  92:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+  93:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     // ���þ���ֵ
+  94:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     memcpy(Height_KF.P_data, P_Init, sizeof(P_Init));
+  95:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     memcpy(Height_KF.F_data, F_Init, sizeof(F_Init));
+  96:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     memcpy(Height_KF.Q_data, Q_Init, sizeof(Q_Init));
+  97:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     memcpy(Height_KF.MeasurementMap, measurement_reference, sizeof(measurement_reference));
+  98:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     memcpy(Height_KF.MeasurementDegree, measurement_degree, sizeof(measurement_degree));
+  99:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     memcpy(Height_KF.MatR_DiagonalElements, mat_R_diagonal_elements, sizeof(mat_R_diagonal_eleme
+ 100:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     memcpy(Height_KF.StateMinVariance, state_min_variance, sizeof(state_min_variance));
+ 101:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * }
+ 102:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+ 103:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * void INS_Task(void const *pvParameters)
+ 104:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * {
+ 105:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     // ѭ������
+ 106:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     Kalman_Filter_Update(&Height_KF);
+ 107:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     vTaskDelay(ts);
+ 108:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * }
+ 109:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *
+ 110:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * // �������ݸ���Ӧ����������ʽ ����MeasuredVector
+ 111:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * void Barometer_Read_Over(void)
+ 112:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * {
+ 113:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     ......
+ 114:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     INS_KF.MeasuredVector[0] = baro_height;
+ 115:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * }
+ 116:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * void GPS_Read_Over(void)
+ 117:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * {
+ 118:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     ......
+ 119:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     INS_KF.MeasuredVector[1] = GPS_height;
+ 120:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * }
+ 121:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * void Acc_Data_Process(void)
+ 122:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * {
+ 123:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     ......
+ 124:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  *     INS_KF.MeasuredVector[2] = acc.z;
+ 125:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  * }
+ 126:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  ******************************************************************************
+ 127:Middlewares/Filter/KalmanFilter/kalman_filter.c ****  */
+ 128:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 129:Middlewares/Filter/KalmanFilter/kalman_filter.c **** #include "kalman_filter.h"
+ 130:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 131:Middlewares/Filter/KalmanFilter/kalman_filter.c **** uint16_t sizeof_float, sizeof_double;
+ 132:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 133:Middlewares/Filter/KalmanFilter/kalman_filter.c **** static void H_K_R_Adjustment(KalmanFilter_t *kf);
+ 134:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 135:Middlewares/Filter/KalmanFilter/kalman_filter.c **** void Kalman_Filter_Init(KalmanFilter_t *kf, uint8_t xhatSize, uint8_t uSize, uint8_t zSize)
+ 136:Middlewares/Filter/KalmanFilter/kalman_filter.c **** {
+ 137:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     sizeof_float = sizeof(float);
+ 138:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     sizeof_double = sizeof(double);
+ 139:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 140:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->xhatSize = xhatSize;
+ 141:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->uSize = uSize;
+ 142:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->zSize = zSize;
+ 143:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 144:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasurementValidNum = 0;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 4
+
+
+ 145:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 146:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // measurement flags
+ 147:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasurementMap = (uint8_t *)user_malloc(sizeof(uint8_t) * zSize);
+ 148:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementMap, 0, sizeof(uint8_t) * zSize);
+ 149:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasurementDegree = (float *)user_malloc(sizeof_float * zSize);
+ 150:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementDegree, 0, sizeof_float * zSize);
+ 151:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MatR_DiagonalElements = (float *)user_malloc(sizeof_float * zSize);
+ 152:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MatR_DiagonalElements, 0, sizeof_float * zSize);
+ 153:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->StateMinVariance = (float *)user_malloc(sizeof_float * xhatSize);
+ 154:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->StateMinVariance, 0, sizeof_float * xhatSize);
+ 155:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp = (uint8_t *)user_malloc(sizeof(uint8_t) * zSize);
+ 156:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->temp, 0, sizeof(uint8_t) * zSize);
+ 157:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 158:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // filter data
+ 159:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->FilteredValue = (float *)user_malloc(sizeof_float * xhatSize);
+ 160:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FilteredValue, 0, sizeof_float * xhatSize);
+ 161:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasuredVector = (float *)user_malloc(sizeof_float * zSize);
+ 162:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasuredVector, 0, sizeof_float * zSize);
+ 163:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->ControlVector = (float *)user_malloc(sizeof_float * uSize);
+ 164:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->ControlVector, 0, sizeof_float * uSize);
+ 165:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 166:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // xhat x(k|k)
+ 167:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->xhat_data = (float *)user_malloc(sizeof_float * xhatSize);
+ 168:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhat_data, 0, sizeof_float * xhatSize);
+ 169:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->xhat, kf->xhatSize, 1, (float *)kf->xhat_data);
+ 170:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 171:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // xhatminus x(k|k-1)
+ 172:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->xhatminus_data = (float *)user_malloc(sizeof_float * xhatSize);
+ 173:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhatminus_data, 0, sizeof_float * xhatSize);
+ 174:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->xhatminus, kf->xhatSize, 1, (float *)kf->xhatminus_data);
+ 175:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 176:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (uSize != 0)
+ 177:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 178:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // control vector u
+ 179:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->u_data = (float *)user_malloc(sizeof_float * uSize);
+ 180:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->u_data, 0, sizeof_float * uSize);
+ 181:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         Matrix_Init(&kf->u, kf->uSize, 1, (float *)kf->u_data);
+ 182:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 183:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 184:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // measurement vector z
+ 185:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->z_data = (float *)user_malloc(sizeof_float * zSize);
+ 186:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->z_data, 0, sizeof_float * zSize);
+ 187:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->z, kf->zSize, 1, (float *)kf->z_data);
+ 188:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 189:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // covariance matrix P(k|k)
+ 190:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->P_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ 191:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->P_data, 0, sizeof_float * xhatSize * xhatSize);
+ 192:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->P, kf->xhatSize, kf->xhatSize, (float *)kf->P_data);
+ 193:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 194:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // create covariance matrix P(k|k-1)
+ 195:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->Pminus_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ 196:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Pminus_data, 0, sizeof_float * xhatSize * xhatSize);
+ 197:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->Pminus, kf->xhatSize, kf->xhatSize, (float *)kf->Pminus_data);
+ 198:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 199:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // state transition matrix F FT
+ 200:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->F_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ 201:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->FT_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 5
+
+
+ 202:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->F_data, 0, sizeof_float * xhatSize * xhatSize);
+ 203:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FT_data, 0, sizeof_float * xhatSize * xhatSize);
+ 204:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->F, kf->xhatSize, kf->xhatSize, (float *)kf->F_data);
+ 205:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->FT, kf->xhatSize, kf->xhatSize, (float *)kf->FT_data);
+ 206:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 207:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (uSize != 0)
+ 208:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 209:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // control matrix B
+ 210:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->B_data = (float *)user_malloc(sizeof_float * xhatSize * uSize);
+ 211:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->B_data, 0, sizeof_float * xhatSize * uSize);
+ 212:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         Matrix_Init(&kf->B, kf->xhatSize, kf->uSize, (float *)kf->B_data);
+ 213:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 214:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 215:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // measurement matrix H
+ 216:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->H_data = (float *)user_malloc(sizeof_float * zSize * xhatSize);
+ 217:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->HT_data = (float *)user_malloc(sizeof_float * xhatSize * zSize);
+ 218:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->H_data, 0, sizeof_float * zSize * xhatSize);
+ 219:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->HT_data, 0, sizeof_float * xhatSize * zSize);
+ 220:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->H, kf->zSize, kf->xhatSize, (float *)kf->H_data);
+ 221:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->HT, kf->xhatSize, kf->zSize, (float *)kf->HT_data);
+ 222:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 223:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // process noise covariance matrix Q
+ 224:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->Q_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ 225:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Q_data, 0, sizeof_float * xhatSize * xhatSize);
+ 226:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->Q, kf->xhatSize, kf->xhatSize, (float *)kf->Q_data);
+ 227:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 228:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // measurement noise covariance matrix R
+ 229:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->R_data = (float *)user_malloc(sizeof_float * zSize * zSize);
+ 230:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->R_data, 0, sizeof_float * zSize * zSize);
+ 231:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->R, kf->zSize, kf->zSize, (float *)kf->R_data);
+ 232:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 233:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // kalman gain K
+ 234:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->K_data = (float *)user_malloc(sizeof_float * xhatSize * zSize);
+ 235:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->K_data, 0, sizeof_float * xhatSize * zSize);
+ 236:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->K, kf->xhatSize, kf->zSize, (float *)kf->K_data);
+ 237:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 238:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->S_data = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 239:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 240:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 241:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 242:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 243:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->S, kf->xhatSize, kf->xhatSize, (float *)kf->S_data);
+ 244:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_matrix, kf->xhatSize, kf->xhatSize, (float *)kf->temp_matrix_data);
+ 245:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_matrix1, kf->xhatSize, kf->xhatSize, (float *)kf->temp_matrix_data1);
+ 246:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_vector, kf->xhatSize, 1, (float *)kf->temp_vector_data);
+ 247:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_vector1, kf->xhatSize, 1, (float *)kf->temp_vector_data1);
+ 248:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 249:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq1 = 0;
+ 250:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq2 = 0;
+ 251:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq3 = 0;
+ 252:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq4 = 0;
+ 253:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq5 = 0;
+ 254:Middlewares/Filter/KalmanFilter/kalman_filter.c **** }
+ 255:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 256:Middlewares/Filter/KalmanFilter/kalman_filter.c **** float *Kalman_Filter_Update(KalmanFilter_t *kf)
+ 257:Middlewares/Filter/KalmanFilter/kalman_filter.c **** {
+ 258:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // ����H K R������������Զ�����
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 6
+
+
+ 259:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // matrix H K R auto adjustment
+ 260:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (kf->UseAutoAdjustment != 0)
+ 261:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         H_K_R_Adjustment(kf);
+ 262:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     else
+ 263:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 264:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memcpy(kf->z_data, kf->MeasuredVector, sizeof_float * kf->zSize);
+ 265:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->MeasuredVector, 0, sizeof_float * kf->zSize);
+ 266:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 267:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 268:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memcpy(kf->u_data, kf->ControlVector, sizeof_float * kf->uSize);
+ 269:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 270:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (kf->User_Func0_f != NULL)
+ 271:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func0_f(kf);
+ 272:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 273:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // 1. xhat'(k)= A��xhat(k-1) + B��u
+ 274:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (!kf->SkipEq1)
+ 275:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 276:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         if (kf->uSize > 0)
+ 277:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 278:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->F, &kf->xhat, &kf->temp_vector);
+ 279:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->xhatSize;
+ 280:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numCols = 1;
+ 281:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->B, &kf->u, &kf->temp_vector1);
+ 282:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->temp_vector, &kf->temp_vector1, &kf->xhatminus);
+ 283:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 284:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         else
+ 285:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 286:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->F, &kf->xhat, &kf->xhatminus);
+ 287:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 288:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 289:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 290:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (kf->User_Func1_f != NULL)
+ 291:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func1_f(kf);
+ 292:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 293:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // Ԥ�����
+ 294:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // 2. P'(k) = A��P(k-1)��AT + Q
+ 295:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (!kf->SkipEq2)
+ 296:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 297:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Transpose(&kf->F, &kf->FT);
+ 298:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->F, &kf->P, &kf->Pminus);
+ 299:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->temp_matrix.numRows = kf->Pminus.numRows;
+ 300:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->temp_matrix.numCols = kf->FT.numCols;
+ 301:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->FT, &kf->temp_matrix); // temp_matrix = F
+ 302:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Add(&kf->temp_matrix, &kf->Q, &kf->Pminus);
+ 303:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 304:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 305:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (kf->User_Func2_f != NULL)
+ 306:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func2_f(kf);
+ 307:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 308:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (kf->MeasurementValidNum != 0 || kf->UseAutoAdjustment == 0)
+ 309:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 310:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // �������
+ 311:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // 3. K(k) = P'(k)��HT / (H��P'(k)��HT + R)
+ 312:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         if (!kf->SkipEq3)
+ 313:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 314:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Transpose(&kf->H, &kf->HT); // z|x => x|z
+ 315:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->H.numRows;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 7
+
+
+ 316:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->Pminus.numCols;
+ 317:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->H, &kf->Pminus, &kf->temp_matrix); // temp_matrix 
+ 318:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ 319:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numCols = kf->HT.numCols;
+ 320:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->HT, &kf->temp_matrix1); // temp_
+ 321:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->S.numRows = kf->R.numRows;
+ 322:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->S.numCols = kf->R.numCols;
+ 323:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->temp_matrix1, &kf->R, &kf->S); // S = H P'(k) HT + R
+ 324:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Inverse(&kf->S, &kf->temp_matrix1);     // temp_matrix1 = inv(H�
+ 325:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->Pminus.numRows;
+ 326:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->HT.numCols;
+ 327:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix
+ 328:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
+ 329:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 330:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 331:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         if (kf->User_Func3_f != NULL)
+ 332:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->User_Func3_f(kf);
+ 333:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 334:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // 4. xhat(k) = xhat'(k) + K(k)��(z(k) - H��xhat'(k))
+ 335:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         if (!kf->SkipEq4)
+ 336:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 337:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numRows = kf->H.numRows;
+ 338:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numCols = 1;
+ 339:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->H, &kf->xhatminus, &kf->temp_vector); // temp_vect
+ 340:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->z.numRows;
+ 341:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numCols = 1;
+ 342:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Subtract(&kf->z, &kf->temp_vector, &kf->temp_vector1); // temp_v
+ 343:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numRows = kf->K.numRows;
+ 344:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numCols = 1;
+ 345:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->K, &kf->temp_vector1, &kf->temp_vector); // temp_v
+ 346:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->xhatminus, &kf->temp_vector, &kf->xhat);
+ 347:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 348:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 349:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         if (kf->User_Func4_f != NULL)
+ 350:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->User_Func4_f(kf);
+ 351:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 352:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // 5. P(k) = (1-K(k)��H)��P'(k) ==> P(k) = P'(k)-K(k)��H��P'(k)
+ 353:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         if (!kf->SkipEq5)
+ 354:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 355:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->K.numRows;
+ 356:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->H.numCols;
+ 357:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ 358:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numCols = kf->Pminus.numCols;
+ 359:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->K, &kf->H, &kf->temp_matrix);                 // t
+ 360:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->Pminus, &kf->temp_matrix1); // t
+ 361:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Subtract(&kf->Pminus, &kf->temp_matrix1, &kf->P);
+ 362:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 363:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 364:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     else
+ 365:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 366:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // ����Ч���� ��Ԥ��
+ 367:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // xhat(k) = xhat'(k)
+ 368:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // P(k) = P'(k)
+ 369:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memcpy(kf->xhat_data, kf->xhatminus_data, sizeof_float * kf->xhatSize);
+ 370:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memcpy(kf->P_data, kf->Pminus_data, sizeof_float * kf->xhatSize * kf->xhatSize);
+ 371:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 372:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 8
+
+
+ 373:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (kf->User_Func5_f != NULL)
+ 374:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func5_f(kf);
+ 375:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 376:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // �����˲�����������
+ 377:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // suppress filter excessive convergence
+ 378:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     for (uint8_t i = 0; i < kf->xhatSize; i++)
+ 379:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 380:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         if (kf->P_data[i * kf->xhatSize + i] < kf->StateMinVariance[i])
+ 381:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->P_data[i * kf->xhatSize + i] = kf->StateMinVariance[i];
+ 382:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 383:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 384:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (kf->UseAutoAdjustment != 0)
+ 385:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 386:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->R_data, 0, sizeof_float * kf->zSize * kf->zSize);
+ 387:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->H_data, 0, sizeof_float * kf->xhatSize * kf->zSize);
+ 388:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 389:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 390:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memcpy(kf->FilteredValue, kf->xhat_data, sizeof_float * kf->xhatSize);
+ 391:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 392:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     if (kf->User_Func6_f != NULL)
+ 393:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func6_f(kf);
+ 394:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 395:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     return kf->FilteredValue;
+ 396:Middlewares/Filter/KalmanFilter/kalman_filter.c **** }
+ 397:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 398:Middlewares/Filter/KalmanFilter/kalman_filter.c **** static void H_K_R_Adjustment(KalmanFilter_t *kf)
+ 399:Middlewares/Filter/KalmanFilter/kalman_filter.c **** {
+  29              		.loc 1 399 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 399 1 is_stmt 0 view .LVU1
+  34 0000 70B5     		push	{r4, r5, r6, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 4, -16
+  38              		.cfi_offset 5, -12
+  39              		.cfi_offset 6, -8
+  40              		.cfi_offset 14, -4
+  41 0002 0446     		mov	r4, r0
+ 400:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasurementValidNum = 0;
+  42              		.loc 1 400 5 is_stmt 1 view .LVU2
+  43              		.loc 1 400 29 is_stmt 0 view .LVU3
+  44 0004 0025     		movs	r5, #0
+  45 0006 0574     		strb	r5, [r0, #16]
+ 401:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 402:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memcpy(kf->z_data, kf->MeasuredVector, sizeof_float * kf->zSize);
+  46              		.loc 1 402 5 is_stmt 1 view .LVU4
+  47              		.loc 1 402 61 is_stmt 0 view .LVU5
+  48 0008 827B     		ldrb	r2, [r0, #14]	@ zero_extendqisi2
+  49              		.loc 1 402 57 view .LVU6
+  50 000a 364E     		ldr	r6, .L9
+  51 000c 3388     		ldrh	r3, [r6]
+  52              		.loc 1 402 5 view .LVU7
+  53 000e 03FB02F2 		mul	r2, r3, r2
+  54 0012 4168     		ldr	r1, [r0, #4]
+  55 0014 D0F8F400 		ldr	r0, [r0, #244]
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 9
+
+
+  56              	.LVL1:
+  57              		.loc 1 402 5 view .LVU8
+  58 0018 FFF7FEFF 		bl	memcpy
+  59              	.LVL2:
+ 403:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasuredVector, 0, sizeof_float * kf->zSize);
+  60              		.loc 1 403 5 is_stmt 1 view .LVU9
+  61              		.loc 1 403 52 is_stmt 0 view .LVU10
+  62 001c A27B     		ldrb	r2, [r4, #14]	@ zero_extendqisi2
+  63              		.loc 1 403 48 view .LVU11
+  64 001e 3388     		ldrh	r3, [r6]
+  65              		.loc 1 403 5 view .LVU12
+  66 0020 03FB02F2 		mul	r2, r3, r2
+  67 0024 2946     		mov	r1, r5
+  68 0026 6068     		ldr	r0, [r4, #4]
+  69 0028 FFF7FEFF 		bl	memset
+  70              	.LVL3:
+ 404:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 405:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // ʶ������������Ч�Բ���������H R K
+ 406:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // recognize measurement validity and adjust matrices H R K
+ 407:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     for (uint8_t i = 0; i < kf->zSize; i++)
+  71              		.loc 1 407 5 is_stmt 1 view .LVU13
+  72              	.LBB2:
+  73              		.loc 1 407 10 view .LVU14
+  74              		.loc 1 407 18 is_stmt 0 view .LVU15
+  75 002c 2946     		mov	r1, r5
+  76              		.loc 1 407 5 view .LVU16
+  77 002e 01E0     		b	.L2
+  78              	.LVL4:
+  79              	.L3:
+  80              		.loc 1 407 41 is_stmt 1 discriminator 2 view .LVU17
+  81 0030 0131     		adds	r1, r1, #1
+  82              	.LVL5:
+  83              		.loc 1 407 41 is_stmt 0 discriminator 2 view .LVU18
+  84 0032 C9B2     		uxtb	r1, r1
+  85              	.LVL6:
+  86              	.L2:
+  87              		.loc 1 407 27 is_stmt 1 discriminator 1 view .LVU19
+  88              		.loc 1 407 31 is_stmt 0 discriminator 1 view .LVU20
+  89 0034 A37B     		ldrb	r3, [r4, #14]	@ zero_extendqisi2
+  90              		.loc 1 407 27 discriminator 1 view .LVU21
+  91 0036 8B42     		cmp	r3, r1
+  92 0038 2AD9     		bls	.L8
+ 408:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 409:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         if (kf->z_data[i] != 0)
+  93              		.loc 1 409 9 is_stmt 1 view .LVU22
+  94              		.loc 1 409 15 is_stmt 0 view .LVU23
+  95 003a D4F8F430 		ldr	r3, [r4, #244]
+  96              		.loc 1 409 23 view .LVU24
+  97 003e 4FEA810C 		lsl	ip, r1, #2
+  98 0042 03EB8102 		add	r2, r3, r1, lsl #2
+  99 0046 D2ED007A 		vldr.32	s15, [r2]
+ 100              		.loc 1 409 12 view .LVU25
+ 101 004a F5EE407A 		vcmp.f32	s15, #0
+ 102 004e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 103 0052 EDD0     		beq	.L3
+ 410:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 411:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             // �ع�����z
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 10
+
+
+ 412:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             // rebuild vector z
+ 413:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->z_data[kf->MeasurementValidNum] = kf->z_data[i];
+ 104              		.loc 1 413 13 is_stmt 1 view .LVU26
+ 105              		.loc 1 413 26 is_stmt 0 view .LVU27
+ 106 0054 227C     		ldrb	r2, [r4, #16]	@ zero_extendqisi2
+ 107              		.loc 1 413 23 view .LVU28
+ 108 0056 03EB8203 		add	r3, r3, r2, lsl #2
+ 109              		.loc 1 413 49 view .LVU29
+ 110 005a C3ED007A 		vstr.32	s15, [r3]
+ 414:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp[kf->MeasurementValidNum] = i;
+ 111              		.loc 1 414 13 is_stmt 1 view .LVU30
+ 112              		.loc 1 414 15 is_stmt 0 view .LVU31
+ 113 005e 626A     		ldr	r2, [r4, #36]
+ 114              		.loc 1 414 24 view .LVU32
+ 115 0060 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+ 116              		.loc 1 414 47 view .LVU33
+ 117 0062 D154     		strb	r1, [r2, r3]
+ 415:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             // �ع�����H
+ 416:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             // rebuild matrix H
+ 417:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->H_data[kf->xhatSize * kf->MeasurementValidNum + kf->MeasurementMap[i] - 1] = kf->Me
+ 118              		.loc 1 417 13 is_stmt 1 view .LVU34
+ 119              		.loc 1 417 96 is_stmt 0 view .LVU35
+ 120 0064 A069     		ldr	r0, [r4, #24]
+ 121              		.loc 1 417 15 view .LVU36
+ 122 0066 D4F80C21 		ldr	r2, [r4, #268]
+ 123              		.loc 1 417 26 view .LVU37
+ 124 006a 94F80CE0 		ldrb	lr, [r4, #12]	@ zero_extendqisi2
+ 125              		.loc 1 417 41 view .LVU38
+ 126 006e 257C     		ldrb	r5, [r4, #16]	@ zero_extendqisi2
+ 127              		.loc 1 417 67 view .LVU39
+ 128 0070 6369     		ldr	r3, [r4, #20]
+ 129              		.loc 1 417 83 view .LVU40
+ 130 0072 5B5C     		ldrb	r3, [r3, r1]	@ zero_extendqisi2
+ 131              		.loc 1 417 63 view .LVU41
+ 132 0074 05FB0E33 		mla	r3, r5, lr, r3
+ 133              		.loc 1 417 23 view .LVU42
+ 134 0078 03F18043 		add	r3, r3, #1073741824
+ 135 007c 013B     		subs	r3, r3, #1
+ 136 007e 02EB8302 		add	r2, r2, r3, lsl #2
+ 137              		.loc 1 417 115 view .LVU43
+ 138 0082 6044     		add	r0, r0, ip
+ 139 0084 0368     		ldr	r3, [r0]	@ float
+ 140              		.loc 1 417 92 view .LVU44
+ 141 0086 1360     		str	r3, [r2]	@ float
+ 418:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MeasurementValidNum++;
+ 142              		.loc 1 418 13 is_stmt 1 view .LVU45
+ 143              		.loc 1 418 15 is_stmt 0 view .LVU46
+ 144 0088 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+ 145              		.loc 1 418 36 view .LVU47
+ 146 008a 0133     		adds	r3, r3, #1
+ 147 008c 2374     		strb	r3, [r4, #16]
+ 148 008e CFE7     		b	.L3
+ 149              	.L8:
+ 150              	.LBE2:
+ 151              	.LBB3:
+ 419:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 420:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 11
+
+
+ 421:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     for (uint8_t i = 0; i < kf->MeasurementValidNum; i++)
+ 152              		.loc 1 421 18 view .LVU48
+ 153 0090 0023     		movs	r3, #0
+ 154 0092 0FE0     		b	.L5
+ 155              	.LVL7:
+ 156              	.L6:
+ 422:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 423:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // �ع�����R
+ 424:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         // rebuild matrix R
+ 425:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->R_data[i * kf->MeasurementValidNum + i] = kf->MatR_DiagonalElements[kf->temp[i]];
+ 157              		.loc 1 425 9 is_stmt 1 view .LVU49
+ 158              		.loc 1 425 57 is_stmt 0 view .LVU50
+ 159 0094 E069     		ldr	r0, [r4, #28]
+ 160              		.loc 1 425 83 view .LVU51
+ 161 0096 616A     		ldr	r1, [r4, #36]
+ 162              		.loc 1 425 89 view .LVU52
+ 163 0098 11F803C0 		ldrb	ip, [r1, r3]	@ zero_extendqisi2
+ 164              		.loc 1 425 11 view .LVU53
+ 165 009c D4F81811 		ldr	r1, [r4, #280]
+ 166              		.loc 1 425 48 view .LVU54
+ 167 00a0 02FB0332 		mla	r2, r2, r3, r3
+ 168              		.loc 1 425 19 view .LVU55
+ 169 00a4 01EB8201 		add	r1, r1, r2, lsl #2
+ 170              		.loc 1 425 80 view .LVU56
+ 171 00a8 00EB8C00 		add	r0, r0, ip, lsl #2
+ 172 00ac 0268     		ldr	r2, [r0]	@ float
+ 173              		.loc 1 425 53 view .LVU57
+ 174 00ae 0A60     		str	r2, [r1]	@ float
+ 421:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 175              		.loc 1 421 55 is_stmt 1 discriminator 3 view .LVU58
+ 176 00b0 0133     		adds	r3, r3, #1
+ 177              	.LVL8:
+ 421:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 178              		.loc 1 421 55 is_stmt 0 discriminator 3 view .LVU59
+ 179 00b2 DBB2     		uxtb	r3, r3
+ 180              	.LVL9:
+ 181              	.L5:
+ 421:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 182              		.loc 1 421 27 is_stmt 1 discriminator 1 view .LVU60
+ 421:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 183              		.loc 1 421 31 is_stmt 0 discriminator 1 view .LVU61
+ 184 00b4 227C     		ldrb	r2, [r4, #16]	@ zero_extendqisi2
+ 421:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 185              		.loc 1 421 27 discriminator 1 view .LVU62
+ 186 00b6 9A42     		cmp	r2, r3
+ 187 00b8 ECD8     		bhi	.L6
+ 188              	.LBE3:
+ 426:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 427:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 428:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // ��������ά��
+ 429:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // adjust the dimensions of system matrices
+ 430:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->H.numRows = kf->MeasurementValidNum;
+ 189              		.loc 1 430 5 is_stmt 1 view .LVU63
+ 190              		.loc 1 430 19 is_stmt 0 view .LVU64
+ 191 00ba A4F87820 		strh	r2, [r4, #120]	@ movhi
+ 431:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->H.numCols = kf->xhatSize;
+ 192              		.loc 1 431 5 is_stmt 1 view .LVU65
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 12
+
+
+ 193              		.loc 1 431 23 is_stmt 0 view .LVU66
+ 194 00be 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 195              	.LVL10:
+ 196              		.loc 1 431 19 view .LVU67
+ 197 00c0 A4F87A30 		strh	r3, [r4, #122]	@ movhi
+ 432:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->HT.numRows = kf->xhatSize;
+ 198              		.loc 1 432 5 is_stmt 1 view .LVU68
+ 199              		.loc 1 432 20 is_stmt 0 view .LVU69
+ 200 00c4 A4F88030 		strh	r3, [r4, #128]	@ movhi
+ 433:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->HT.numCols = kf->MeasurementValidNum;
+ 201              		.loc 1 433 5 is_stmt 1 view .LVU70
+ 202              		.loc 1 433 20 is_stmt 0 view .LVU71
+ 203 00c8 A4F88220 		strh	r2, [r4, #130]	@ movhi
+ 434:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->R.numRows = kf->MeasurementValidNum;
+ 204              		.loc 1 434 5 is_stmt 1 view .LVU72
+ 205              		.loc 1 434 19 is_stmt 0 view .LVU73
+ 206 00cc A4F89020 		strh	r2, [r4, #144]	@ movhi
+ 435:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->R.numCols = kf->MeasurementValidNum;
+ 207              		.loc 1 435 5 is_stmt 1 view .LVU74
+ 208              		.loc 1 435 19 is_stmt 0 view .LVU75
+ 209 00d0 A4F89220 		strh	r2, [r4, #146]	@ movhi
+ 436:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->K.numRows = kf->xhatSize;
+ 210              		.loc 1 436 5 is_stmt 1 view .LVU76
+ 211              		.loc 1 436 19 is_stmt 0 view .LVU77
+ 212 00d4 A4F89830 		strh	r3, [r4, #152]	@ movhi
+ 437:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->K.numCols = kf->MeasurementValidNum;
+ 213              		.loc 1 437 5 is_stmt 1 view .LVU78
+ 214              		.loc 1 437 19 is_stmt 0 view .LVU79
+ 215 00d8 A4F89A20 		strh	r2, [r4, #154]	@ movhi
+ 438:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->z.numRows = kf->MeasurementValidNum;
+ 216              		.loc 1 438 5 is_stmt 1 view .LVU80
+ 217              		.loc 1 438 19 is_stmt 0 view .LVU81
+ 218 00dc A4F84820 		strh	r2, [r4, #72]	@ movhi
+ 439:Middlewares/Filter/KalmanFilter/kalman_filter.c **** }
+ 219              		.loc 1 439 1 view .LVU82
+ 220 00e0 70BD     		pop	{r4, r5, r6, pc}
+ 221              	.LVL11:
+ 222              	.L10:
+ 223              		.loc 1 439 1 view .LVU83
+ 224 00e2 00BF     		.align	2
+ 225              	.L9:
+ 226 00e4 00000000 		.word	sizeof_float
+ 227              		.cfi_endproc
+ 228              	.LFE170:
+ 230              		.section	.text.Kalman_Filter_Init,"ax",%progbits
+ 231              		.align	1
+ 232              		.global	Kalman_Filter_Init
+ 233              		.syntax unified
+ 234              		.thumb
+ 235              		.thumb_func
+ 237              	Kalman_Filter_Init:
+ 238              	.LVL12:
+ 239              	.LFB168:
+ 136:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     sizeof_float = sizeof(float);
+ 240              		.loc 1 136 1 is_stmt 1 view -0
+ 241              		.cfi_startproc
+ 242              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 13
+
+
+ 243              		@ frame_needed = 0, uses_anonymous_args = 0
+ 136:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     sizeof_float = sizeof(float);
+ 244              		.loc 1 136 1 is_stmt 0 view .LVU85
+ 245 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 246              	.LCFI1:
+ 247              		.cfi_def_cfa_offset 32
+ 248              		.cfi_offset 3, -32
+ 249              		.cfi_offset 4, -28
+ 250              		.cfi_offset 5, -24
+ 251              		.cfi_offset 6, -20
+ 252              		.cfi_offset 7, -16
+ 253              		.cfi_offset 8, -12
+ 254              		.cfi_offset 9, -8
+ 255              		.cfi_offset 14, -4
+ 256 0004 0446     		mov	r4, r0
+ 257 0006 0D46     		mov	r5, r1
+ 258 0008 9146     		mov	r9, r2
+ 259 000a 1E46     		mov	r6, r3
+ 137:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     sizeof_double = sizeof(double);
+ 260              		.loc 1 137 5 is_stmt 1 view .LVU86
+ 137:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     sizeof_double = sizeof(double);
+ 261              		.loc 1 137 18 is_stmt 0 view .LVU87
+ 262 000c DA4F     		ldr	r7, .L17
+ 263 000e 0423     		movs	r3, #4
+ 264              	.LVL13:
+ 137:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     sizeof_double = sizeof(double);
+ 265              		.loc 1 137 18 view .LVU88
+ 266 0010 3B80     		strh	r3, [r7]	@ movhi
+ 138:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 267              		.loc 1 138 5 is_stmt 1 view .LVU89
+ 138:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 268              		.loc 1 138 19 is_stmt 0 view .LVU90
+ 269 0012 DA4B     		ldr	r3, .L17+4
+ 270 0014 0822     		movs	r2, #8
+ 271              	.LVL14:
+ 138:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 272              		.loc 1 138 19 view .LVU91
+ 273 0016 1A80     		strh	r2, [r3]	@ movhi
+ 140:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->uSize = uSize;
+ 274              		.loc 1 140 5 is_stmt 1 view .LVU92
+ 140:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->uSize = uSize;
+ 275              		.loc 1 140 18 is_stmt 0 view .LVU93
+ 276 0018 0173     		strb	r1, [r0, #12]
+ 141:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->zSize = zSize;
+ 277              		.loc 1 141 5 is_stmt 1 view .LVU94
+ 141:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->zSize = zSize;
+ 278              		.loc 1 141 15 is_stmt 0 view .LVU95
+ 279 001a 80F80D90 		strb	r9, [r0, #13]
+ 142:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 280              		.loc 1 142 5 is_stmt 1 view .LVU96
+ 142:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 281              		.loc 1 142 15 is_stmt 0 view .LVU97
+ 282 001e 8673     		strb	r6, [r0, #14]
+ 144:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 283              		.loc 1 144 5 is_stmt 1 view .LVU98
+ 144:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 284              		.loc 1 144 29 is_stmt 0 view .LVU99
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 14
+
+
+ 285 0020 4FF00008 		mov	r8, #0
+ 286 0024 80F81080 		strb	r8, [r0, #16]
+ 147:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementMap, 0, sizeof(uint8_t) * zSize);
+ 287              		.loc 1 147 5 is_stmt 1 view .LVU100
+ 147:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementMap, 0, sizeof(uint8_t) * zSize);
+ 288              		.loc 1 147 37 is_stmt 0 view .LVU101
+ 289 0028 3046     		mov	r0, r6
+ 290              	.LVL15:
+ 147:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementMap, 0, sizeof(uint8_t) * zSize);
+ 291              		.loc 1 147 37 view .LVU102
+ 292 002a FFF7FEFF 		bl	pvPortMalloc
+ 293              	.LVL16:
+ 147:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementMap, 0, sizeof(uint8_t) * zSize);
+ 294              		.loc 1 147 24 discriminator 1 view .LVU103
+ 295 002e 6061     		str	r0, [r4, #20]
+ 148:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasurementDegree = (float *)user_malloc(sizeof_float * zSize);
+ 296              		.loc 1 148 5 is_stmt 1 view .LVU104
+ 297 0030 3246     		mov	r2, r6
+ 298 0032 4146     		mov	r1, r8
+ 299 0034 FFF7FEFF 		bl	memset
+ 300              	.LVL17:
+ 149:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementDegree, 0, sizeof_float * zSize);
+ 301              		.loc 1 149 5 view .LVU105
+ 149:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementDegree, 0, sizeof_float * zSize);
+ 302              		.loc 1 149 63 is_stmt 0 view .LVU106
+ 303 0038 3888     		ldrh	r0, [r7]
+ 149:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementDegree, 0, sizeof_float * zSize);
+ 304              		.loc 1 149 38 view .LVU107
+ 305 003a 06FB00F0 		mul	r0, r6, r0
+ 306 003e FFF7FEFF 		bl	pvPortMalloc
+ 307              	.LVL18:
+ 149:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasurementDegree, 0, sizeof_float * zSize);
+ 308              		.loc 1 149 27 discriminator 1 view .LVU108
+ 309 0042 A061     		str	r0, [r4, #24]
+ 150:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MatR_DiagonalElements = (float *)user_malloc(sizeof_float * zSize);
+ 310              		.loc 1 150 5 is_stmt 1 view .LVU109
+ 150:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MatR_DiagonalElements = (float *)user_malloc(sizeof_float * zSize);
+ 311              		.loc 1 150 51 is_stmt 0 view .LVU110
+ 312 0044 3A88     		ldrh	r2, [r7]
+ 150:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MatR_DiagonalElements = (float *)user_malloc(sizeof_float * zSize);
+ 313              		.loc 1 150 5 view .LVU111
+ 314 0046 06FB02F2 		mul	r2, r6, r2
+ 315 004a 4146     		mov	r1, r8
+ 316 004c FFF7FEFF 		bl	memset
+ 317              	.LVL19:
+ 151:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MatR_DiagonalElements, 0, sizeof_float * zSize);
+ 318              		.loc 1 151 5 is_stmt 1 view .LVU112
+ 151:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MatR_DiagonalElements, 0, sizeof_float * zSize);
+ 319              		.loc 1 151 67 is_stmt 0 view .LVU113
+ 320 0050 3888     		ldrh	r0, [r7]
+ 151:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MatR_DiagonalElements, 0, sizeof_float * zSize);
+ 321              		.loc 1 151 42 view .LVU114
+ 322 0052 06FB00F0 		mul	r0, r6, r0
+ 323 0056 FFF7FEFF 		bl	pvPortMalloc
+ 324              	.LVL20:
+ 151:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MatR_DiagonalElements, 0, sizeof_float * zSize);
+ 325              		.loc 1 151 31 discriminator 1 view .LVU115
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 15
+
+
+ 326 005a E061     		str	r0, [r4, #28]
+ 152:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->StateMinVariance = (float *)user_malloc(sizeof_float * xhatSize);
+ 327              		.loc 1 152 5 is_stmt 1 view .LVU116
+ 152:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->StateMinVariance = (float *)user_malloc(sizeof_float * xhatSize);
+ 328              		.loc 1 152 55 is_stmt 0 view .LVU117
+ 329 005c 3A88     		ldrh	r2, [r7]
+ 152:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->StateMinVariance = (float *)user_malloc(sizeof_float * xhatSize);
+ 330              		.loc 1 152 5 view .LVU118
+ 331 005e 06FB02F2 		mul	r2, r6, r2
+ 332 0062 4146     		mov	r1, r8
+ 333 0064 FFF7FEFF 		bl	memset
+ 334              	.LVL21:
+ 153:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->StateMinVariance, 0, sizeof_float * xhatSize);
+ 335              		.loc 1 153 5 is_stmt 1 view .LVU119
+ 153:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->StateMinVariance, 0, sizeof_float * xhatSize);
+ 336              		.loc 1 153 62 is_stmt 0 view .LVU120
+ 337 0068 3888     		ldrh	r0, [r7]
+ 153:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->StateMinVariance, 0, sizeof_float * xhatSize);
+ 338              		.loc 1 153 37 view .LVU121
+ 339 006a 05FB00F0 		mul	r0, r5, r0
+ 340 006e FFF7FEFF 		bl	pvPortMalloc
+ 341              	.LVL22:
+ 153:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->StateMinVariance, 0, sizeof_float * xhatSize);
+ 342              		.loc 1 153 26 discriminator 1 view .LVU122
+ 343 0072 2062     		str	r0, [r4, #32]
+ 154:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp = (uint8_t *)user_malloc(sizeof(uint8_t) * zSize);
+ 344              		.loc 1 154 5 is_stmt 1 view .LVU123
+ 154:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp = (uint8_t *)user_malloc(sizeof(uint8_t) * zSize);
+ 345              		.loc 1 154 50 is_stmt 0 view .LVU124
+ 346 0074 3A88     		ldrh	r2, [r7]
+ 154:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp = (uint8_t *)user_malloc(sizeof(uint8_t) * zSize);
+ 347              		.loc 1 154 5 view .LVU125
+ 348 0076 05FB02F2 		mul	r2, r5, r2
+ 349 007a 4146     		mov	r1, r8
+ 350 007c FFF7FEFF 		bl	memset
+ 351              	.LVL23:
+ 155:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->temp, 0, sizeof(uint8_t) * zSize);
+ 352              		.loc 1 155 5 is_stmt 1 view .LVU126
+ 155:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->temp, 0, sizeof(uint8_t) * zSize);
+ 353              		.loc 1 155 27 is_stmt 0 view .LVU127
+ 354 0080 3046     		mov	r0, r6
+ 355 0082 FFF7FEFF 		bl	pvPortMalloc
+ 356              	.LVL24:
+ 155:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->temp, 0, sizeof(uint8_t) * zSize);
+ 357              		.loc 1 155 14 discriminator 1 view .LVU128
+ 358 0086 6062     		str	r0, [r4, #36]
+ 156:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 359              		.loc 1 156 5 is_stmt 1 view .LVU129
+ 360 0088 3246     		mov	r2, r6
+ 361 008a 4146     		mov	r1, r8
+ 362 008c FFF7FEFF 		bl	memset
+ 363              	.LVL25:
+ 159:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FilteredValue, 0, sizeof_float * xhatSize);
+ 364              		.loc 1 159 5 view .LVU130
+ 159:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FilteredValue, 0, sizeof_float * xhatSize);
+ 365              		.loc 1 159 59 is_stmt 0 view .LVU131
+ 366 0090 3888     		ldrh	r0, [r7]
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 16
+
+
+ 159:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FilteredValue, 0, sizeof_float * xhatSize);
+ 367              		.loc 1 159 34 view .LVU132
+ 368 0092 05FB00F0 		mul	r0, r5, r0
+ 369 0096 FFF7FEFF 		bl	pvPortMalloc
+ 370              	.LVL26:
+ 159:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FilteredValue, 0, sizeof_float * xhatSize);
+ 371              		.loc 1 159 23 discriminator 1 view .LVU133
+ 372 009a 2060     		str	r0, [r4]
+ 160:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasuredVector = (float *)user_malloc(sizeof_float * zSize);
+ 373              		.loc 1 160 5 is_stmt 1 view .LVU134
+ 160:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasuredVector = (float *)user_malloc(sizeof_float * zSize);
+ 374              		.loc 1 160 47 is_stmt 0 view .LVU135
+ 375 009c 3A88     		ldrh	r2, [r7]
+ 160:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->MeasuredVector = (float *)user_malloc(sizeof_float * zSize);
+ 376              		.loc 1 160 5 view .LVU136
+ 377 009e 05FB02F2 		mul	r2, r5, r2
+ 378 00a2 4146     		mov	r1, r8
+ 379 00a4 FFF7FEFF 		bl	memset
+ 380              	.LVL27:
+ 161:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasuredVector, 0, sizeof_float * zSize);
+ 381              		.loc 1 161 5 is_stmt 1 view .LVU137
+ 161:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasuredVector, 0, sizeof_float * zSize);
+ 382              		.loc 1 161 60 is_stmt 0 view .LVU138
+ 383 00a8 3888     		ldrh	r0, [r7]
+ 161:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasuredVector, 0, sizeof_float * zSize);
+ 384              		.loc 1 161 35 view .LVU139
+ 385 00aa 06FB00F0 		mul	r0, r6, r0
+ 386 00ae FFF7FEFF 		bl	pvPortMalloc
+ 387              	.LVL28:
+ 161:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->MeasuredVector, 0, sizeof_float * zSize);
+ 388              		.loc 1 161 24 discriminator 1 view .LVU140
+ 389 00b2 6060     		str	r0, [r4, #4]
+ 162:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->ControlVector = (float *)user_malloc(sizeof_float * uSize);
+ 390              		.loc 1 162 5 is_stmt 1 view .LVU141
+ 162:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->ControlVector = (float *)user_malloc(sizeof_float * uSize);
+ 391              		.loc 1 162 48 is_stmt 0 view .LVU142
+ 392 00b4 3A88     		ldrh	r2, [r7]
+ 162:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->ControlVector = (float *)user_malloc(sizeof_float * uSize);
+ 393              		.loc 1 162 5 view .LVU143
+ 394 00b6 06FB02F2 		mul	r2, r6, r2
+ 395 00ba 4146     		mov	r1, r8
+ 396 00bc FFF7FEFF 		bl	memset
+ 397              	.LVL29:
+ 163:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->ControlVector, 0, sizeof_float * uSize);
+ 398              		.loc 1 163 5 is_stmt 1 view .LVU144
+ 163:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->ControlVector, 0, sizeof_float * uSize);
+ 399              		.loc 1 163 59 is_stmt 0 view .LVU145
+ 400 00c0 3888     		ldrh	r0, [r7]
+ 163:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->ControlVector, 0, sizeof_float * uSize);
+ 401              		.loc 1 163 34 view .LVU146
+ 402 00c2 09FB00F0 		mul	r0, r9, r0
+ 403 00c6 FFF7FEFF 		bl	pvPortMalloc
+ 404              	.LVL30:
+ 163:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->ControlVector, 0, sizeof_float * uSize);
+ 405              		.loc 1 163 23 discriminator 1 view .LVU147
+ 406 00ca A060     		str	r0, [r4, #8]
+ 164:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 17
+
+
+ 407              		.loc 1 164 5 is_stmt 1 view .LVU148
+ 164:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 408              		.loc 1 164 47 is_stmt 0 view .LVU149
+ 409 00cc 3A88     		ldrh	r2, [r7]
+ 164:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 410              		.loc 1 164 5 view .LVU150
+ 411 00ce 09FB02F2 		mul	r2, r9, r2
+ 412 00d2 4146     		mov	r1, r8
+ 413 00d4 FFF7FEFF 		bl	memset
+ 414              	.LVL31:
+ 167:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhat_data, 0, sizeof_float * xhatSize);
+ 415              		.loc 1 167 5 is_stmt 1 view .LVU151
+ 167:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhat_data, 0, sizeof_float * xhatSize);
+ 416              		.loc 1 167 55 is_stmt 0 view .LVU152
+ 417 00d8 3888     		ldrh	r0, [r7]
+ 167:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhat_data, 0, sizeof_float * xhatSize);
+ 418              		.loc 1 167 30 view .LVU153
+ 419 00da 05FB00F0 		mul	r0, r5, r0
+ 420 00de FFF7FEFF 		bl	pvPortMalloc
+ 421              	.LVL32:
+ 167:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhat_data, 0, sizeof_float * xhatSize);
+ 422              		.loc 1 167 19 discriminator 1 view .LVU154
+ 423 00e2 C4F8E800 		str	r0, [r4, #232]
+ 168:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->xhat, kf->xhatSize, 1, (float *)kf->xhat_data);
+ 424              		.loc 1 168 5 is_stmt 1 view .LVU155
+ 168:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->xhat, kf->xhatSize, 1, (float *)kf->xhat_data);
+ 425              		.loc 1 168 43 is_stmt 0 view .LVU156
+ 426 00e6 3A88     		ldrh	r2, [r7]
+ 168:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->xhat, kf->xhatSize, 1, (float *)kf->xhat_data);
+ 427              		.loc 1 168 5 view .LVU157
+ 428 00e8 05FB02F2 		mul	r2, r5, r2
+ 429 00ec 4146     		mov	r1, r8
+ 430 00ee FFF7FEFF 		bl	memset
+ 431              	.LVL33:
+ 169:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 432              		.loc 1 169 5 is_stmt 1 view .LVU158
+ 433 00f2 D4F8E830 		ldr	r3, [r4, #232]
+ 434 00f6 0122     		movs	r2, #1
+ 435 00f8 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 436 00fa 04F13000 		add	r0, r4, #48
+ 437 00fe FFF7FEFF 		bl	arm_mat_init_f32
+ 438              	.LVL34:
+ 172:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhatminus_data, 0, sizeof_float * xhatSize);
+ 439              		.loc 1 172 5 view .LVU159
+ 172:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhatminus_data, 0, sizeof_float * xhatSize);
+ 440              		.loc 1 172 60 is_stmt 0 view .LVU160
+ 441 0102 3888     		ldrh	r0, [r7]
+ 172:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhatminus_data, 0, sizeof_float * xhatSize);
+ 442              		.loc 1 172 35 view .LVU161
+ 443 0104 05FB00F0 		mul	r0, r5, r0
+ 444 0108 FFF7FEFF 		bl	pvPortMalloc
+ 445              	.LVL35:
+ 172:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->xhatminus_data, 0, sizeof_float * xhatSize);
+ 446              		.loc 1 172 24 discriminator 1 view .LVU162
+ 447 010c C4F8EC00 		str	r0, [r4, #236]
+ 173:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->xhatminus, kf->xhatSize, 1, (float *)kf->xhatminus_data);
+ 448              		.loc 1 173 5 is_stmt 1 view .LVU163
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 18
+
+
+ 173:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->xhatminus, kf->xhatSize, 1, (float *)kf->xhatminus_data);
+ 449              		.loc 1 173 48 is_stmt 0 view .LVU164
+ 450 0110 3A88     		ldrh	r2, [r7]
+ 173:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->xhatminus, kf->xhatSize, 1, (float *)kf->xhatminus_data);
+ 451              		.loc 1 173 5 view .LVU165
+ 452 0112 05FB02F2 		mul	r2, r5, r2
+ 453 0116 4146     		mov	r1, r8
+ 454 0118 FFF7FEFF 		bl	memset
+ 455              	.LVL36:
+ 174:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 456              		.loc 1 174 5 is_stmt 1 view .LVU166
+ 457 011c D4F8EC30 		ldr	r3, [r4, #236]
+ 458 0120 0122     		movs	r2, #1
+ 459 0122 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 460 0124 04F13800 		add	r0, r4, #56
+ 461 0128 FFF7FEFF 		bl	arm_mat_init_f32
+ 462              	.LVL37:
+ 176:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 463              		.loc 1 176 5 view .LVU167
+ 176:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 464              		.loc 1 176 8 is_stmt 0 view .LVU168
+ 465 012c B9F1000F 		cmp	r9, #0
+ 466 0130 40F06D81 		bne	.L15
+ 467              	.L12:
+ 185:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->z_data, 0, sizeof_float * zSize);
+ 468              		.loc 1 185 5 is_stmt 1 view .LVU169
+ 185:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->z_data, 0, sizeof_float * zSize);
+ 469              		.loc 1 185 52 is_stmt 0 view .LVU170
+ 470 0134 904F     		ldr	r7, .L17
+ 471 0136 3888     		ldrh	r0, [r7]
+ 185:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->z_data, 0, sizeof_float * zSize);
+ 472              		.loc 1 185 27 view .LVU171
+ 473 0138 06FB00F0 		mul	r0, r6, r0
+ 474 013c FFF7FEFF 		bl	pvPortMalloc
+ 475              	.LVL38:
+ 185:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->z_data, 0, sizeof_float * zSize);
+ 476              		.loc 1 185 16 discriminator 1 view .LVU172
+ 477 0140 C4F8F400 		str	r0, [r4, #244]
+ 186:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->z, kf->zSize, 1, (float *)kf->z_data);
+ 478              		.loc 1 186 5 is_stmt 1 view .LVU173
+ 186:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->z, kf->zSize, 1, (float *)kf->z_data);
+ 479              		.loc 1 186 40 is_stmt 0 view .LVU174
+ 480 0144 3A88     		ldrh	r2, [r7]
+ 186:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->z, kf->zSize, 1, (float *)kf->z_data);
+ 481              		.loc 1 186 5 view .LVU175
+ 482 0146 06FB02F2 		mul	r2, r6, r2
+ 483 014a 0021     		movs	r1, #0
+ 484 014c FFF7FEFF 		bl	memset
+ 485              	.LVL39:
+ 187:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 486              		.loc 1 187 5 is_stmt 1 view .LVU176
+ 487 0150 D4F8F430 		ldr	r3, [r4, #244]
+ 488 0154 0122     		movs	r2, #1
+ 489 0156 A17B     		ldrb	r1, [r4, #14]	@ zero_extendqisi2
+ 490 0158 04F14800 		add	r0, r4, #72
+ 491 015c FFF7FEFF 		bl	arm_mat_init_f32
+ 492              	.LVL40:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 19
+
+
+ 190:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->P_data, 0, sizeof_float * xhatSize * xhatSize);
+ 493              		.loc 1 190 5 view .LVU177
+ 190:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->P_data, 0, sizeof_float * xhatSize * xhatSize);
+ 494              		.loc 1 190 52 is_stmt 0 view .LVU178
+ 495 0160 3888     		ldrh	r0, [r7]
+ 496 0162 05FB00F0 		mul	r0, r5, r0
+ 190:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->P_data, 0, sizeof_float * xhatSize * xhatSize);
+ 497              		.loc 1 190 27 view .LVU179
+ 498 0166 05FB00F0 		mul	r0, r5, r0
+ 499 016a FFF7FEFF 		bl	pvPortMalloc
+ 500              	.LVL41:
+ 190:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->P_data, 0, sizeof_float * xhatSize * xhatSize);
+ 501              		.loc 1 190 16 discriminator 1 view .LVU180
+ 502 016e C4F8F800 		str	r0, [r4, #248]
+ 191:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->P, kf->xhatSize, kf->xhatSize, (float *)kf->P_data);
+ 503              		.loc 1 191 5 is_stmt 1 view .LVU181
+ 191:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->P, kf->xhatSize, kf->xhatSize, (float *)kf->P_data);
+ 504              		.loc 1 191 40 is_stmt 0 view .LVU182
+ 505 0172 3A88     		ldrh	r2, [r7]
+ 506 0174 05FB02F2 		mul	r2, r5, r2
+ 191:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->P, kf->xhatSize, kf->xhatSize, (float *)kf->P_data);
+ 507              		.loc 1 191 5 view .LVU183
+ 508 0178 05FB02F2 		mul	r2, r5, r2
+ 509 017c 0021     		movs	r1, #0
+ 510 017e FFF7FEFF 		bl	memset
+ 511              	.LVL42:
+ 192:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 512              		.loc 1 192 5 is_stmt 1 view .LVU184
+ 192:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 513              		.loc 1 192 27 is_stmt 0 view .LVU185
+ 514 0182 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 192:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 515              		.loc 1 192 5 view .LVU186
+ 516 0184 D4F8F830 		ldr	r3, [r4, #248]
+ 517 0188 0A46     		mov	r2, r1
+ 518 018a 04F15000 		add	r0, r4, #80
+ 519 018e FFF7FEFF 		bl	arm_mat_init_f32
+ 520              	.LVL43:
+ 195:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Pminus_data, 0, sizeof_float * xhatSize * xhatSize);
+ 521              		.loc 1 195 5 is_stmt 1 view .LVU187
+ 195:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Pminus_data, 0, sizeof_float * xhatSize * xhatSize);
+ 522              		.loc 1 195 57 is_stmt 0 view .LVU188
+ 523 0192 3888     		ldrh	r0, [r7]
+ 524 0194 05FB00F0 		mul	r0, r5, r0
+ 195:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Pminus_data, 0, sizeof_float * xhatSize * xhatSize);
+ 525              		.loc 1 195 32 view .LVU189
+ 526 0198 05FB00F0 		mul	r0, r5, r0
+ 527 019c FFF7FEFF 		bl	pvPortMalloc
+ 528              	.LVL44:
+ 195:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Pminus_data, 0, sizeof_float * xhatSize * xhatSize);
+ 529              		.loc 1 195 21 discriminator 1 view .LVU190
+ 530 01a0 C4F8FC00 		str	r0, [r4, #252]
+ 196:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->Pminus, kf->xhatSize, kf->xhatSize, (float *)kf->Pminus_data);
+ 531              		.loc 1 196 5 is_stmt 1 view .LVU191
+ 196:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->Pminus, kf->xhatSize, kf->xhatSize, (float *)kf->Pminus_data);
+ 532              		.loc 1 196 45 is_stmt 0 view .LVU192
+ 533 01a4 3A88     		ldrh	r2, [r7]
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 20
+
+
+ 534 01a6 05FB02F2 		mul	r2, r5, r2
+ 196:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->Pminus, kf->xhatSize, kf->xhatSize, (float *)kf->Pminus_data);
+ 535              		.loc 1 196 5 view .LVU193
+ 536 01aa 05FB02F2 		mul	r2, r5, r2
+ 537 01ae 0021     		movs	r1, #0
+ 538 01b0 FFF7FEFF 		bl	memset
+ 539              	.LVL45:
+ 197:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 540              		.loc 1 197 5 is_stmt 1 view .LVU194
+ 197:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 541              		.loc 1 197 32 is_stmt 0 view .LVU195
+ 542 01b4 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 197:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 543              		.loc 1 197 5 view .LVU196
+ 544 01b6 D4F8FC30 		ldr	r3, [r4, #252]
+ 545 01ba 0A46     		mov	r2, r1
+ 546 01bc 04F15800 		add	r0, r4, #88
+ 547 01c0 FFF7FEFF 		bl	arm_mat_init_f32
+ 548              	.LVL46:
+ 200:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->FT_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ 549              		.loc 1 200 5 is_stmt 1 view .LVU197
+ 200:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->FT_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ 550              		.loc 1 200 52 is_stmt 0 view .LVU198
+ 551 01c4 3888     		ldrh	r0, [r7]
+ 552 01c6 05FB00F0 		mul	r0, r5, r0
+ 200:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->FT_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ 553              		.loc 1 200 27 view .LVU199
+ 554 01ca 05FB00F0 		mul	r0, r5, r0
+ 555 01ce FFF7FEFF 		bl	pvPortMalloc
+ 556              	.LVL47:
+ 200:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->FT_data = (float *)user_malloc(sizeof_float * xhatSize * xhatSize);
+ 557              		.loc 1 200 16 discriminator 1 view .LVU200
+ 558 01d2 C4F80001 		str	r0, [r4, #256]
+ 201:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->F_data, 0, sizeof_float * xhatSize * xhatSize);
+ 559              		.loc 1 201 5 is_stmt 1 view .LVU201
+ 201:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->F_data, 0, sizeof_float * xhatSize * xhatSize);
+ 560              		.loc 1 201 53 is_stmt 0 view .LVU202
+ 561 01d6 3888     		ldrh	r0, [r7]
+ 562 01d8 05FB00F0 		mul	r0, r5, r0
+ 201:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->F_data, 0, sizeof_float * xhatSize * xhatSize);
+ 563              		.loc 1 201 28 view .LVU203
+ 564 01dc 05FB00F0 		mul	r0, r5, r0
+ 565 01e0 FFF7FEFF 		bl	pvPortMalloc
+ 566              	.LVL48:
+ 201:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->F_data, 0, sizeof_float * xhatSize * xhatSize);
+ 567              		.loc 1 201 17 discriminator 1 view .LVU204
+ 568 01e4 C4F80401 		str	r0, [r4, #260]
+ 202:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FT_data, 0, sizeof_float * xhatSize * xhatSize);
+ 569              		.loc 1 202 5 is_stmt 1 view .LVU205
+ 202:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FT_data, 0, sizeof_float * xhatSize * xhatSize);
+ 570              		.loc 1 202 40 is_stmt 0 view .LVU206
+ 571 01e8 3A88     		ldrh	r2, [r7]
+ 572 01ea 05FB02F2 		mul	r2, r5, r2
+ 202:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->FT_data, 0, sizeof_float * xhatSize * xhatSize);
+ 573              		.loc 1 202 5 view .LVU207
+ 574 01ee 05FB02F2 		mul	r2, r5, r2
+ 575 01f2 0021     		movs	r1, #0
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 21
+
+
+ 576 01f4 D4F80001 		ldr	r0, [r4, #256]
+ 577 01f8 FFF7FEFF 		bl	memset
+ 578              	.LVL49:
+ 203:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->F, kf->xhatSize, kf->xhatSize, (float *)kf->F_data);
+ 579              		.loc 1 203 5 is_stmt 1 view .LVU208
+ 203:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->F, kf->xhatSize, kf->xhatSize, (float *)kf->F_data);
+ 580              		.loc 1 203 41 is_stmt 0 view .LVU209
+ 581 01fc 3A88     		ldrh	r2, [r7]
+ 582 01fe 05FB02F2 		mul	r2, r5, r2
+ 203:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->F, kf->xhatSize, kf->xhatSize, (float *)kf->F_data);
+ 583              		.loc 1 203 5 view .LVU210
+ 584 0202 05FB02F2 		mul	r2, r5, r2
+ 585 0206 0021     		movs	r1, #0
+ 586 0208 D4F80401 		ldr	r0, [r4, #260]
+ 587 020c FFF7FEFF 		bl	memset
+ 588              	.LVL50:
+ 204:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->FT, kf->xhatSize, kf->xhatSize, (float *)kf->FT_data);
+ 589              		.loc 1 204 5 is_stmt 1 view .LVU211
+ 204:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->FT, kf->xhatSize, kf->xhatSize, (float *)kf->FT_data);
+ 590              		.loc 1 204 27 is_stmt 0 view .LVU212
+ 591 0210 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 204:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->FT, kf->xhatSize, kf->xhatSize, (float *)kf->FT_data);
+ 592              		.loc 1 204 5 view .LVU213
+ 593 0212 D4F80031 		ldr	r3, [r4, #256]
+ 594 0216 0A46     		mov	r2, r1
+ 595 0218 04F16000 		add	r0, r4, #96
+ 596 021c FFF7FEFF 		bl	arm_mat_init_f32
+ 597              	.LVL51:
+ 205:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 598              		.loc 1 205 5 is_stmt 1 view .LVU214
+ 205:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 599              		.loc 1 205 28 is_stmt 0 view .LVU215
+ 600 0220 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 205:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 601              		.loc 1 205 5 view .LVU216
+ 602 0222 D4F80431 		ldr	r3, [r4, #260]
+ 603 0226 0A46     		mov	r2, r1
+ 604 0228 04F16800 		add	r0, r4, #104
+ 605 022c FFF7FEFF 		bl	arm_mat_init_f32
+ 606              	.LVL52:
+ 207:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 607              		.loc 1 207 5 is_stmt 1 view .LVU217
+ 207:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 608              		.loc 1 207 8 is_stmt 0 view .LVU218
+ 609 0230 B9F1000F 		cmp	r9, #0
+ 610 0234 40F00181 		bne	.L16
+ 611              	.L13:
+ 216:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->HT_data = (float *)user_malloc(sizeof_float * xhatSize * zSize);
+ 612              		.loc 1 216 5 is_stmt 1 view .LVU219
+ 216:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->HT_data = (float *)user_malloc(sizeof_float * xhatSize * zSize);
+ 613              		.loc 1 216 52 is_stmt 0 view .LVU220
+ 614 0238 4F4F     		ldr	r7, .L17
+ 615 023a 3888     		ldrh	r0, [r7]
+ 616 023c 06FB00F0 		mul	r0, r6, r0
+ 216:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->HT_data = (float *)user_malloc(sizeof_float * xhatSize * zSize);
+ 617              		.loc 1 216 27 view .LVU221
+ 618 0240 05FB00F0 		mul	r0, r5, r0
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 22
+
+
+ 619 0244 FFF7FEFF 		bl	pvPortMalloc
+ 620              	.LVL53:
+ 216:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->HT_data = (float *)user_malloc(sizeof_float * xhatSize * zSize);
+ 621              		.loc 1 216 16 discriminator 1 view .LVU222
+ 622 0248 C4F80C01 		str	r0, [r4, #268]
+ 217:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->H_data, 0, sizeof_float * zSize * xhatSize);
+ 623              		.loc 1 217 5 is_stmt 1 view .LVU223
+ 217:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->H_data, 0, sizeof_float * zSize * xhatSize);
+ 624              		.loc 1 217 53 is_stmt 0 view .LVU224
+ 625 024c 3888     		ldrh	r0, [r7]
+ 626 024e 05FB00F0 		mul	r0, r5, r0
+ 217:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->H_data, 0, sizeof_float * zSize * xhatSize);
+ 627              		.loc 1 217 28 view .LVU225
+ 628 0252 06FB00F0 		mul	r0, r6, r0
+ 629 0256 FFF7FEFF 		bl	pvPortMalloc
+ 630              	.LVL54:
+ 217:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->H_data, 0, sizeof_float * zSize * xhatSize);
+ 631              		.loc 1 217 17 discriminator 1 view .LVU226
+ 632 025a C4F81001 		str	r0, [r4, #272]
+ 218:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->HT_data, 0, sizeof_float * xhatSize * zSize);
+ 633              		.loc 1 218 5 is_stmt 1 view .LVU227
+ 218:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->HT_data, 0, sizeof_float * xhatSize * zSize);
+ 634              		.loc 1 218 40 is_stmt 0 view .LVU228
+ 635 025e 3A88     		ldrh	r2, [r7]
+ 636 0260 06FB02F2 		mul	r2, r6, r2
+ 218:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->HT_data, 0, sizeof_float * xhatSize * zSize);
+ 637              		.loc 1 218 5 view .LVU229
+ 638 0264 05FB02F2 		mul	r2, r5, r2
+ 639 0268 0021     		movs	r1, #0
+ 640 026a D4F80C01 		ldr	r0, [r4, #268]
+ 641 026e FFF7FEFF 		bl	memset
+ 642              	.LVL55:
+ 219:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->H, kf->zSize, kf->xhatSize, (float *)kf->H_data);
+ 643              		.loc 1 219 5 is_stmt 1 view .LVU230
+ 219:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->H, kf->zSize, kf->xhatSize, (float *)kf->H_data);
+ 644              		.loc 1 219 41 is_stmt 0 view .LVU231
+ 645 0272 3A88     		ldrh	r2, [r7]
+ 646 0274 05FB02F2 		mul	r2, r5, r2
+ 219:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->H, kf->zSize, kf->xhatSize, (float *)kf->H_data);
+ 647              		.loc 1 219 5 view .LVU232
+ 648 0278 06FB02F2 		mul	r2, r6, r2
+ 649 027c 0021     		movs	r1, #0
+ 650 027e D4F81001 		ldr	r0, [r4, #272]
+ 651 0282 FFF7FEFF 		bl	memset
+ 652              	.LVL56:
+ 220:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->HT, kf->xhatSize, kf->zSize, (float *)kf->HT_data);
+ 653              		.loc 1 220 5 is_stmt 1 view .LVU233
+ 654 0286 D4F80C31 		ldr	r3, [r4, #268]
+ 655 028a 227B     		ldrb	r2, [r4, #12]	@ zero_extendqisi2
+ 656 028c A17B     		ldrb	r1, [r4, #14]	@ zero_extendqisi2
+ 657 028e 04F17800 		add	r0, r4, #120
+ 658 0292 FFF7FEFF 		bl	arm_mat_init_f32
+ 659              	.LVL57:
+ 221:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 660              		.loc 1 221 5 view .LVU234
+ 661 0296 D4F81031 		ldr	r3, [r4, #272]
+ 662 029a A27B     		ldrb	r2, [r4, #14]	@ zero_extendqisi2
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 23
+
+
+ 663 029c 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 664 029e 04F18000 		add	r0, r4, #128
+ 665 02a2 FFF7FEFF 		bl	arm_mat_init_f32
+ 666              	.LVL58:
+ 224:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Q_data, 0, sizeof_float * xhatSize * xhatSize);
+ 667              		.loc 1 224 5 view .LVU235
+ 224:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Q_data, 0, sizeof_float * xhatSize * xhatSize);
+ 668              		.loc 1 224 52 is_stmt 0 view .LVU236
+ 669 02a6 3888     		ldrh	r0, [r7]
+ 670 02a8 05FB00F0 		mul	r0, r5, r0
+ 224:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Q_data, 0, sizeof_float * xhatSize * xhatSize);
+ 671              		.loc 1 224 27 view .LVU237
+ 672 02ac 05FB00F0 		mul	r0, r5, r0
+ 673 02b0 FFF7FEFF 		bl	pvPortMalloc
+ 674              	.LVL59:
+ 224:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->Q_data, 0, sizeof_float * xhatSize * xhatSize);
+ 675              		.loc 1 224 16 discriminator 1 view .LVU238
+ 676 02b4 C4F81401 		str	r0, [r4, #276]
+ 225:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->Q, kf->xhatSize, kf->xhatSize, (float *)kf->Q_data);
+ 677              		.loc 1 225 5 is_stmt 1 view .LVU239
+ 225:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->Q, kf->xhatSize, kf->xhatSize, (float *)kf->Q_data);
+ 678              		.loc 1 225 40 is_stmt 0 view .LVU240
+ 679 02b8 3A88     		ldrh	r2, [r7]
+ 680 02ba 05FB02F2 		mul	r2, r5, r2
+ 225:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->Q, kf->xhatSize, kf->xhatSize, (float *)kf->Q_data);
+ 681              		.loc 1 225 5 view .LVU241
+ 682 02be 05FB02F2 		mul	r2, r5, r2
+ 683 02c2 0021     		movs	r1, #0
+ 684 02c4 FFF7FEFF 		bl	memset
+ 685              	.LVL60:
+ 226:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 686              		.loc 1 226 5 is_stmt 1 view .LVU242
+ 226:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 687              		.loc 1 226 27 is_stmt 0 view .LVU243
+ 688 02c8 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 226:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 689              		.loc 1 226 5 view .LVU244
+ 690 02ca D4F81431 		ldr	r3, [r4, #276]
+ 691 02ce 0A46     		mov	r2, r1
+ 692 02d0 04F18800 		add	r0, r4, #136
+ 693 02d4 FFF7FEFF 		bl	arm_mat_init_f32
+ 694              	.LVL61:
+ 229:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->R_data, 0, sizeof_float * zSize * zSize);
+ 695              		.loc 1 229 5 is_stmt 1 view .LVU245
+ 229:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->R_data, 0, sizeof_float * zSize * zSize);
+ 696              		.loc 1 229 52 is_stmt 0 view .LVU246
+ 697 02d8 3888     		ldrh	r0, [r7]
+ 698 02da 06FB00F0 		mul	r0, r6, r0
+ 229:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->R_data, 0, sizeof_float * zSize * zSize);
+ 699              		.loc 1 229 27 view .LVU247
+ 700 02de 06FB00F0 		mul	r0, r6, r0
+ 701 02e2 FFF7FEFF 		bl	pvPortMalloc
+ 702              	.LVL62:
+ 229:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->R_data, 0, sizeof_float * zSize * zSize);
+ 703              		.loc 1 229 16 discriminator 1 view .LVU248
+ 704 02e6 C4F81801 		str	r0, [r4, #280]
+ 230:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->R, kf->zSize, kf->zSize, (float *)kf->R_data);
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 24
+
+
+ 705              		.loc 1 230 5 is_stmt 1 view .LVU249
+ 230:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->R, kf->zSize, kf->zSize, (float *)kf->R_data);
+ 706              		.loc 1 230 40 is_stmt 0 view .LVU250
+ 707 02ea 3A88     		ldrh	r2, [r7]
+ 708 02ec 06FB02F2 		mul	r2, r6, r2
+ 230:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->R, kf->zSize, kf->zSize, (float *)kf->R_data);
+ 709              		.loc 1 230 5 view .LVU251
+ 710 02f0 06FB02F2 		mul	r2, r6, r2
+ 711 02f4 0021     		movs	r1, #0
+ 712 02f6 FFF7FEFF 		bl	memset
+ 713              	.LVL63:
+ 231:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 714              		.loc 1 231 5 is_stmt 1 view .LVU252
+ 231:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 715              		.loc 1 231 27 is_stmt 0 view .LVU253
+ 716 02fa A17B     		ldrb	r1, [r4, #14]	@ zero_extendqisi2
+ 231:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 717              		.loc 1 231 5 view .LVU254
+ 718 02fc D4F81831 		ldr	r3, [r4, #280]
+ 719 0300 0A46     		mov	r2, r1
+ 720 0302 04F19000 		add	r0, r4, #144
+ 721 0306 FFF7FEFF 		bl	arm_mat_init_f32
+ 722              	.LVL64:
+ 234:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->K_data, 0, sizeof_float * xhatSize * zSize);
+ 723              		.loc 1 234 5 is_stmt 1 view .LVU255
+ 234:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->K_data, 0, sizeof_float * xhatSize * zSize);
+ 724              		.loc 1 234 52 is_stmt 0 view .LVU256
+ 725 030a 3888     		ldrh	r0, [r7]
+ 726 030c 05FB00F0 		mul	r0, r5, r0
+ 234:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->K_data, 0, sizeof_float * xhatSize * zSize);
+ 727              		.loc 1 234 27 view .LVU257
+ 728 0310 06FB00F0 		mul	r0, r6, r0
+ 729 0314 FFF7FEFF 		bl	pvPortMalloc
+ 730              	.LVL65:
+ 234:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     memset(kf->K_data, 0, sizeof_float * xhatSize * zSize);
+ 731              		.loc 1 234 16 discriminator 1 view .LVU258
+ 732 0318 C4F81C01 		str	r0, [r4, #284]
+ 235:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->K, kf->xhatSize, kf->zSize, (float *)kf->K_data);
+ 733              		.loc 1 235 5 is_stmt 1 view .LVU259
+ 235:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->K, kf->xhatSize, kf->zSize, (float *)kf->K_data);
+ 734              		.loc 1 235 40 is_stmt 0 view .LVU260
+ 735 031c 3A88     		ldrh	r2, [r7]
+ 736 031e 05FB02F2 		mul	r2, r5, r2
+ 235:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->K, kf->xhatSize, kf->zSize, (float *)kf->K_data);
+ 737              		.loc 1 235 5 view .LVU261
+ 738 0322 06FB02F2 		mul	r2, r6, r2
+ 739 0326 0021     		movs	r1, #0
+ 740 0328 FFF7FEFF 		bl	memset
+ 741              	.LVL66:
+ 236:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 742              		.loc 1 236 5 is_stmt 1 view .LVU262
+ 743 032c D4F81C31 		ldr	r3, [r4, #284]
+ 744 0330 A27B     		ldrb	r2, [r4, #14]	@ zero_extendqisi2
+ 745 0332 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 746 0334 04F19800 		add	r0, r4, #152
+ 747 0338 FFF7FEFF 		bl	arm_mat_init_f32
+ 748              	.LVL67:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 25
+
+
+ 238:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 749              		.loc 1 238 5 view .LVU263
+ 238:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 750              		.loc 1 238 56 is_stmt 0 view .LVU264
+ 751 033c 207B     		ldrb	r0, [r4, #12]	@ zero_extendqisi2
+ 238:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 752              		.loc 1 238 52 view .LVU265
+ 753 033e 3B88     		ldrh	r3, [r7]
+ 754 0340 00FB03F3 		mul	r3, r0, r3
+ 238:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 755              		.loc 1 238 27 view .LVU266
+ 756 0344 03FB00F0 		mul	r0, r3, r0
+ 757 0348 FFF7FEFF 		bl	pvPortMalloc
+ 758              	.LVL68:
+ 238:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 759              		.loc 1 238 16 discriminator 1 view .LVU267
+ 760 034c C4F82001 		str	r0, [r4, #288]
+ 239:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 761              		.loc 1 239 5 is_stmt 1 view .LVU268
+ 239:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 762              		.loc 1 239 66 is_stmt 0 view .LVU269
+ 763 0350 207B     		ldrb	r0, [r4, #12]	@ zero_extendqisi2
+ 239:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 764              		.loc 1 239 62 view .LVU270
+ 765 0352 3B88     		ldrh	r3, [r7]
+ 766 0354 00FB03F3 		mul	r3, r0, r3
+ 239:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 767              		.loc 1 239 37 view .LVU271
+ 768 0358 03FB00F0 		mul	r0, r3, r0
+ 769 035c FFF7FEFF 		bl	pvPortMalloc
+ 770              	.LVL69:
+ 239:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_matrix_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize * kf->xhatSize);
+ 771              		.loc 1 239 26 discriminator 1 view .LVU272
+ 772 0360 C4F82401 		str	r0, [r4, #292]
+ 240:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 773              		.loc 1 240 5 is_stmt 1 view .LVU273
+ 240:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 774              		.loc 1 240 67 is_stmt 0 view .LVU274
+ 775 0364 207B     		ldrb	r0, [r4, #12]	@ zero_extendqisi2
+ 240:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 776              		.loc 1 240 63 view .LVU275
+ 777 0366 3B88     		ldrh	r3, [r7]
+ 778 0368 00FB03F3 		mul	r3, r0, r3
+ 240:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 779              		.loc 1 240 38 view .LVU276
+ 780 036c 03FB00F0 		mul	r0, r3, r0
+ 781 0370 FFF7FEFF 		bl	pvPortMalloc
+ 782              	.LVL70:
+ 783 0374 04E0     		b	.L18
+ 784              	.L19:
+ 785 0376 00BF     		.align	2
+ 786              	.L17:
+ 787 0378 00000000 		.word	sizeof_float
+ 788 037c 00000000 		.word	sizeof_double
+ 789              	.L18:
+ 240:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 790              		.loc 1 240 27 discriminator 1 view .LVU277
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 26
+
+
+ 791 0380 C4F82801 		str	r0, [r4, #296]
+ 241:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 792              		.loc 1 241 5 is_stmt 1 view .LVU278
+ 241:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 793              		.loc 1 241 66 is_stmt 0 view .LVU279
+ 794 0384 207B     		ldrb	r0, [r4, #12]	@ zero_extendqisi2
+ 241:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 795              		.loc 1 241 62 view .LVU280
+ 796 0386 3B88     		ldrh	r3, [r7]
+ 241:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 797              		.loc 1 241 37 view .LVU281
+ 798 0388 03FB00F0 		mul	r0, r3, r0
+ 799 038c FFF7FEFF 		bl	pvPortMalloc
+ 800              	.LVL71:
+ 241:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->temp_vector_data1 = (float *)user_malloc(sizeof_float * kf->xhatSize);
+ 801              		.loc 1 241 26 discriminator 1 view .LVU282
+ 802 0390 C4F82C01 		str	r0, [r4, #300]
+ 242:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->S, kf->xhatSize, kf->xhatSize, (float *)kf->S_data);
+ 803              		.loc 1 242 5 is_stmt 1 view .LVU283
+ 242:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->S, kf->xhatSize, kf->xhatSize, (float *)kf->S_data);
+ 804              		.loc 1 242 67 is_stmt 0 view .LVU284
+ 805 0394 207B     		ldrb	r0, [r4, #12]	@ zero_extendqisi2
+ 242:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->S, kf->xhatSize, kf->xhatSize, (float *)kf->S_data);
+ 806              		.loc 1 242 63 view .LVU285
+ 807 0396 3B88     		ldrh	r3, [r7]
+ 242:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->S, kf->xhatSize, kf->xhatSize, (float *)kf->S_data);
+ 808              		.loc 1 242 38 view .LVU286
+ 809 0398 03FB00F0 		mul	r0, r3, r0
+ 810 039c FFF7FEFF 		bl	pvPortMalloc
+ 811              	.LVL72:
+ 242:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->S, kf->xhatSize, kf->xhatSize, (float *)kf->S_data);
+ 812              		.loc 1 242 27 discriminator 1 view .LVU287
+ 813 03a0 C4F83001 		str	r0, [r4, #304]
+ 243:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_matrix, kf->xhatSize, kf->xhatSize, (float *)kf->temp_matrix_data);
+ 814              		.loc 1 243 5 is_stmt 1 view .LVU288
+ 243:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_matrix, kf->xhatSize, kf->xhatSize, (float *)kf->temp_matrix_data);
+ 815              		.loc 1 243 27 is_stmt 0 view .LVU289
+ 816 03a4 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 243:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_matrix, kf->xhatSize, kf->xhatSize, (float *)kf->temp_matrix_data);
+ 817              		.loc 1 243 5 view .LVU290
+ 818 03a6 D4F82031 		ldr	r3, [r4, #288]
+ 819 03aa 0A46     		mov	r2, r1
+ 820 03ac 04F1A000 		add	r0, r4, #160
+ 821 03b0 FFF7FEFF 		bl	arm_mat_init_f32
+ 822              	.LVL73:
+ 244:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_matrix1, kf->xhatSize, kf->xhatSize, (float *)kf->temp_matrix_data1);
+ 823              		.loc 1 244 5 is_stmt 1 view .LVU291
+ 244:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_matrix1, kf->xhatSize, kf->xhatSize, (float *)kf->temp_matrix_data1);
+ 824              		.loc 1 244 37 is_stmt 0 view .LVU292
+ 825 03b4 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 244:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_matrix1, kf->xhatSize, kf->xhatSize, (float *)kf->temp_matrix_data1);
+ 826              		.loc 1 244 5 view .LVU293
+ 827 03b6 D4F82431 		ldr	r3, [r4, #292]
+ 828 03ba 0A46     		mov	r2, r1
+ 829 03bc 04F1A800 		add	r0, r4, #168
+ 830 03c0 FFF7FEFF 		bl	arm_mat_init_f32
+ 831              	.LVL74:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 27
+
+
+ 245:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_vector, kf->xhatSize, 1, (float *)kf->temp_vector_data);
+ 832              		.loc 1 245 5 is_stmt 1 view .LVU294
+ 245:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_vector, kf->xhatSize, 1, (float *)kf->temp_vector_data);
+ 833              		.loc 1 245 38 is_stmt 0 view .LVU295
+ 834 03c4 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 245:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_vector, kf->xhatSize, 1, (float *)kf->temp_vector_data);
+ 835              		.loc 1 245 5 view .LVU296
+ 836 03c6 D4F82831 		ldr	r3, [r4, #296]
+ 837 03ca 0A46     		mov	r2, r1
+ 838 03cc 04F1B000 		add	r0, r4, #176
+ 839 03d0 FFF7FEFF 		bl	arm_mat_init_f32
+ 840              	.LVL75:
+ 246:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     Matrix_Init(&kf->temp_vector1, kf->xhatSize, 1, (float *)kf->temp_vector_data1);
+ 841              		.loc 1 246 5 is_stmt 1 view .LVU297
+ 842 03d4 D4F82C31 		ldr	r3, [r4, #300]
+ 843 03d8 0122     		movs	r2, #1
+ 844 03da 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 845 03dc 04F1B800 		add	r0, r4, #184
+ 846 03e0 FFF7FEFF 		bl	arm_mat_init_f32
+ 847              	.LVL76:
+ 247:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 848              		.loc 1 247 5 view .LVU298
+ 849 03e4 D4F83031 		ldr	r3, [r4, #304]
+ 850 03e8 0122     		movs	r2, #1
+ 851 03ea 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 852 03ec 04F1C000 		add	r0, r4, #192
+ 853 03f0 FFF7FEFF 		bl	arm_mat_init_f32
+ 854              	.LVL77:
+ 249:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq2 = 0;
+ 855              		.loc 1 249 5 view .LVU299
+ 249:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq2 = 0;
+ 856              		.loc 1 249 17 is_stmt 0 view .LVU300
+ 857 03f4 0023     		movs	r3, #0
+ 858 03f6 84F82830 		strb	r3, [r4, #40]
+ 250:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq3 = 0;
+ 859              		.loc 1 250 5 is_stmt 1 view .LVU301
+ 250:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq3 = 0;
+ 860              		.loc 1 250 17 is_stmt 0 view .LVU302
+ 861 03fa 84F82930 		strb	r3, [r4, #41]
+ 251:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq4 = 0;
+ 862              		.loc 1 251 5 is_stmt 1 view .LVU303
+ 251:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq4 = 0;
+ 863              		.loc 1 251 17 is_stmt 0 view .LVU304
+ 864 03fe 84F82A30 		strb	r3, [r4, #42]
+ 252:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq5 = 0;
+ 865              		.loc 1 252 5 is_stmt 1 view .LVU305
+ 252:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     kf->SkipEq5 = 0;
+ 866              		.loc 1 252 17 is_stmt 0 view .LVU306
+ 867 0402 84F82B30 		strb	r3, [r4, #43]
+ 253:Middlewares/Filter/KalmanFilter/kalman_filter.c **** }
+ 868              		.loc 1 253 5 is_stmt 1 view .LVU307
+ 253:Middlewares/Filter/KalmanFilter/kalman_filter.c **** }
+ 869              		.loc 1 253 17 is_stmt 0 view .LVU308
+ 870 0406 84F82C30 		strb	r3, [r4, #44]
+ 254:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 871              		.loc 1 254 1 view .LVU309
+ 872 040a BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 28
+
+
+ 873              	.LVL78:
+ 874              	.L15:
+ 179:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->u_data, 0, sizeof_float * uSize);
+ 875              		.loc 1 179 9 is_stmt 1 view .LVU310
+ 179:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->u_data, 0, sizeof_float * uSize);
+ 876              		.loc 1 179 56 is_stmt 0 view .LVU311
+ 877 040e 3888     		ldrh	r0, [r7]
+ 179:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->u_data, 0, sizeof_float * uSize);
+ 878              		.loc 1 179 31 view .LVU312
+ 879 0410 09FB00F0 		mul	r0, r9, r0
+ 880 0414 FFF7FEFF 		bl	pvPortMalloc
+ 881              	.LVL79:
+ 179:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->u_data, 0, sizeof_float * uSize);
+ 882              		.loc 1 179 20 discriminator 1 view .LVU313
+ 883 0418 C4F8F000 		str	r0, [r4, #240]
+ 180:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         Matrix_Init(&kf->u, kf->uSize, 1, (float *)kf->u_data);
+ 884              		.loc 1 180 9 is_stmt 1 view .LVU314
+ 180:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         Matrix_Init(&kf->u, kf->uSize, 1, (float *)kf->u_data);
+ 885              		.loc 1 180 44 is_stmt 0 view .LVU315
+ 886 041c 3A88     		ldrh	r2, [r7]
+ 180:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         Matrix_Init(&kf->u, kf->uSize, 1, (float *)kf->u_data);
+ 887              		.loc 1 180 9 view .LVU316
+ 888 041e 09FB02F2 		mul	r2, r9, r2
+ 889 0422 4146     		mov	r1, r8
+ 890 0424 FFF7FEFF 		bl	memset
+ 891              	.LVL80:
+ 181:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 892              		.loc 1 181 9 is_stmt 1 view .LVU317
+ 893 0428 D4F8F030 		ldr	r3, [r4, #240]
+ 894 042c 0122     		movs	r2, #1
+ 895 042e 617B     		ldrb	r1, [r4, #13]	@ zero_extendqisi2
+ 896 0430 04F14000 		add	r0, r4, #64
+ 897 0434 FFF7FEFF 		bl	arm_mat_init_f32
+ 898              	.LVL81:
+ 899 0438 7CE6     		b	.L12
+ 900              	.L16:
+ 210:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->B_data, 0, sizeof_float * xhatSize * uSize);
+ 901              		.loc 1 210 9 view .LVU318
+ 210:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->B_data, 0, sizeof_float * xhatSize * uSize);
+ 902              		.loc 1 210 56 is_stmt 0 view .LVU319
+ 903 043a 3888     		ldrh	r0, [r7]
+ 904 043c 05FB00F0 		mul	r0, r5, r0
+ 210:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->B_data, 0, sizeof_float * xhatSize * uSize);
+ 905              		.loc 1 210 31 view .LVU320
+ 906 0440 00FB09F0 		mul	r0, r0, r9
+ 907 0444 FFF7FEFF 		bl	pvPortMalloc
+ 908              	.LVL82:
+ 210:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->B_data, 0, sizeof_float * xhatSize * uSize);
+ 909              		.loc 1 210 20 discriminator 1 view .LVU321
+ 910 0448 C4F80801 		str	r0, [r4, #264]
+ 211:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         Matrix_Init(&kf->B, kf->xhatSize, kf->uSize, (float *)kf->B_data);
+ 911              		.loc 1 211 9 is_stmt 1 view .LVU322
+ 211:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         Matrix_Init(&kf->B, kf->xhatSize, kf->uSize, (float *)kf->B_data);
+ 912              		.loc 1 211 44 is_stmt 0 view .LVU323
+ 913 044c 3A88     		ldrh	r2, [r7]
+ 914 044e 05FB02F2 		mul	r2, r5, r2
+ 211:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         Matrix_Init(&kf->B, kf->xhatSize, kf->uSize, (float *)kf->B_data);
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 29
+
+
+ 915              		.loc 1 211 9 view .LVU324
+ 916 0452 02FB09F2 		mul	r2, r2, r9
+ 917 0456 0021     		movs	r1, #0
+ 918 0458 FFF7FEFF 		bl	memset
+ 919              	.LVL83:
+ 212:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 920              		.loc 1 212 9 is_stmt 1 view .LVU325
+ 921 045c D4F80831 		ldr	r3, [r4, #264]
+ 922 0460 627B     		ldrb	r2, [r4, #13]	@ zero_extendqisi2
+ 923 0462 217B     		ldrb	r1, [r4, #12]	@ zero_extendqisi2
+ 924 0464 04F17000 		add	r0, r4, #112
+ 925 0468 FFF7FEFF 		bl	arm_mat_init_f32
+ 926              	.LVL84:
+ 927 046c E4E6     		b	.L13
+ 928              		.cfi_endproc
+ 929              	.LFE168:
+ 931 046e 00BF     		.section	.text.Kalman_Filter_Update,"ax",%progbits
+ 932              		.align	1
+ 933              		.global	Kalman_Filter_Update
+ 934              		.syntax unified
+ 935              		.thumb
+ 936              		.thumb_func
+ 938              	Kalman_Filter_Update:
+ 939              	.LVL85:
+ 940              	.LFB169:
+ 257:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // ����H K R������������Զ�����
+ 941              		.loc 1 257 1 view -0
+ 942              		.cfi_startproc
+ 943              		@ args = 0, pretend = 0, frame = 0
+ 944              		@ frame_needed = 0, uses_anonymous_args = 0
+ 257:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // ����H K R������������Զ�����
+ 945              		.loc 1 257 1 is_stmt 0 view .LVU327
+ 946 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 947              	.LCFI2:
+ 948              		.cfi_def_cfa_offset 32
+ 949              		.cfi_offset 3, -32
+ 950              		.cfi_offset 4, -28
+ 951              		.cfi_offset 5, -24
+ 952              		.cfi_offset 6, -20
+ 953              		.cfi_offset 7, -16
+ 954              		.cfi_offset 8, -12
+ 955              		.cfi_offset 9, -8
+ 956              		.cfi_offset 14, -4
+ 957 0004 0446     		mov	r4, r0
+ 260:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         H_K_R_Adjustment(kf);
+ 958              		.loc 1 260 5 is_stmt 1 view .LVU328
+ 260:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         H_K_R_Adjustment(kf);
+ 959              		.loc 1 260 11 is_stmt 0 view .LVU329
+ 960 0006 C37B     		ldrb	r3, [r0, #15]	@ zero_extendqisi2
+ 260:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         H_K_R_Adjustment(kf);
+ 961              		.loc 1 260 8 view .LVU330
+ 962 0008 002B     		cmp	r3, #0
+ 963 000a 6DD0     		beq	.L21
+ 261:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     else
+ 964              		.loc 1 261 9 is_stmt 1 view .LVU331
+ 965 000c FFF7FEFF 		bl	H_K_R_Adjustment
+ 966              	.LVL86:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 30
+
+
+ 967              	.L22:
+ 268:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 968              		.loc 1 268 5 view .LVU332
+ 268:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 969              		.loc 1 268 60 is_stmt 0 view .LVU333
+ 970 0010 627B     		ldrb	r2, [r4, #13]	@ zero_extendqisi2
+ 268:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 971              		.loc 1 268 56 view .LVU334
+ 972 0012 D74B     		ldr	r3, .L51
+ 973 0014 1B88     		ldrh	r3, [r3]
+ 268:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 974              		.loc 1 268 5 view .LVU335
+ 975 0016 03FB02F2 		mul	r2, r3, r2
+ 976 001a A168     		ldr	r1, [r4, #8]
+ 977 001c D4F8F000 		ldr	r0, [r4, #240]
+ 978 0020 FFF7FEFF 		bl	memcpy
+ 979              	.LVL87:
+ 270:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func0_f(kf);
+ 980              		.loc 1 270 5 is_stmt 1 view .LVU336
+ 270:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func0_f(kf);
+ 981              		.loc 1 270 11 is_stmt 0 view .LVU337
+ 982 0024 D4F8CC30 		ldr	r3, [r4, #204]
+ 270:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func0_f(kf);
+ 983              		.loc 1 270 8 view .LVU338
+ 984 0028 0BB1     		cbz	r3, .L23
+ 271:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 985              		.loc 1 271 9 is_stmt 1 view .LVU339
+ 986 002a 2046     		mov	r0, r4
+ 987 002c 9847     		blx	r3
+ 988              	.LVL88:
+ 989              	.L23:
+ 274:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 990              		.loc 1 274 5 view .LVU340
+ 274:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 991              		.loc 1 274 12 is_stmt 0 view .LVU341
+ 992 002e 94F82830 		ldrb	r3, [r4, #40]	@ zero_extendqisi2
+ 274:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 993              		.loc 1 274 8 view .LVU342
+ 994 0032 33BB     		cbnz	r3, .L24
+ 276:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 995              		.loc 1 276 9 is_stmt 1 view .LVU343
+ 276:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 996              		.loc 1 276 15 is_stmt 0 view .LVU344
+ 997 0034 637B     		ldrb	r3, [r4, #13]	@ zero_extendqisi2
+ 276:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 998              		.loc 1 276 12 view .LVU345
+ 999 0036 002B     		cmp	r3, #0
+ 1000 0038 69D0     		beq	.L25
+ 278:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->xhatSize;
+ 1001              		.loc 1 278 13 is_stmt 1 view .LVU346
+ 278:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->xhatSize;
+ 1002              		.loc 1 278 29 is_stmt 0 view .LVU347
+ 1003 003a 04F1B805 		add	r5, r4, #184
+ 1004 003e 2A46     		mov	r2, r5
+ 1005 0040 04F13001 		add	r1, r4, #48
+ 1006 0044 04F16000 		add	r0, r4, #96
+ 1007 0048 FFF7FEFF 		bl	arm_mat_mult_f32
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 31
+
+
+ 1008              	.LVL89:
+ 278:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->xhatSize;
+ 1009              		.loc 1 278 27 discriminator 1 view .LVU348
+ 1010 004c 84F8C800 		strb	r0, [r4, #200]
+ 279:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numCols = 1;
+ 1011              		.loc 1 279 13 is_stmt 1 view .LVU349
+ 279:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numCols = 1;
+ 1012              		.loc 1 279 42 is_stmt 0 view .LVU350
+ 1013 0050 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 279:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numCols = 1;
+ 1014              		.loc 1 279 38 view .LVU351
+ 1015 0052 A4F8C030 		strh	r3, [r4, #192]	@ movhi
+ 280:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->B, &kf->u, &kf->temp_vector1);
+ 1016              		.loc 1 280 13 is_stmt 1 view .LVU352
+ 280:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->B, &kf->u, &kf->temp_vector1);
+ 1017              		.loc 1 280 38 is_stmt 0 view .LVU353
+ 1018 0056 0123     		movs	r3, #1
+ 1019 0058 A4F8C230 		strh	r3, [r4, #194]	@ movhi
+ 281:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->temp_vector, &kf->temp_vector1, &kf->xhatminus);
+ 1020              		.loc 1 281 13 is_stmt 1 view .LVU354
+ 281:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->temp_vector, &kf->temp_vector1, &kf->xhatminus);
+ 1021              		.loc 1 281 29 is_stmt 0 view .LVU355
+ 1022 005c 04F1C006 		add	r6, r4, #192
+ 1023 0060 3246     		mov	r2, r6
+ 1024 0062 04F14001 		add	r1, r4, #64
+ 1025 0066 04F17000 		add	r0, r4, #112
+ 1026 006a FFF7FEFF 		bl	arm_mat_mult_f32
+ 1027              	.LVL90:
+ 281:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->temp_vector, &kf->temp_vector1, &kf->xhatminus);
+ 1028              		.loc 1 281 27 discriminator 1 view .LVU356
+ 1029 006e 84F8C800 		strb	r0, [r4, #200]
+ 282:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1030              		.loc 1 282 13 is_stmt 1 view .LVU357
+ 282:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1031              		.loc 1 282 29 is_stmt 0 view .LVU358
+ 1032 0072 04F13802 		add	r2, r4, #56
+ 1033 0076 3146     		mov	r1, r6
+ 1034 0078 2846     		mov	r0, r5
+ 1035 007a FFF7FEFF 		bl	arm_mat_add_f32
+ 1036              	.LVL91:
+ 282:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1037              		.loc 1 282 27 discriminator 1 view .LVU359
+ 1038 007e 84F8C800 		strb	r0, [r4, #200]
+ 1039              	.L24:
+ 290:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func1_f(kf);
+ 1040              		.loc 1 290 5 is_stmt 1 view .LVU360
+ 290:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func1_f(kf);
+ 1041              		.loc 1 290 11 is_stmt 0 view .LVU361
+ 1042 0082 D4F8D030 		ldr	r3, [r4, #208]
+ 290:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func1_f(kf);
+ 1043              		.loc 1 290 8 view .LVU362
+ 1044 0086 0BB1     		cbz	r3, .L26
+ 291:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1045              		.loc 1 291 9 is_stmt 1 view .LVU363
+ 1046 0088 2046     		mov	r0, r4
+ 1047 008a 9847     		blx	r3
+ 1048              	.LVL92:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 32
+
+
+ 1049              	.L26:
+ 295:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1050              		.loc 1 295 5 view .LVU364
+ 295:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1051              		.loc 1 295 12 is_stmt 0 view .LVU365
+ 1052 008c 94F82930 		ldrb	r3, [r4, #41]	@ zero_extendqisi2
+ 295:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1053              		.loc 1 295 8 view .LVU366
+ 1054 0090 002B     		cmp	r3, #0
+ 1055 0092 47D0     		beq	.L45
+ 1056              	.L27:
+ 305:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func2_f(kf);
+ 1057              		.loc 1 305 5 is_stmt 1 view .LVU367
+ 305:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func2_f(kf);
+ 1058              		.loc 1 305 11 is_stmt 0 view .LVU368
+ 1059 0094 D4F8D430 		ldr	r3, [r4, #212]
+ 305:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func2_f(kf);
+ 1060              		.loc 1 305 8 view .LVU369
+ 1061 0098 0BB1     		cbz	r3, .L28
+ 306:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1062              		.loc 1 306 9 is_stmt 1 view .LVU370
+ 1063 009a 2046     		mov	r0, r4
+ 1064 009c 9847     		blx	r3
+ 1065              	.LVL93:
+ 1066              	.L28:
+ 308:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1067              		.loc 1 308 5 view .LVU371
+ 308:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1068              		.loc 1 308 11 is_stmt 0 view .LVU372
+ 1069 009e 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+ 308:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1070              		.loc 1 308 8 view .LVU373
+ 1071 00a0 1BB9     		cbnz	r3, .L29
+ 308:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1072              		.loc 1 308 43 discriminator 1 view .LVU374
+ 1073 00a2 E37B     		ldrb	r3, [r4, #15]	@ zero_extendqisi2
+ 308:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1074              		.loc 1 308 38 discriminator 1 view .LVU375
+ 1075 00a4 002B     		cmp	r3, #0
+ 1076 00a6 40F03081 		bne	.L30
+ 1077              	.L29:
+ 312:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1078              		.loc 1 312 9 is_stmt 1 view .LVU376
+ 312:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1079              		.loc 1 312 16 is_stmt 0 view .LVU377
+ 1080 00aa 94F82A30 		ldrb	r3, [r4, #42]	@ zero_extendqisi2
+ 312:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1081              		.loc 1 312 12 view .LVU378
+ 1082 00ae 002B     		cmp	r3, #0
+ 1083 00b0 66D0     		beq	.L46
+ 1084              	.L31:
+ 331:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->User_Func3_f(kf);
+ 1085              		.loc 1 331 9 is_stmt 1 view .LVU379
+ 331:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->User_Func3_f(kf);
+ 1086              		.loc 1 331 15 is_stmt 0 view .LVU380
+ 1087 00b2 D4F8D830 		ldr	r3, [r4, #216]
+ 331:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->User_Func3_f(kf);
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 33
+
+
+ 1088              		.loc 1 331 12 view .LVU381
+ 1089 00b6 0BB1     		cbz	r3, .L32
+ 332:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1090              		.loc 1 332 13 is_stmt 1 view .LVU382
+ 1091 00b8 2046     		mov	r0, r4
+ 1092 00ba 9847     		blx	r3
+ 1093              	.LVL94:
+ 1094              	.L32:
+ 335:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1095              		.loc 1 335 9 view .LVU383
+ 335:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1096              		.loc 1 335 16 is_stmt 0 view .LVU384
+ 1097 00bc 94F82B30 		ldrb	r3, [r4, #43]	@ zero_extendqisi2
+ 335:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1098              		.loc 1 335 12 view .LVU385
+ 1099 00c0 002B     		cmp	r3, #0
+ 1100 00c2 00F0BB80 		beq	.L47
+ 1101              	.L33:
+ 349:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->User_Func4_f(kf);
+ 1102              		.loc 1 349 9 is_stmt 1 view .LVU386
+ 349:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->User_Func4_f(kf);
+ 1103              		.loc 1 349 15 is_stmt 0 view .LVU387
+ 1104 00c6 D4F8DC30 		ldr	r3, [r4, #220]
+ 349:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->User_Func4_f(kf);
+ 1105              		.loc 1 349 12 view .LVU388
+ 1106 00ca 0BB1     		cbz	r3, .L34
+ 350:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1107              		.loc 1 350 13 is_stmt 1 view .LVU389
+ 1108 00cc 2046     		mov	r0, r4
+ 1109 00ce 9847     		blx	r3
+ 1110              	.LVL95:
+ 1111              	.L34:
+ 353:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1112              		.loc 1 353 9 view .LVU390
+ 353:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1113              		.loc 1 353 16 is_stmt 0 view .LVU391
+ 1114 00d0 94F82C30 		ldrb	r3, [r4, #44]	@ zero_extendqisi2
+ 353:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         {
+ 1115              		.loc 1 353 12 view .LVU392
+ 1116 00d4 002B     		cmp	r3, #0
+ 1117 00d6 00F0EB80 		beq	.L48
+ 1118              	.L35:
+ 373:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func5_f(kf);
+ 1119              		.loc 1 373 5 is_stmt 1 view .LVU393
+ 373:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func5_f(kf);
+ 1120              		.loc 1 373 11 is_stmt 0 view .LVU394
+ 1121 00da D4F8E030 		ldr	r3, [r4, #224]
+ 373:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func5_f(kf);
+ 1122              		.loc 1 373 8 view .LVU395
+ 1123 00de 0BB1     		cbz	r3, .L36
+ 374:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1124              		.loc 1 374 9 is_stmt 1 view .LVU396
+ 1125 00e0 2046     		mov	r0, r4
+ 1126 00e2 9847     		blx	r3
+ 1127              	.LVL96:
+ 1128              	.L36:
+ 257:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     // ����H K R������������Զ�����
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 34
+
+
+ 1129              		.loc 1 257 1 is_stmt 0 view .LVU397
+ 1130 00e4 0023     		movs	r3, #0
+ 1131 00e6 2AE1     		b	.L37
+ 1132              	.LVL97:
+ 1133              	.L21:
+ 264:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->MeasuredVector, 0, sizeof_float * kf->zSize);
+ 1134              		.loc 1 264 9 is_stmt 1 view .LVU398
+ 264:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->MeasuredVector, 0, sizeof_float * kf->zSize);
+ 1135              		.loc 1 264 65 is_stmt 0 view .LVU399
+ 1136 00e8 827B     		ldrb	r2, [r0, #14]	@ zero_extendqisi2
+ 264:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->MeasuredVector, 0, sizeof_float * kf->zSize);
+ 1137              		.loc 1 264 61 view .LVU400
+ 1138 00ea A14D     		ldr	r5, .L51
+ 1139 00ec 2B88     		ldrh	r3, [r5]
+ 264:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->MeasuredVector, 0, sizeof_float * kf->zSize);
+ 1140              		.loc 1 264 9 view .LVU401
+ 1141 00ee 03FB02F2 		mul	r2, r3, r2
+ 1142 00f2 4168     		ldr	r1, [r0, #4]
+ 1143 00f4 D0F8F400 		ldr	r0, [r0, #244]
+ 1144              	.LVL98:
+ 264:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->MeasuredVector, 0, sizeof_float * kf->zSize);
+ 1145              		.loc 1 264 9 view .LVU402
+ 1146 00f8 FFF7FEFF 		bl	memcpy
+ 1147              	.LVL99:
+ 265:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1148              		.loc 1 265 9 is_stmt 1 view .LVU403
+ 265:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1149              		.loc 1 265 56 is_stmt 0 view .LVU404
+ 1150 00fc A27B     		ldrb	r2, [r4, #14]	@ zero_extendqisi2
+ 265:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1151              		.loc 1 265 52 view .LVU405
+ 1152 00fe 2B88     		ldrh	r3, [r5]
+ 265:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1153              		.loc 1 265 9 view .LVU406
+ 1154 0100 03FB02F2 		mul	r2, r3, r2
+ 1155 0104 0021     		movs	r1, #0
+ 1156 0106 6068     		ldr	r0, [r4, #4]
+ 1157 0108 FFF7FEFF 		bl	memset
+ 1158              	.LVL100:
+ 1159 010c 80E7     		b	.L22
+ 1160              	.L25:
+ 286:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1161              		.loc 1 286 13 is_stmt 1 view .LVU407
+ 286:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1162              		.loc 1 286 29 is_stmt 0 view .LVU408
+ 1163 010e 04F13802 		add	r2, r4, #56
+ 1164 0112 04F13001 		add	r1, r4, #48
+ 1165 0116 04F16000 		add	r0, r4, #96
+ 1166 011a FFF7FEFF 		bl	arm_mat_mult_f32
+ 1167              	.LVL101:
+ 286:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1168              		.loc 1 286 27 discriminator 1 view .LVU409
+ 1169 011e 84F8C800 		strb	r0, [r4, #200]
+ 1170 0122 AEE7     		b	.L24
+ 1171              	.L45:
+ 297:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->F, &kf->P, &kf->Pminus);
+ 1172              		.loc 1 297 9 is_stmt 1 view .LVU410
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 35
+
+
+ 297:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->F, &kf->P, &kf->Pminus);
+ 1173              		.loc 1 297 42 is_stmt 0 view .LVU411
+ 1174 0124 04F16005 		add	r5, r4, #96
+ 297:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->F, &kf->P, &kf->Pminus);
+ 1175              		.loc 1 297 25 view .LVU412
+ 1176 0128 04F16807 		add	r7, r4, #104
+ 1177 012c 3946     		mov	r1, r7
+ 1178 012e 2846     		mov	r0, r5
+ 1179 0130 FFF7FEFF 		bl	arm_mat_trans_f32
+ 1180              	.LVL102:
+ 297:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->F, &kf->P, &kf->Pminus);
+ 1181              		.loc 1 297 23 discriminator 1 view .LVU413
+ 1182 0134 84F8C800 		strb	r0, [r4, #200]
+ 298:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->temp_matrix.numRows = kf->Pminus.numRows;
+ 1183              		.loc 1 298 9 is_stmt 1 view .LVU414
+ 298:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->temp_matrix.numRows = kf->Pminus.numRows;
+ 1184              		.loc 1 298 25 is_stmt 0 view .LVU415
+ 1185 0138 04F15806 		add	r6, r4, #88
+ 1186 013c 3246     		mov	r2, r6
+ 1187 013e 04F15001 		add	r1, r4, #80
+ 1188 0142 2846     		mov	r0, r5
+ 1189 0144 FFF7FEFF 		bl	arm_mat_mult_f32
+ 1190              	.LVL103:
+ 298:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->temp_matrix.numRows = kf->Pminus.numRows;
+ 1191              		.loc 1 298 23 discriminator 1 view .LVU416
+ 1192 0148 84F8C800 		strb	r0, [r4, #200]
+ 299:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->temp_matrix.numCols = kf->FT.numCols;
+ 1193              		.loc 1 299 9 is_stmt 1 view .LVU417
+ 299:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->temp_matrix.numCols = kf->FT.numCols;
+ 1194              		.loc 1 299 45 is_stmt 0 view .LVU418
+ 1195 014c B4F85830 		ldrh	r3, [r4, #88]
+ 299:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->temp_matrix.numCols = kf->FT.numCols;
+ 1196              		.loc 1 299 33 view .LVU419
+ 1197 0150 A4F8A830 		strh	r3, [r4, #168]	@ movhi
+ 300:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->FT, &kf->temp_matrix); // temp_matrix = F
+ 1198              		.loc 1 300 9 is_stmt 1 view .LVU420
+ 300:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->FT, &kf->temp_matrix); // temp_matrix = F
+ 1199              		.loc 1 300 41 is_stmt 0 view .LVU421
+ 1200 0154 B4F86A30 		ldrh	r3, [r4, #106]
+ 300:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->FT, &kf->temp_matrix); // temp_matrix = F
+ 1201              		.loc 1 300 33 view .LVU422
+ 1202 0158 A4F8AA30 		strh	r3, [r4, #170]	@ movhi
+ 301:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Add(&kf->temp_matrix, &kf->Q, &kf->Pminus);
+ 1203              		.loc 1 301 9 is_stmt 1 view .LVU423
+ 301:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Add(&kf->temp_matrix, &kf->Q, &kf->Pminus);
+ 1204              		.loc 1 301 25 is_stmt 0 view .LVU424
+ 1205 015c 04F1A805 		add	r5, r4, #168
+ 1206 0160 2A46     		mov	r2, r5
+ 1207 0162 3946     		mov	r1, r7
+ 1208 0164 3046     		mov	r0, r6
+ 1209 0166 FFF7FEFF 		bl	arm_mat_mult_f32
+ 1210              	.LVL104:
+ 301:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->MatStatus = Matrix_Add(&kf->temp_matrix, &kf->Q, &kf->Pminus);
+ 1211              		.loc 1 301 23 discriminator 1 view .LVU425
+ 1212 016a 84F8C800 		strb	r0, [r4, #200]
+ 302:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1213              		.loc 1 302 9 is_stmt 1 view .LVU426
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 36
+
+
+ 302:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1214              		.loc 1 302 25 is_stmt 0 view .LVU427
+ 1215 016e 3246     		mov	r2, r6
+ 1216 0170 04F18801 		add	r1, r4, #136
+ 1217 0174 2846     		mov	r0, r5
+ 1218 0176 FFF7FEFF 		bl	arm_mat_add_f32
+ 1219              	.LVL105:
+ 302:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1220              		.loc 1 302 23 discriminator 1 view .LVU428
+ 1221 017a 84F8C800 		strb	r0, [r4, #200]
+ 1222 017e 89E7     		b	.L27
+ 1223              	.L46:
+ 314:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->H.numRows;
+ 1224              		.loc 1 314 13 is_stmt 1 view .LVU429
+ 314:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->H.numRows;
+ 1225              		.loc 1 314 46 is_stmt 0 view .LVU430
+ 1226 0180 04F17806 		add	r6, r4, #120
+ 314:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->H.numRows;
+ 1227              		.loc 1 314 29 view .LVU431
+ 1228 0184 04F18008 		add	r8, r4, #128
+ 1229 0188 4146     		mov	r1, r8
+ 1230 018a 3046     		mov	r0, r6
+ 1231 018c FFF7FEFF 		bl	arm_mat_trans_f32
+ 1232              	.LVL106:
+ 314:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->H.numRows;
+ 1233              		.loc 1 314 27 discriminator 1 view .LVU432
+ 1234 0190 84F8C800 		strb	r0, [r4, #200]
+ 315:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->Pminus.numCols;
+ 1235              		.loc 1 315 13 is_stmt 1 view .LVU433
+ 315:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->Pminus.numCols;
+ 1236              		.loc 1 315 44 is_stmt 0 view .LVU434
+ 1237 0194 B4F87830 		ldrh	r3, [r4, #120]
+ 315:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->Pminus.numCols;
+ 1238              		.loc 1 315 37 view .LVU435
+ 1239 0198 A4F8A830 		strh	r3, [r4, #168]	@ movhi
+ 316:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->H, &kf->Pminus, &kf->temp_matrix); // temp_matrix 
+ 1240              		.loc 1 316 13 is_stmt 1 view .LVU436
+ 316:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->H, &kf->Pminus, &kf->temp_matrix); // temp_matrix 
+ 1241              		.loc 1 316 49 is_stmt 0 view .LVU437
+ 1242 019c B4F85A30 		ldrh	r3, [r4, #90]
+ 316:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->H, &kf->Pminus, &kf->temp_matrix); // temp_matrix 
+ 1243              		.loc 1 316 37 view .LVU438
+ 1244 01a0 A4F8AA30 		strh	r3, [r4, #170]	@ movhi
+ 317:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ 1245              		.loc 1 317 13 is_stmt 1 view .LVU439
+ 317:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ 1246              		.loc 1 317 53 is_stmt 0 view .LVU440
+ 1247 01a4 04F15807 		add	r7, r4, #88
+ 317:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ 1248              		.loc 1 317 29 view .LVU441
+ 1249 01a8 04F1A805 		add	r5, r4, #168
+ 1250 01ac 2A46     		mov	r2, r5
+ 1251 01ae 3946     		mov	r1, r7
+ 1252 01b0 3046     		mov	r0, r6
+ 1253 01b2 FFF7FEFF 		bl	arm_mat_mult_f32
+ 1254              	.LVL107:
+ 317:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 37
+
+
+ 1255              		.loc 1 317 27 discriminator 1 view .LVU442
+ 1256 01b6 84F8C800 		strb	r0, [r4, #200]
+ 318:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numCols = kf->HT.numCols;
+ 1257              		.loc 1 318 13 is_stmt 1 view .LVU443
+ 318:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numCols = kf->HT.numCols;
+ 1258              		.loc 1 318 55 is_stmt 0 view .LVU444
+ 1259 01ba B4F8A830 		ldrh	r3, [r4, #168]
+ 318:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numCols = kf->HT.numCols;
+ 1260              		.loc 1 318 38 view .LVU445
+ 1261 01be A4F8B030 		strh	r3, [r4, #176]	@ movhi
+ 319:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->HT, &kf->temp_matrix1); // temp_
+ 1262              		.loc 1 319 13 is_stmt 1 view .LVU446
+ 319:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->HT, &kf->temp_matrix1); // temp_
+ 1263              		.loc 1 319 46 is_stmt 0 view .LVU447
+ 1264 01c2 B4F88230 		ldrh	r3, [r4, #130]
+ 319:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->HT, &kf->temp_matrix1); // temp_
+ 1265              		.loc 1 319 38 view .LVU448
+ 1266 01c6 A4F8B230 		strh	r3, [r4, #178]	@ movhi
+ 320:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->S.numRows = kf->R.numRows;
+ 1267              		.loc 1 320 13 is_stmt 1 view .LVU449
+ 320:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->S.numRows = kf->R.numRows;
+ 1268              		.loc 1 320 29 is_stmt 0 view .LVU450
+ 1269 01ca 04F1B006 		add	r6, r4, #176
+ 1270 01ce 3246     		mov	r2, r6
+ 1271 01d0 4146     		mov	r1, r8
+ 1272 01d2 2846     		mov	r0, r5
+ 1273 01d4 FFF7FEFF 		bl	arm_mat_mult_f32
+ 1274              	.LVL108:
+ 320:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->S.numRows = kf->R.numRows;
+ 1275              		.loc 1 320 27 discriminator 1 view .LVU451
+ 1276 01d8 84F8C800 		strb	r0, [r4, #200]
+ 321:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->S.numCols = kf->R.numCols;
+ 1277              		.loc 1 321 13 is_stmt 1 view .LVU452
+ 321:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->S.numCols = kf->R.numCols;
+ 1278              		.loc 1 321 34 is_stmt 0 view .LVU453
+ 1279 01dc B4F89030 		ldrh	r3, [r4, #144]
+ 321:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->S.numCols = kf->R.numCols;
+ 1280              		.loc 1 321 27 view .LVU454
+ 1281 01e0 A4F8A030 		strh	r3, [r4, #160]	@ movhi
+ 322:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->temp_matrix1, &kf->R, &kf->S); // S = H P'(k) HT + R
+ 1282              		.loc 1 322 13 is_stmt 1 view .LVU455
+ 322:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->temp_matrix1, &kf->R, &kf->S); // S = H P'(k) HT + R
+ 1283              		.loc 1 322 34 is_stmt 0 view .LVU456
+ 1284 01e4 B4F89230 		ldrh	r3, [r4, #146]
+ 322:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->temp_matrix1, &kf->R, &kf->S); // S = H P'(k) HT + R
+ 1285              		.loc 1 322 27 view .LVU457
+ 1286 01e8 A4F8A230 		strh	r3, [r4, #162]	@ movhi
+ 323:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Inverse(&kf->S, &kf->temp_matrix1);     // temp_matrix1 = inv(H�
+ 1287              		.loc 1 323 13 is_stmt 1 view .LVU458
+ 323:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Inverse(&kf->S, &kf->temp_matrix1);     // temp_matrix1 = inv(H�
+ 1288              		.loc 1 323 29 is_stmt 0 view .LVU459
+ 1289 01ec 04F1A009 		add	r9, r4, #160
+ 1290 01f0 4A46     		mov	r2, r9
+ 1291 01f2 04F19001 		add	r1, r4, #144
+ 1292 01f6 3046     		mov	r0, r6
+ 1293 01f8 FFF7FEFF 		bl	arm_mat_add_f32
+ 1294              	.LVL109:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 38
+
+
+ 323:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Inverse(&kf->S, &kf->temp_matrix1);     // temp_matrix1 = inv(H�
+ 1295              		.loc 1 323 27 discriminator 1 view .LVU460
+ 1296 01fc 84F8C800 		strb	r0, [r4, #200]
+ 324:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->Pminus.numRows;
+ 1297              		.loc 1 324 13 is_stmt 1 view .LVU461
+ 324:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->Pminus.numRows;
+ 1298              		.loc 1 324 29 is_stmt 0 view .LVU462
+ 1299 0200 3146     		mov	r1, r6
+ 1300 0202 4846     		mov	r0, r9
+ 1301 0204 FFF7FEFF 		bl	arm_mat_inverse_f32
+ 1302              	.LVL110:
+ 324:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numRows = kf->Pminus.numRows;
+ 1303              		.loc 1 324 27 discriminator 1 view .LVU463
+ 1304 0208 84F8C800 		strb	r0, [r4, #200]
+ 325:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->HT.numCols;
+ 1305              		.loc 1 325 13 is_stmt 1 view .LVU464
+ 325:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->HT.numCols;
+ 1306              		.loc 1 325 49 is_stmt 0 view .LVU465
+ 1307 020c B4F85830 		ldrh	r3, [r4, #88]
+ 325:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->HT.numCols;
+ 1308              		.loc 1 325 37 view .LVU466
+ 1309 0210 A4F8A830 		strh	r3, [r4, #168]	@ movhi
+ 326:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix
+ 1310              		.loc 1 326 13 is_stmt 1 view .LVU467
+ 326:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix
+ 1311              		.loc 1 326 45 is_stmt 0 view .LVU468
+ 1312 0214 B4F88230 		ldrh	r3, [r4, #130]
+ 326:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix
+ 1313              		.loc 1 326 37 view .LVU469
+ 1314 0218 A4F8AA30 		strh	r3, [r4, #170]	@ movhi
+ 327:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
+ 1315              		.loc 1 327 13 is_stmt 1 view .LVU470
+ 327:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
+ 1316              		.loc 1 327 29 is_stmt 0 view .LVU471
+ 1317 021c 2A46     		mov	r2, r5
+ 1318 021e 4146     		mov	r1, r8
+ 1319 0220 3846     		mov	r0, r7
+ 1320 0222 FFF7FEFF 		bl	arm_mat_mult_f32
+ 1321              	.LVL111:
+ 327:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
+ 1322              		.loc 1 327 27 discriminator 1 view .LVU472
+ 1323 0226 84F8C800 		strb	r0, [r4, #200]
+ 328:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1324              		.loc 1 328 13 is_stmt 1 view .LVU473
+ 328:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1325              		.loc 1 328 29 is_stmt 0 view .LVU474
+ 1326 022a 04F19802 		add	r2, r4, #152
+ 1327 022e 3146     		mov	r1, r6
+ 1328 0230 2846     		mov	r0, r5
+ 1329 0232 FFF7FEFF 		bl	arm_mat_mult_f32
+ 1330              	.LVL112:
+ 328:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1331              		.loc 1 328 27 discriminator 1 view .LVU475
+ 1332 0236 84F8C800 		strb	r0, [r4, #200]
+ 1333 023a 3AE7     		b	.L31
+ 1334              	.L47:
+ 337:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numCols = 1;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 39
+
+
+ 1335              		.loc 1 337 13 is_stmt 1 view .LVU476
+ 337:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numCols = 1;
+ 1336              		.loc 1 337 44 is_stmt 0 view .LVU477
+ 1337 023c B4F87830 		ldrh	r3, [r4, #120]
+ 337:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numCols = 1;
+ 1338              		.loc 1 337 37 view .LVU478
+ 1339 0240 A4F8B830 		strh	r3, [r4, #184]	@ movhi
+ 338:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->H, &kf->xhatminus, &kf->temp_vector); // temp_vect
+ 1340              		.loc 1 338 13 is_stmt 1 view .LVU479
+ 338:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->H, &kf->xhatminus, &kf->temp_vector); // temp_vect
+ 1341              		.loc 1 338 37 is_stmt 0 view .LVU480
+ 1342 0244 0127     		movs	r7, #1
+ 1343 0246 A4F8BA70 		strh	r7, [r4, #186]	@ movhi
+ 339:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->z.numRows;
+ 1344              		.loc 1 339 13 is_stmt 1 view .LVU481
+ 339:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->z.numRows;
+ 1345              		.loc 1 339 53 is_stmt 0 view .LVU482
+ 1346 024a 04F13805 		add	r5, r4, #56
+ 339:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->z.numRows;
+ 1347              		.loc 1 339 29 view .LVU483
+ 1348 024e 04F1B806 		add	r6, r4, #184
+ 1349 0252 3246     		mov	r2, r6
+ 1350 0254 2946     		mov	r1, r5
+ 1351 0256 04F17800 		add	r0, r4, #120
+ 1352 025a FFF7FEFF 		bl	arm_mat_mult_f32
+ 1353              	.LVL113:
+ 339:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numRows = kf->z.numRows;
+ 1354              		.loc 1 339 27 discriminator 1 view .LVU484
+ 1355 025e 84F8C800 		strb	r0, [r4, #200]
+ 340:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numCols = 1;
+ 1356              		.loc 1 340 13 is_stmt 1 view .LVU485
+ 340:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numCols = 1;
+ 1357              		.loc 1 340 45 is_stmt 0 view .LVU486
+ 1358 0262 B4F84830 		ldrh	r3, [r4, #72]
+ 340:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector1.numCols = 1;
+ 1359              		.loc 1 340 38 view .LVU487
+ 1360 0266 A4F8C030 		strh	r3, [r4, #192]	@ movhi
+ 341:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Subtract(&kf->z, &kf->temp_vector, &kf->temp_vector1); // temp_v
+ 1361              		.loc 1 341 13 is_stmt 1 view .LVU488
+ 341:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Subtract(&kf->z, &kf->temp_vector, &kf->temp_vector1); // temp_v
+ 1362              		.loc 1 341 38 is_stmt 0 view .LVU489
+ 1363 026a A4F8C270 		strh	r7, [r4, #194]	@ movhi
+ 342:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numRows = kf->K.numRows;
+ 1364              		.loc 1 342 13 is_stmt 1 view .LVU490
+ 342:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numRows = kf->K.numRows;
+ 1365              		.loc 1 342 29 is_stmt 0 view .LVU491
+ 1366 026e 04F1C008 		add	r8, r4, #192
+ 1367 0272 4246     		mov	r2, r8
+ 1368 0274 3146     		mov	r1, r6
+ 1369 0276 04F14800 		add	r0, r4, #72
+ 1370 027a FFF7FEFF 		bl	arm_mat_sub_f32
+ 1371              	.LVL114:
+ 342:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numRows = kf->K.numRows;
+ 1372              		.loc 1 342 27 discriminator 1 view .LVU492
+ 1373 027e 84F8C800 		strb	r0, [r4, #200]
+ 343:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numCols = 1;
+ 1374              		.loc 1 343 13 is_stmt 1 view .LVU493
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 40
+
+
+ 343:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numCols = 1;
+ 1375              		.loc 1 343 44 is_stmt 0 view .LVU494
+ 1376 0282 B4F89830 		ldrh	r3, [r4, #152]
+ 343:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_vector.numCols = 1;
+ 1377              		.loc 1 343 37 view .LVU495
+ 1378 0286 A4F8B830 		strh	r3, [r4, #184]	@ movhi
+ 344:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->K, &kf->temp_vector1, &kf->temp_vector); // temp_v
+ 1379              		.loc 1 344 13 is_stmt 1 view .LVU496
+ 344:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->K, &kf->temp_vector1, &kf->temp_vector); // temp_v
+ 1380              		.loc 1 344 37 is_stmt 0 view .LVU497
+ 1381 028a A4F8BA70 		strh	r7, [r4, #186]	@ movhi
+ 345:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->xhatminus, &kf->temp_vector, &kf->xhat);
+ 1382              		.loc 1 345 13 is_stmt 1 view .LVU498
+ 345:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->xhatminus, &kf->temp_vector, &kf->xhat);
+ 1383              		.loc 1 345 29 is_stmt 0 view .LVU499
+ 1384 028e 3246     		mov	r2, r6
+ 1385 0290 4146     		mov	r1, r8
+ 1386 0292 04F19800 		add	r0, r4, #152
+ 1387 0296 FFF7FEFF 		bl	arm_mat_mult_f32
+ 1388              	.LVL115:
+ 345:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Add(&kf->xhatminus, &kf->temp_vector, &kf->xhat);
+ 1389              		.loc 1 345 27 discriminator 1 view .LVU500
+ 1390 029a 84F8C800 		strb	r0, [r4, #200]
+ 346:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1391              		.loc 1 346 13 is_stmt 1 view .LVU501
+ 346:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1392              		.loc 1 346 29 is_stmt 0 view .LVU502
+ 1393 029e 04F13002 		add	r2, r4, #48
+ 1394 02a2 3146     		mov	r1, r6
+ 1395 02a4 2846     		mov	r0, r5
+ 1396 02a6 FFF7FEFF 		bl	arm_mat_add_f32
+ 1397              	.LVL116:
+ 346:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1398              		.loc 1 346 27 discriminator 1 view .LVU503
+ 1399 02aa 84F8C800 		strb	r0, [r4, #200]
+ 1400 02ae 0AE7     		b	.L33
+ 1401              	.L48:
+ 355:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->H.numCols;
+ 1402              		.loc 1 355 13 is_stmt 1 view .LVU504
+ 355:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->H.numCols;
+ 1403              		.loc 1 355 44 is_stmt 0 view .LVU505
+ 1404 02b0 B4F89830 		ldrh	r3, [r4, #152]
+ 355:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix.numCols = kf->H.numCols;
+ 1405              		.loc 1 355 37 view .LVU506
+ 1406 02b4 A4F8A830 		strh	r3, [r4, #168]	@ movhi
+ 356:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ 1407              		.loc 1 356 13 is_stmt 1 view .LVU507
+ 356:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ 1408              		.loc 1 356 44 is_stmt 0 view .LVU508
+ 1409 02b8 B4F87A20 		ldrh	r2, [r4, #122]
+ 356:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numRows = kf->temp_matrix.numRows;
+ 1410              		.loc 1 356 37 view .LVU509
+ 1411 02bc A4F8AA20 		strh	r2, [r4, #170]	@ movhi
+ 357:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numCols = kf->Pminus.numCols;
+ 1412              		.loc 1 357 13 is_stmt 1 view .LVU510
+ 357:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->temp_matrix1.numCols = kf->Pminus.numCols;
+ 1413              		.loc 1 357 38 is_stmt 0 view .LVU511
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 41
+
+
+ 1414 02c0 A4F8B030 		strh	r3, [r4, #176]	@ movhi
+ 358:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->K, &kf->H, &kf->temp_matrix);                 // t
+ 1415              		.loc 1 358 13 is_stmt 1 view .LVU512
+ 358:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->K, &kf->H, &kf->temp_matrix);                 // t
+ 1416              		.loc 1 358 50 is_stmt 0 view .LVU513
+ 1417 02c4 B4F85A30 		ldrh	r3, [r4, #90]
+ 358:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->K, &kf->H, &kf->temp_matrix);                 // t
+ 1418              		.loc 1 358 38 view .LVU514
+ 1419 02c8 A4F8B230 		strh	r3, [r4, #178]	@ movhi
+ 359:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->Pminus, &kf->temp_matrix1); // t
+ 1420              		.loc 1 359 13 is_stmt 1 view .LVU515
+ 359:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->Pminus, &kf->temp_matrix1); // t
+ 1421              		.loc 1 359 29 is_stmt 0 view .LVU516
+ 1422 02cc 04F1A807 		add	r7, r4, #168
+ 1423 02d0 3A46     		mov	r2, r7
+ 1424 02d2 04F17801 		add	r1, r4, #120
+ 1425 02d6 04F19800 		add	r0, r4, #152
+ 1426 02da FFF7FEFF 		bl	arm_mat_mult_f32
+ 1427              	.LVL117:
+ 359:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->Pminus, &kf->temp_matrix1); // t
+ 1428              		.loc 1 359 27 discriminator 1 view .LVU517
+ 1429 02de 84F8C800 		strb	r0, [r4, #200]
+ 360:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Subtract(&kf->Pminus, &kf->temp_matrix1, &kf->P);
+ 1430              		.loc 1 360 13 is_stmt 1 view .LVU518
+ 360:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Subtract(&kf->Pminus, &kf->temp_matrix1, &kf->P);
+ 1431              		.loc 1 360 63 is_stmt 0 view .LVU519
+ 1432 02e2 04F15805 		add	r5, r4, #88
+ 360:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Subtract(&kf->Pminus, &kf->temp_matrix1, &kf->P);
+ 1433              		.loc 1 360 29 view .LVU520
+ 1434 02e6 04F1B006 		add	r6, r4, #176
+ 1435 02ea 3246     		mov	r2, r6
+ 1436 02ec 2946     		mov	r1, r5
+ 1437 02ee 3846     		mov	r0, r7
+ 1438 02f0 FFF7FEFF 		bl	arm_mat_mult_f32
+ 1439              	.LVL118:
+ 360:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->MatStatus = Matrix_Subtract(&kf->Pminus, &kf->temp_matrix1, &kf->P);
+ 1440              		.loc 1 360 27 discriminator 1 view .LVU521
+ 1441 02f4 84F8C800 		strb	r0, [r4, #200]
+ 361:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1442              		.loc 1 361 13 is_stmt 1 view .LVU522
+ 361:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1443              		.loc 1 361 29 is_stmt 0 view .LVU523
+ 1444 02f8 04F15002 		add	r2, r4, #80
+ 1445 02fc 3146     		mov	r1, r6
+ 1446 02fe 2846     		mov	r0, r5
+ 1447 0300 FFF7FEFF 		bl	arm_mat_sub_f32
+ 1448              	.LVL119:
+ 361:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         }
+ 1449              		.loc 1 361 27 discriminator 1 view .LVU524
+ 1450 0304 84F8C800 		strb	r0, [r4, #200]
+ 1451 0308 E7E6     		b	.L35
+ 1452              	.L30:
+ 369:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memcpy(kf->P_data, kf->Pminus_data, sizeof_float * kf->xhatSize * kf->xhatSize);
+ 1453              		.loc 1 369 9 is_stmt 1 view .LVU525
+ 369:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memcpy(kf->P_data, kf->Pminus_data, sizeof_float * kf->xhatSize * kf->xhatSize);
+ 1454              		.loc 1 369 68 is_stmt 0 view .LVU526
+ 1455 030a 227B     		ldrb	r2, [r4, #12]	@ zero_extendqisi2
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 42
+
+
+ 369:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memcpy(kf->P_data, kf->Pminus_data, sizeof_float * kf->xhatSize * kf->xhatSize);
+ 1456              		.loc 1 369 64 view .LVU527
+ 1457 030c 184D     		ldr	r5, .L51
+ 1458 030e 2B88     		ldrh	r3, [r5]
+ 369:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memcpy(kf->P_data, kf->Pminus_data, sizeof_float * kf->xhatSize * kf->xhatSize);
+ 1459              		.loc 1 369 9 view .LVU528
+ 1460 0310 03FB02F2 		mul	r2, r3, r2
+ 1461 0314 D4F8EC10 		ldr	r1, [r4, #236]
+ 1462 0318 D4F8E800 		ldr	r0, [r4, #232]
+ 1463 031c FFF7FEFF 		bl	memcpy
+ 1464              	.LVL120:
+ 370:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1465              		.loc 1 370 9 is_stmt 1 view .LVU529
+ 370:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1466              		.loc 1 370 62 is_stmt 0 view .LVU530
+ 1467 0320 227B     		ldrb	r2, [r4, #12]	@ zero_extendqisi2
+ 370:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1468              		.loc 1 370 58 view .LVU531
+ 1469 0322 2B88     		ldrh	r3, [r5]
+ 1470 0324 02FB03F3 		mul	r3, r2, r3
+ 370:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1471              		.loc 1 370 9 view .LVU532
+ 1472 0328 03FB02F2 		mul	r2, r3, r2
+ 1473 032c D4F8FC10 		ldr	r1, [r4, #252]
+ 1474 0330 D4F8F800 		ldr	r0, [r4, #248]
+ 1475 0334 FFF7FEFF 		bl	memcpy
+ 1476              	.LVL121:
+ 1477 0338 CFE6     		b	.L35
+ 1478              	.LVL122:
+ 1479              	.L38:
+ 1480              	.LBB4:
+ 378:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1481              		.loc 1 378 44 is_stmt 1 discriminator 2 view .LVU533
+ 1482 033a 0133     		adds	r3, r3, #1
+ 1483              	.LVL123:
+ 378:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1484              		.loc 1 378 44 is_stmt 0 discriminator 2 view .LVU534
+ 1485 033c DBB2     		uxtb	r3, r3
+ 1486              	.LVL124:
+ 1487              	.L37:
+ 378:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1488              		.loc 1 378 27 is_stmt 1 discriminator 1 view .LVU535
+ 378:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1489              		.loc 1 378 31 is_stmt 0 discriminator 1 view .LVU536
+ 1490 033e 227B     		ldrb	r2, [r4, #12]	@ zero_extendqisi2
+ 378:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1491              		.loc 1 378 27 discriminator 1 view .LVU537
+ 1492 0340 9A42     		cmp	r2, r3
+ 1493 0342 17D9     		bls	.L49
+ 380:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->P_data[i * kf->xhatSize + i] = kf->StateMinVariance[i];
+ 1494              		.loc 1 380 9 is_stmt 1 view .LVU538
+ 380:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->P_data[i * kf->xhatSize + i] = kf->StateMinVariance[i];
+ 1495              		.loc 1 380 15 is_stmt 0 view .LVU539
+ 1496 0344 D4F8F810 		ldr	r1, [r4, #248]
+ 380:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->P_data[i * kf->xhatSize + i] = kf->StateMinVariance[i];
+ 1497              		.loc 1 380 41 view .LVU540
+ 1498 0348 02FB0332 		mla	r2, r2, r3, r3
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 43
+
+
+ 380:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->P_data[i * kf->xhatSize + i] = kf->StateMinVariance[i];
+ 1499              		.loc 1 380 23 view .LVU541
+ 1500 034c 01EB8202 		add	r2, r1, r2, lsl #2
+ 1501 0350 92ED007A 		vldr.32	s14, [r2]
+ 380:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->P_data[i * kf->xhatSize + i] = kf->StateMinVariance[i];
+ 1502              		.loc 1 380 50 view .LVU542
+ 1503 0354 216A     		ldr	r1, [r4, #32]
+ 380:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->P_data[i * kf->xhatSize + i] = kf->StateMinVariance[i];
+ 1504              		.loc 1 380 68 view .LVU543
+ 1505 0356 01EB8301 		add	r1, r1, r3, lsl #2
+ 1506 035a D1ED007A 		vldr.32	s15, [r1]
+ 380:Middlewares/Filter/KalmanFilter/kalman_filter.c ****             kf->P_data[i * kf->xhatSize + i] = kf->StateMinVariance[i];
+ 1507              		.loc 1 380 12 view .LVU544
+ 1508 035e B4EEE77A 		vcmpe.f32	s14, s15
+ 1509 0362 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1510 0366 E8D5     		bpl	.L38
+ 381:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1511              		.loc 1 381 13 is_stmt 1 view .LVU545
+ 381:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1512              		.loc 1 381 46 is_stmt 0 view .LVU546
+ 1513 0368 C2ED007A 		vstr.32	s15, [r2]
+ 1514 036c E5E7     		b	.L38
+ 1515              	.L52:
+ 1516 036e 00BF     		.align	2
+ 1517              	.L51:
+ 1518 0370 00000000 		.word	sizeof_float
+ 1519              	.L49:
+ 1520              	.LBE4:
+ 384:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1521              		.loc 1 384 5 is_stmt 1 view .LVU547
+ 384:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1522              		.loc 1 384 11 is_stmt 0 view .LVU548
+ 1523 0374 E37B     		ldrb	r3, [r4, #15]	@ zero_extendqisi2
+ 1524              	.LVL125:
+ 384:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     {
+ 1525              		.loc 1 384 8 view .LVU549
+ 1526 0376 8BB9     		cbnz	r3, .L50
+ 1527              	.L41:
+ 390:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1528              		.loc 1 390 5 is_stmt 1 view .LVU550
+ 390:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1529              		.loc 1 390 63 is_stmt 0 view .LVU551
+ 1530 0378 227B     		ldrb	r2, [r4, #12]	@ zero_extendqisi2
+ 390:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1531              		.loc 1 390 59 view .LVU552
+ 1532 037a 154B     		ldr	r3, .L53
+ 1533 037c 1B88     		ldrh	r3, [r3]
+ 390:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1534              		.loc 1 390 5 view .LVU553
+ 1535 037e 03FB02F2 		mul	r2, r3, r2
+ 1536 0382 D4F8E810 		ldr	r1, [r4, #232]
+ 1537 0386 2068     		ldr	r0, [r4]
+ 1538 0388 FFF7FEFF 		bl	memcpy
+ 1539              	.LVL126:
+ 392:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func6_f(kf);
+ 1540              		.loc 1 392 5 is_stmt 1 view .LVU554
+ 392:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func6_f(kf);
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 44
+
+
+ 1541              		.loc 1 392 11 is_stmt 0 view .LVU555
+ 1542 038c D4F8E430 		ldr	r3, [r4, #228]
+ 392:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         kf->User_Func6_f(kf);
+ 1543              		.loc 1 392 8 view .LVU556
+ 1544 0390 0BB1     		cbz	r3, .L42
+ 393:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1545              		.loc 1 393 9 is_stmt 1 view .LVU557
+ 1546 0392 2046     		mov	r0, r4
+ 1547 0394 9847     		blx	r3
+ 1548              	.LVL127:
+ 1549              	.L42:
+ 395:Middlewares/Filter/KalmanFilter/kalman_filter.c **** }
+ 1550              		.loc 1 395 5 view .LVU558
+ 396:Middlewares/Filter/KalmanFilter/kalman_filter.c **** 
+ 1551              		.loc 1 396 1 is_stmt 0 view .LVU559
+ 1552 0396 2068     		ldr	r0, [r4]
+ 1553 0398 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 1554              	.LVL128:
+ 1555              	.L50:
+ 386:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->H_data, 0, sizeof_float * kf->xhatSize * kf->zSize);
+ 1556              		.loc 1 386 9 is_stmt 1 view .LVU560
+ 386:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->H_data, 0, sizeof_float * kf->xhatSize * kf->zSize);
+ 1557              		.loc 1 386 48 is_stmt 0 view .LVU561
+ 1558 039c A27B     		ldrb	r2, [r4, #14]	@ zero_extendqisi2
+ 386:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->H_data, 0, sizeof_float * kf->xhatSize * kf->zSize);
+ 1559              		.loc 1 386 44 view .LVU562
+ 1560 039e 0C4D     		ldr	r5, .L53
+ 1561 03a0 2B88     		ldrh	r3, [r5]
+ 1562 03a2 02FB03F3 		mul	r3, r2, r3
+ 386:Middlewares/Filter/KalmanFilter/kalman_filter.c ****         memset(kf->H_data, 0, sizeof_float * kf->xhatSize * kf->zSize);
+ 1563              		.loc 1 386 9 view .LVU563
+ 1564 03a6 03FB02F2 		mul	r2, r3, r2
+ 1565 03aa 0021     		movs	r1, #0
+ 1566 03ac D4F81801 		ldr	r0, [r4, #280]
+ 1567 03b0 FFF7FEFF 		bl	memset
+ 1568              	.LVL129:
+ 387:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1569              		.loc 1 387 9 is_stmt 1 view .LVU564
+ 387:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1570              		.loc 1 387 48 is_stmt 0 view .LVU565
+ 1571 03b4 227B     		ldrb	r2, [r4, #12]	@ zero_extendqisi2
+ 387:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1572              		.loc 1 387 44 view .LVU566
+ 1573 03b6 2B88     		ldrh	r3, [r5]
+ 1574 03b8 02FB03F3 		mul	r3, r2, r3
+ 387:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1575              		.loc 1 387 63 view .LVU567
+ 1576 03bc A27B     		ldrb	r2, [r4, #14]	@ zero_extendqisi2
+ 387:Middlewares/Filter/KalmanFilter/kalman_filter.c ****     }
+ 1577              		.loc 1 387 9 view .LVU568
+ 1578 03be 03FB02F2 		mul	r2, r3, r2
+ 1579 03c2 0021     		movs	r1, #0
+ 1580 03c4 D4F80C01 		ldr	r0, [r4, #268]
+ 1581 03c8 FFF7FEFF 		bl	memset
+ 1582              	.LVL130:
+ 1583 03cc D4E7     		b	.L41
+ 1584              	.L54:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 45
+
+
+ 1585 03ce 00BF     		.align	2
+ 1586              	.L53:
+ 1587 03d0 00000000 		.word	sizeof_float
+ 1588              		.cfi_endproc
+ 1589              	.LFE169:
+ 1591              		.global	sizeof_double
+ 1592              		.section	.bss.sizeof_double,"aw",%nobits
+ 1593              		.align	1
+ 1596              	sizeof_double:
+ 1597 0000 0000     		.space	2
+ 1598              		.global	sizeof_float
+ 1599              		.section	.bss.sizeof_float,"aw",%nobits
+ 1600              		.align	1
+ 1603              	sizeof_float:
+ 1604 0000 0000     		.space	2
+ 1605              		.text
+ 1606              	.Letext0:
+ 1607              		.file 2 "C:/msys64/mingw64/lib/gcc/arm-none-eabi/13.3.0/include/stddef.h"
+ 1608              		.file 3 "C:/msys64/mingw64/arm-none-eabi/include/machine/_default_types.h"
+ 1609              		.file 4 "C:/msys64/mingw64/arm-none-eabi/include/sys/_stdint.h"
+ 1610              		.file 5 "Middlewares/Algorithm/Include/arm_math.h"
+ 1611              		.file 6 "Middlewares/Filter/KalmanFilter/kalman_filter.h"
+ 1612              		.file 7 "C:/msys64/mingw64/arm-none-eabi/include/string.h"
+ 1613              		.file 8 "Middlewares/Third_Party/FreeRTOS/Source/include/portable.h"
+ 1614              		.file 9 "<built-in>"
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s 			page 46
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 kalman_filter.c
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:21     .text.H_K_R_Adjustment:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:26     .text.H_K_R_Adjustment:00000000 H_K_R_Adjustment
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:226    .text.H_K_R_Adjustment:000000e4 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:1603   .bss.sizeof_float:00000000 sizeof_float
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:231    .text.Kalman_Filter_Init:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:237    .text.Kalman_Filter_Init:00000000 Kalman_Filter_Init
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:787    .text.Kalman_Filter_Init:00000378 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:1596   .bss.sizeof_double:00000000 sizeof_double
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:791    .text.Kalman_Filter_Init:00000380 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:932    .text.Kalman_Filter_Update:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:938    .text.Kalman_Filter_Update:00000000 Kalman_Filter_Update
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:1518   .text.Kalman_Filter_Update:00000370 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:1523   .text.Kalman_Filter_Update:00000374 $t
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:1587   .text.Kalman_Filter_Update:000003d0 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:1593   .bss.sizeof_double:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\ccSOLawh.s:1600   .bss.sizeof_float:00000000 $d
+
+UNDEFINED SYMBOLS
+memcpy
+memset
+pvPortMalloc
+arm_mat_init_f32
+arm_mat_mult_f32
+arm_mat_add_f32
+arm_mat_trans_f32
+arm_mat_inverse_f32
+arm_mat_sub_f32

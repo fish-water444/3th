@@ -1,0 +1,933 @@
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"syscalls.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/syscalls.c"
+  20              		.section	.text.initialise_monitor_handles,"ax",%progbits
+  21              		.align	1
+  22              		.global	initialise_monitor_handles
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	initialise_monitor_handles:
+  28              	.LFB25:
+   1:Core/Src/syscalls.c **** /**
+   2:Core/Src/syscalls.c ****  ******************************************************************************
+   3:Core/Src/syscalls.c ****  * @file      syscalls.c
+   4:Core/Src/syscalls.c ****  * @author    Auto-generated
+   5:Core/Src/syscalls.c ****  * @brief     STM32 Minimal System calls file
+   6:Core/Src/syscalls.c ****  *            This file provides minimal system call implementations for
+   7:Core/Src/syscalls.c ****  *            newlib-nano library support.
+   8:Core/Src/syscalls.c ****  ******************************************************************************
+   9:Core/Src/syscalls.c ****  */
+  10:Core/Src/syscalls.c **** 
+  11:Core/Src/syscalls.c **** #include <sys/stat.h>
+  12:Core/Src/syscalls.c **** #include <stdlib.h>
+  13:Core/Src/syscalls.c **** #include <errno.h>
+  14:Core/Src/syscalls.c **** #include <stdio.h>
+  15:Core/Src/syscalls.c **** #include <signal.h>
+  16:Core/Src/syscalls.c **** #include <time.h>
+  17:Core/Src/syscalls.c **** #include <sys/time.h>
+  18:Core/Src/syscalls.c **** #include <sys/times.h>
+  19:Core/Src/syscalls.c **** 
+  20:Core/Src/syscalls.c **** /* Variables */
+  21:Core/Src/syscalls.c **** extern int __io_putchar(int ch) __attribute__((weak));
+  22:Core/Src/syscalls.c **** extern int __io_getchar(void) __attribute__((weak));
+  23:Core/Src/syscalls.c **** 
+  24:Core/Src/syscalls.c **** register char * stack_ptr asm("sp");
+  25:Core/Src/syscalls.c **** 
+  26:Core/Src/syscalls.c **** char *__env[1] = { 0 };
+  27:Core/Src/syscalls.c **** char **environ = __env;
+  28:Core/Src/syscalls.c **** 
+  29:Core/Src/syscalls.c **** /* Functions */
+  30:Core/Src/syscalls.c **** void initialise_monitor_handles()
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 2
+
+
+  31:Core/Src/syscalls.c **** {
+  29              		.loc 1 31 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  32:Core/Src/syscalls.c **** }
+  34              		.loc 1 32 1 view .LVU1
+  35 0000 7047     		bx	lr
+  36              		.cfi_endproc
+  37              	.LFE25:
+  39              		.section	.text._getpid,"ax",%progbits
+  40              		.align	1
+  41              		.global	_getpid
+  42              		.syntax unified
+  43              		.thumb
+  44              		.thumb_func
+  46              	_getpid:
+  47              	.LFB26:
+  33:Core/Src/syscalls.c **** 
+  34:Core/Src/syscalls.c **** int _getpid(void)
+  35:Core/Src/syscalls.c **** {
+  48              		.loc 1 35 1 view -0
+  49              		.cfi_startproc
+  50              		@ args = 0, pretend = 0, frame = 0
+  51              		@ frame_needed = 0, uses_anonymous_args = 0
+  52              		@ link register save eliminated.
+  36:Core/Src/syscalls.c **** 	return 1;
+  53              		.loc 1 36 2 view .LVU3
+  37:Core/Src/syscalls.c **** }
+  54              		.loc 1 37 1 is_stmt 0 view .LVU4
+  55 0000 0120     		movs	r0, #1
+  56 0002 7047     		bx	lr
+  57              		.cfi_endproc
+  58              	.LFE26:
+  60              		.section	.text._kill,"ax",%progbits
+  61              		.align	1
+  62              		.global	_kill
+  63              		.syntax unified
+  64              		.thumb
+  65              		.thumb_func
+  67              	_kill:
+  68              	.LVL0:
+  69              	.LFB27:
+  38:Core/Src/syscalls.c **** 
+  39:Core/Src/syscalls.c **** int _kill(int pid, int sig)
+  40:Core/Src/syscalls.c **** {
+  70              		.loc 1 40 1 is_stmt 1 view -0
+  71              		.cfi_startproc
+  72              		@ args = 0, pretend = 0, frame = 0
+  73              		@ frame_needed = 0, uses_anonymous_args = 0
+  74              		.loc 1 40 1 is_stmt 0 view .LVU6
+  75 0000 08B5     		push	{r3, lr}
+  76              	.LCFI0:
+  77              		.cfi_def_cfa_offset 8
+  78              		.cfi_offset 3, -8
+  79              		.cfi_offset 14, -4
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 3
+
+
+  41:Core/Src/syscalls.c **** 	errno = EINVAL;
+  80              		.loc 1 41 2 is_stmt 1 view .LVU7
+  81 0002 FFF7FEFF 		bl	__errno
+  82              	.LVL1:
+  83              		.loc 1 41 8 is_stmt 0 discriminator 1 view .LVU8
+  84 0006 1623     		movs	r3, #22
+  85 0008 0360     		str	r3, [r0]
+  42:Core/Src/syscalls.c **** 	return -1;
+  86              		.loc 1 42 2 is_stmt 1 view .LVU9
+  43:Core/Src/syscalls.c **** }
+  87              		.loc 1 43 1 is_stmt 0 view .LVU10
+  88 000a 4FF0FF30 		mov	r0, #-1
+  89 000e 08BD     		pop	{r3, pc}
+  90              		.cfi_endproc
+  91              	.LFE27:
+  93              		.section	.text._exit,"ax",%progbits
+  94              		.align	1
+  95              		.global	_exit
+  96              		.syntax unified
+  97              		.thumb
+  98              		.thumb_func
+ 100              	_exit:
+ 101              	.LVL2:
+ 102              	.LFB28:
+  44:Core/Src/syscalls.c **** 
+  45:Core/Src/syscalls.c **** void _exit (int status)
+  46:Core/Src/syscalls.c **** {
+ 103              		.loc 1 46 1 is_stmt 1 view -0
+ 104              		.cfi_startproc
+ 105              		@ Volatile: function does not return.
+ 106              		@ args = 0, pretend = 0, frame = 0
+ 107              		@ frame_needed = 0, uses_anonymous_args = 0
+ 108              		.loc 1 46 1 is_stmt 0 view .LVU12
+ 109 0000 08B5     		push	{r3, lr}
+ 110              	.LCFI1:
+ 111              		.cfi_def_cfa_offset 8
+ 112              		.cfi_offset 3, -8
+ 113              		.cfi_offset 14, -4
+  47:Core/Src/syscalls.c **** 	_kill(status, -1);
+ 114              		.loc 1 47 2 is_stmt 1 view .LVU13
+ 115 0002 4FF0FF31 		mov	r1, #-1
+ 116 0006 FFF7FEFF 		bl	_kill
+ 117              	.LVL3:
+ 118              	.L6:
+  48:Core/Src/syscalls.c **** 	while (1) {}		/* Make sure we hang here */
+ 119              		.loc 1 48 2 view .LVU14
+ 120              		.loc 1 48 13 view .LVU15
+ 121              		.loc 1 48 8 view .LVU16
+ 122 000a FEE7     		b	.L6
+ 123              		.cfi_endproc
+ 124              	.LFE28:
+ 126              		.section	.text._read,"ax",%progbits
+ 127              		.align	1
+ 128              		.weak	_read
+ 129              		.syntax unified
+ 130              		.thumb
+ 131              		.thumb_func
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 4
+
+
+ 133              	_read:
+ 134              	.LVL4:
+ 135              	.LFB29:
+  49:Core/Src/syscalls.c **** }
+  50:Core/Src/syscalls.c **** 
+  51:Core/Src/syscalls.c **** __attribute__((weak)) int _read(int file, char *ptr, int len)
+  52:Core/Src/syscalls.c **** {
+ 136              		.loc 1 52 1 view -0
+ 137              		.cfi_startproc
+ 138              		@ args = 0, pretend = 0, frame = 0
+ 139              		@ frame_needed = 0, uses_anonymous_args = 0
+ 140              		.loc 1 52 1 is_stmt 0 view .LVU18
+ 141 0000 70B5     		push	{r4, r5, r6, lr}
+ 142              	.LCFI2:
+ 143              		.cfi_def_cfa_offset 16
+ 144              		.cfi_offset 4, -16
+ 145              		.cfi_offset 5, -12
+ 146              		.cfi_offset 6, -8
+ 147              		.cfi_offset 14, -4
+ 148 0002 0C46     		mov	r4, r1
+ 149 0004 1646     		mov	r6, r2
+  53:Core/Src/syscalls.c **** 	int DataIdx;
+ 150              		.loc 1 53 2 is_stmt 1 view .LVU19
+  54:Core/Src/syscalls.c **** 
+  55:Core/Src/syscalls.c **** 	for (DataIdx = 0; DataIdx < len; DataIdx++)
+ 151              		.loc 1 55 2 view .LVU20
+ 152              	.LVL5:
+ 153              		.loc 1 55 15 is_stmt 0 view .LVU21
+ 154 0006 0025     		movs	r5, #0
+ 155              		.loc 1 55 2 view .LVU22
+ 156 0008 06E0     		b	.L9
+ 157              	.LVL6:
+ 158              	.L10:
+  56:Core/Src/syscalls.c **** 	{
+  57:Core/Src/syscalls.c **** 		*ptr++ = __io_getchar();
+ 159              		.loc 1 57 3 is_stmt 1 view .LVU23
+ 160              		.loc 1 57 12 is_stmt 0 view .LVU24
+ 161 000a FFF7FEFF 		bl	__io_getchar
+ 162              	.LVL7:
+ 163              		.loc 1 57 7 discriminator 1 view .LVU25
+ 164 000e 2146     		mov	r1, r4
+ 165              	.LVL8:
+ 166              		.loc 1 57 10 discriminator 1 view .LVU26
+ 167 0010 01F8010B 		strb	r0, [r1], #1
+ 168              	.LVL9:
+  55:Core/Src/syscalls.c **** 	{
+ 169              		.loc 1 55 42 is_stmt 1 discriminator 3 view .LVU27
+ 170 0014 0135     		adds	r5, r5, #1
+ 171              	.LVL10:
+ 172              		.loc 1 57 7 is_stmt 0 discriminator 1 view .LVU28
+ 173 0016 0C46     		mov	r4, r1
+ 174              	.LVL11:
+ 175              	.L9:
+  55:Core/Src/syscalls.c **** 	{
+ 176              		.loc 1 55 28 is_stmt 1 discriminator 1 view .LVU29
+ 177 0018 B542     		cmp	r5, r6
+ 178 001a F6DB     		blt	.L10
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 5
+
+
+  58:Core/Src/syscalls.c **** 	}
+  59:Core/Src/syscalls.c **** 
+  60:Core/Src/syscalls.c **** 	return len;
+ 179              		.loc 1 60 2 view .LVU30
+  61:Core/Src/syscalls.c **** }
+ 180              		.loc 1 61 1 is_stmt 0 view .LVU31
+ 181 001c 3046     		mov	r0, r6
+ 182 001e 70BD     		pop	{r4, r5, r6, pc}
+ 183              		.loc 1 61 1 view .LVU32
+ 184              		.cfi_endproc
+ 185              	.LFE29:
+ 187              		.section	.text._write,"ax",%progbits
+ 188              		.align	1
+ 189              		.weak	_write
+ 190              		.syntax unified
+ 191              		.thumb
+ 192              		.thumb_func
+ 194              	_write:
+ 195              	.LVL12:
+ 196              	.LFB30:
+  62:Core/Src/syscalls.c **** 
+  63:Core/Src/syscalls.c **** __attribute__((weak)) int _write(int file, char *ptr, int len)
+  64:Core/Src/syscalls.c **** {
+ 197              		.loc 1 64 1 is_stmt 1 view -0
+ 198              		.cfi_startproc
+ 199              		@ args = 0, pretend = 0, frame = 0
+ 200              		@ frame_needed = 0, uses_anonymous_args = 0
+ 201              		.loc 1 64 1 is_stmt 0 view .LVU34
+ 202 0000 70B5     		push	{r4, r5, r6, lr}
+ 203              	.LCFI3:
+ 204              		.cfi_def_cfa_offset 16
+ 205              		.cfi_offset 4, -16
+ 206              		.cfi_offset 5, -12
+ 207              		.cfi_offset 6, -8
+ 208              		.cfi_offset 14, -4
+ 209 0002 0C46     		mov	r4, r1
+ 210 0004 1646     		mov	r6, r2
+  65:Core/Src/syscalls.c **** 	int DataIdx;
+ 211              		.loc 1 65 2 is_stmt 1 view .LVU35
+  66:Core/Src/syscalls.c **** 
+  67:Core/Src/syscalls.c **** 	for (DataIdx = 0; DataIdx < len; DataIdx++)
+ 212              		.loc 1 67 2 view .LVU36
+ 213              	.LVL13:
+ 214              		.loc 1 67 15 is_stmt 0 view .LVU37
+ 215 0006 0025     		movs	r5, #0
+ 216              		.loc 1 67 2 view .LVU38
+ 217 0008 04E0     		b	.L13
+ 218              	.LVL14:
+ 219              	.L14:
+  68:Core/Src/syscalls.c **** 	{
+  69:Core/Src/syscalls.c **** 		__io_putchar(*ptr++);
+ 220              		.loc 1 69 3 is_stmt 1 view .LVU39
+ 221              		.loc 1 69 3 is_stmt 0 view .LVU40
+ 222 000a 14F8010B 		ldrb	r0, [r4], #1	@ zero_extendqisi2
+ 223              	.LVL15:
+ 224              		.loc 1 69 3 view .LVU41
+ 225 000e FFF7FEFF 		bl	__io_putchar
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 6
+
+
+ 226              	.LVL16:
+  67:Core/Src/syscalls.c **** 	{
+ 227              		.loc 1 67 42 is_stmt 1 discriminator 3 view .LVU42
+ 228 0012 0135     		adds	r5, r5, #1
+ 229              	.LVL17:
+ 230              	.L13:
+  67:Core/Src/syscalls.c **** 	{
+ 231              		.loc 1 67 28 discriminator 1 view .LVU43
+ 232 0014 B542     		cmp	r5, r6
+ 233 0016 F8DB     		blt	.L14
+  70:Core/Src/syscalls.c **** 	}
+  71:Core/Src/syscalls.c **** 	return len;
+ 234              		.loc 1 71 2 view .LVU44
+  72:Core/Src/syscalls.c **** }
+ 235              		.loc 1 72 1 is_stmt 0 view .LVU45
+ 236 0018 3046     		mov	r0, r6
+ 237 001a 70BD     		pop	{r4, r5, r6, pc}
+ 238              		.loc 1 72 1 view .LVU46
+ 239              		.cfi_endproc
+ 240              	.LFE30:
+ 242              		.section	.text._sbrk,"ax",%progbits
+ 243              		.align	1
+ 244              		.global	_sbrk
+ 245              		.syntax unified
+ 246              		.thumb
+ 247              		.thumb_func
+ 249              	_sbrk:
+ 250              	.LVL18:
+ 251              	.LFB31:
+  73:Core/Src/syscalls.c **** 
+  74:Core/Src/syscalls.c **** caddr_t _sbrk(int incr)
+  75:Core/Src/syscalls.c **** {
+ 252              		.loc 1 75 1 is_stmt 1 view -0
+ 253              		.cfi_startproc
+ 254              		@ args = 0, pretend = 0, frame = 0
+ 255              		@ frame_needed = 0, uses_anonymous_args = 0
+ 256              		.loc 1 75 1 is_stmt 0 view .LVU48
+ 257 0000 08B5     		push	{r3, lr}
+ 258              	.LCFI4:
+ 259              		.cfi_def_cfa_offset 8
+ 260              		.cfi_offset 3, -8
+ 261              		.cfi_offset 14, -4
+ 262 0002 0346     		mov	r3, r0
+  76:Core/Src/syscalls.c **** 	extern char end asm("end");
+ 263              		.loc 1 76 2 is_stmt 1 view .LVU49
+  77:Core/Src/syscalls.c **** 	static char *heap_end;
+ 264              		.loc 1 77 2 view .LVU50
+  78:Core/Src/syscalls.c **** 	char *prev_heap_end;
+ 265              		.loc 1 78 2 view .LVU51
+  79:Core/Src/syscalls.c **** 
+  80:Core/Src/syscalls.c **** 	if (heap_end == 0)
+ 266              		.loc 1 80 2 view .LVU52
+ 267              		.loc 1 80 15 is_stmt 0 view .LVU53
+ 268 0004 0B4A     		ldr	r2, .L23
+ 269 0006 1268     		ldr	r2, [r2]
+ 270              		.loc 1 80 5 view .LVU54
+ 271 0008 42B1     		cbz	r2, .L21
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 7
+
+
+ 272              	.L17:
+  81:Core/Src/syscalls.c **** 		heap_end = &end;
+  82:Core/Src/syscalls.c **** 
+  83:Core/Src/syscalls.c **** 	prev_heap_end = heap_end;
+ 273              		.loc 1 83 2 is_stmt 1 view .LVU55
+ 274              		.loc 1 83 16 is_stmt 0 view .LVU56
+ 275 000a 0A4A     		ldr	r2, .L23
+ 276 000c 1068     		ldr	r0, [r2]
+ 277              	.LVL19:
+  84:Core/Src/syscalls.c **** 	if (heap_end + incr > stack_ptr)
+ 278              		.loc 1 84 2 is_stmt 1 view .LVU57
+ 279              		.loc 1 84 15 is_stmt 0 view .LVU58
+ 280 000e 0344     		add	r3, r3, r0
+ 281              	.LVL20:
+ 282              		.loc 1 84 5 view .LVU59
+ 283 0010 6A46     		mov	r2, sp
+ 284 0012 9342     		cmp	r3, r2
+ 285 0014 06D8     		bhi	.L22
+  85:Core/Src/syscalls.c **** 	{
+  86:Core/Src/syscalls.c **** 		errno = ENOMEM;
+  87:Core/Src/syscalls.c **** 		return (caddr_t) -1;
+  88:Core/Src/syscalls.c **** 	}
+  89:Core/Src/syscalls.c **** 
+  90:Core/Src/syscalls.c **** 	heap_end += incr;
+ 286              		.loc 1 90 2 is_stmt 1 view .LVU60
+ 287              		.loc 1 90 11 is_stmt 0 view .LVU61
+ 288 0016 074A     		ldr	r2, .L23
+ 289 0018 1360     		str	r3, [r2]
+  91:Core/Src/syscalls.c **** 
+  92:Core/Src/syscalls.c **** 	return (caddr_t) prev_heap_end;
+ 290              		.loc 1 92 2 is_stmt 1 view .LVU62
+ 291              	.LVL21:
+ 292              	.L16:
+  93:Core/Src/syscalls.c **** }
+ 293              		.loc 1 93 1 is_stmt 0 view .LVU63
+ 294 001a 08BD     		pop	{r3, pc}
+ 295              	.LVL22:
+ 296              	.L21:
+  81:Core/Src/syscalls.c **** 
+ 297              		.loc 1 81 3 is_stmt 1 view .LVU64
+  81:Core/Src/syscalls.c **** 
+ 298              		.loc 1 81 12 is_stmt 0 view .LVU65
+ 299 001c 054A     		ldr	r2, .L23
+ 300 001e 0649     		ldr	r1, .L23+4
+ 301 0020 1160     		str	r1, [r2]
+ 302 0022 F2E7     		b	.L17
+ 303              	.LVL23:
+ 304              	.L22:
+  86:Core/Src/syscalls.c **** 		return (caddr_t) -1;
+ 305              		.loc 1 86 3 is_stmt 1 view .LVU66
+ 306 0024 FFF7FEFF 		bl	__errno
+ 307              	.LVL24:
+  86:Core/Src/syscalls.c **** 		return (caddr_t) -1;
+ 308              		.loc 1 86 9 is_stmt 0 discriminator 1 view .LVU67
+ 309 0028 0C23     		movs	r3, #12
+ 310 002a 0360     		str	r3, [r0]
+  87:Core/Src/syscalls.c **** 	}
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 8
+
+
+ 311              		.loc 1 87 3 is_stmt 1 view .LVU68
+  87:Core/Src/syscalls.c **** 	}
+ 312              		.loc 1 87 10 is_stmt 0 view .LVU69
+ 313 002c 4FF0FF30 		mov	r0, #-1
+ 314 0030 F3E7     		b	.L16
+ 315              	.L24:
+ 316 0032 00BF     		.align	2
+ 317              	.L23:
+ 318 0034 00000000 		.word	heap_end.0
+ 319 0038 00000000 		.word	end
+ 320              		.cfi_endproc
+ 321              	.LFE31:
+ 323              		.section	.text._close,"ax",%progbits
+ 324              		.align	1
+ 325              		.global	_close
+ 326              		.syntax unified
+ 327              		.thumb
+ 328              		.thumb_func
+ 330              	_close:
+ 331              	.LVL25:
+ 332              	.LFB32:
+  94:Core/Src/syscalls.c **** 
+  95:Core/Src/syscalls.c **** int _close(int file)
+  96:Core/Src/syscalls.c **** {
+ 333              		.loc 1 96 1 is_stmt 1 view -0
+ 334              		.cfi_startproc
+ 335              		@ args = 0, pretend = 0, frame = 0
+ 336              		@ frame_needed = 0, uses_anonymous_args = 0
+ 337              		@ link register save eliminated.
+  97:Core/Src/syscalls.c **** 	return -1;
+ 338              		.loc 1 97 2 view .LVU71
+  98:Core/Src/syscalls.c **** }
+ 339              		.loc 1 98 1 is_stmt 0 view .LVU72
+ 340 0000 4FF0FF30 		mov	r0, #-1
+ 341              	.LVL26:
+ 342              		.loc 1 98 1 view .LVU73
+ 343 0004 7047     		bx	lr
+ 344              		.cfi_endproc
+ 345              	.LFE32:
+ 347              		.section	.text._fstat,"ax",%progbits
+ 348              		.align	1
+ 349              		.global	_fstat
+ 350              		.syntax unified
+ 351              		.thumb
+ 352              		.thumb_func
+ 354              	_fstat:
+ 355              	.LVL27:
+ 356              	.LFB33:
+  99:Core/Src/syscalls.c **** 
+ 100:Core/Src/syscalls.c **** int _fstat(int file, struct stat *st)
+ 101:Core/Src/syscalls.c **** {
+ 357              		.loc 1 101 1 is_stmt 1 view -0
+ 358              		.cfi_startproc
+ 359              		@ args = 0, pretend = 0, frame = 0
+ 360              		@ frame_needed = 0, uses_anonymous_args = 0
+ 361              		@ link register save eliminated.
+ 102:Core/Src/syscalls.c **** 	st->st_mode = S_IFCHR;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 9
+
+
+ 362              		.loc 1 102 2 view .LVU75
+ 363              		.loc 1 102 14 is_stmt 0 view .LVU76
+ 364 0000 4FF40053 		mov	r3, #8192
+ 365 0004 4B60     		str	r3, [r1, #4]
+ 103:Core/Src/syscalls.c **** 	return 0;
+ 366              		.loc 1 103 2 is_stmt 1 view .LVU77
+ 104:Core/Src/syscalls.c **** }
+ 367              		.loc 1 104 1 is_stmt 0 view .LVU78
+ 368 0006 0020     		movs	r0, #0
+ 369              	.LVL28:
+ 370              		.loc 1 104 1 view .LVU79
+ 371 0008 7047     		bx	lr
+ 372              		.cfi_endproc
+ 373              	.LFE33:
+ 375              		.section	.text._isatty,"ax",%progbits
+ 376              		.align	1
+ 377              		.global	_isatty
+ 378              		.syntax unified
+ 379              		.thumb
+ 380              		.thumb_func
+ 382              	_isatty:
+ 383              	.LVL29:
+ 384              	.LFB34:
+ 105:Core/Src/syscalls.c **** 
+ 106:Core/Src/syscalls.c **** int _isatty(int file)
+ 107:Core/Src/syscalls.c **** {
+ 385              		.loc 1 107 1 is_stmt 1 view -0
+ 386              		.cfi_startproc
+ 387              		@ args = 0, pretend = 0, frame = 0
+ 388              		@ frame_needed = 0, uses_anonymous_args = 0
+ 389              		@ link register save eliminated.
+ 108:Core/Src/syscalls.c **** 	return 1;
+ 390              		.loc 1 108 2 view .LVU81
+ 109:Core/Src/syscalls.c **** }
+ 391              		.loc 1 109 1 is_stmt 0 view .LVU82
+ 392 0000 0120     		movs	r0, #1
+ 393              	.LVL30:
+ 394              		.loc 1 109 1 view .LVU83
+ 395 0002 7047     		bx	lr
+ 396              		.cfi_endproc
+ 397              	.LFE34:
+ 399              		.section	.text._lseek,"ax",%progbits
+ 400              		.align	1
+ 401              		.global	_lseek
+ 402              		.syntax unified
+ 403              		.thumb
+ 404              		.thumb_func
+ 406              	_lseek:
+ 407              	.LVL31:
+ 408              	.LFB35:
+ 110:Core/Src/syscalls.c **** 
+ 111:Core/Src/syscalls.c **** int _lseek(int file, int ptr, int dir)
+ 112:Core/Src/syscalls.c **** {
+ 409              		.loc 1 112 1 is_stmt 1 view -0
+ 410              		.cfi_startproc
+ 411              		@ args = 0, pretend = 0, frame = 0
+ 412              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 10
+
+
+ 413              		@ link register save eliminated.
+ 113:Core/Src/syscalls.c **** 	return 0;
+ 414              		.loc 1 113 2 view .LVU85
+ 114:Core/Src/syscalls.c **** }
+ 415              		.loc 1 114 1 is_stmt 0 view .LVU86
+ 416 0000 0020     		movs	r0, #0
+ 417              	.LVL32:
+ 418              		.loc 1 114 1 view .LVU87
+ 419 0002 7047     		bx	lr
+ 420              		.cfi_endproc
+ 421              	.LFE35:
+ 423              		.section	.text._open,"ax",%progbits
+ 424              		.align	1
+ 425              		.global	_open
+ 426              		.syntax unified
+ 427              		.thumb
+ 428              		.thumb_func
+ 430              	_open:
+ 431              	.LVL33:
+ 432              	.LFB36:
+ 115:Core/Src/syscalls.c **** 
+ 116:Core/Src/syscalls.c **** int _open(char *path, int flags, ...)
+ 117:Core/Src/syscalls.c **** {
+ 433              		.loc 1 117 1 is_stmt 1 view -0
+ 434              		.cfi_startproc
+ 435              		@ args = 4, pretend = 12, frame = 0
+ 436              		@ frame_needed = 0, uses_anonymous_args = 1
+ 437              		@ link register save eliminated.
+ 438              		.loc 1 117 1 is_stmt 0 view .LVU89
+ 439 0000 0EB4     		push	{r1, r2, r3}
+ 440              	.LCFI5:
+ 441              		.cfi_def_cfa_offset 12
+ 442              		.cfi_offset 1, -12
+ 443              		.cfi_offset 2, -8
+ 444              		.cfi_offset 3, -4
+ 118:Core/Src/syscalls.c **** 	return -1;
+ 445              		.loc 1 118 2 is_stmt 1 view .LVU90
+ 119:Core/Src/syscalls.c **** }
+ 446              		.loc 1 119 1 is_stmt 0 view .LVU91
+ 447 0002 4FF0FF30 		mov	r0, #-1
+ 448              	.LVL34:
+ 449              		.loc 1 119 1 view .LVU92
+ 450 0006 03B0     		add	sp, sp, #12
+ 451              	.LCFI6:
+ 452              		.cfi_restore 3
+ 453              		.cfi_restore 2
+ 454              		.cfi_restore 1
+ 455              		.cfi_def_cfa_offset 0
+ 456 0008 7047     		bx	lr
+ 457              		.cfi_endproc
+ 458              	.LFE36:
+ 460              		.section	.text._wait,"ax",%progbits
+ 461              		.align	1
+ 462              		.global	_wait
+ 463              		.syntax unified
+ 464              		.thumb
+ 465              		.thumb_func
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 11
+
+
+ 467              	_wait:
+ 468              	.LVL35:
+ 469              	.LFB37:
+ 120:Core/Src/syscalls.c **** 
+ 121:Core/Src/syscalls.c **** int _wait(int *status)
+ 122:Core/Src/syscalls.c **** {
+ 470              		.loc 1 122 1 is_stmt 1 view -0
+ 471              		.cfi_startproc
+ 472              		@ args = 0, pretend = 0, frame = 0
+ 473              		@ frame_needed = 0, uses_anonymous_args = 0
+ 474              		.loc 1 122 1 is_stmt 0 view .LVU94
+ 475 0000 08B5     		push	{r3, lr}
+ 476              	.LCFI7:
+ 477              		.cfi_def_cfa_offset 8
+ 478              		.cfi_offset 3, -8
+ 479              		.cfi_offset 14, -4
+ 123:Core/Src/syscalls.c **** 	errno = ECHILD;
+ 480              		.loc 1 123 2 is_stmt 1 view .LVU95
+ 481 0002 FFF7FEFF 		bl	__errno
+ 482              	.LVL36:
+ 483              		.loc 1 123 8 is_stmt 0 discriminator 1 view .LVU96
+ 484 0006 0A23     		movs	r3, #10
+ 485 0008 0360     		str	r3, [r0]
+ 124:Core/Src/syscalls.c **** 	return -1;
+ 486              		.loc 1 124 2 is_stmt 1 view .LVU97
+ 125:Core/Src/syscalls.c **** }
+ 487              		.loc 1 125 1 is_stmt 0 view .LVU98
+ 488 000a 4FF0FF30 		mov	r0, #-1
+ 489 000e 08BD     		pop	{r3, pc}
+ 490              		.cfi_endproc
+ 491              	.LFE37:
+ 493              		.section	.text._unlink,"ax",%progbits
+ 494              		.align	1
+ 495              		.global	_unlink
+ 496              		.syntax unified
+ 497              		.thumb
+ 498              		.thumb_func
+ 500              	_unlink:
+ 501              	.LVL37:
+ 502              	.LFB38:
+ 126:Core/Src/syscalls.c **** 
+ 127:Core/Src/syscalls.c **** int _unlink(char *name)
+ 128:Core/Src/syscalls.c **** {
+ 503              		.loc 1 128 1 is_stmt 1 view -0
+ 504              		.cfi_startproc
+ 505              		@ args = 0, pretend = 0, frame = 0
+ 506              		@ frame_needed = 0, uses_anonymous_args = 0
+ 507              		.loc 1 128 1 is_stmt 0 view .LVU100
+ 508 0000 08B5     		push	{r3, lr}
+ 509              	.LCFI8:
+ 510              		.cfi_def_cfa_offset 8
+ 511              		.cfi_offset 3, -8
+ 512              		.cfi_offset 14, -4
+ 129:Core/Src/syscalls.c **** 	errno = ENOENT;
+ 513              		.loc 1 129 2 is_stmt 1 view .LVU101
+ 514 0002 FFF7FEFF 		bl	__errno
+ 515              	.LVL38:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 12
+
+
+ 516              		.loc 1 129 8 is_stmt 0 discriminator 1 view .LVU102
+ 517 0006 0223     		movs	r3, #2
+ 518 0008 0360     		str	r3, [r0]
+ 130:Core/Src/syscalls.c **** 	return -1;
+ 519              		.loc 1 130 2 is_stmt 1 view .LVU103
+ 131:Core/Src/syscalls.c **** }
+ 520              		.loc 1 131 1 is_stmt 0 view .LVU104
+ 521 000a 4FF0FF30 		mov	r0, #-1
+ 522 000e 08BD     		pop	{r3, pc}
+ 523              		.cfi_endproc
+ 524              	.LFE38:
+ 526              		.section	.text._times,"ax",%progbits
+ 527              		.align	1
+ 528              		.global	_times
+ 529              		.syntax unified
+ 530              		.thumb
+ 531              		.thumb_func
+ 533              	_times:
+ 534              	.LVL39:
+ 535              	.LFB39:
+ 132:Core/Src/syscalls.c **** 
+ 133:Core/Src/syscalls.c **** int _times(struct tms *buf)
+ 134:Core/Src/syscalls.c **** {
+ 536              		.loc 1 134 1 is_stmt 1 view -0
+ 537              		.cfi_startproc
+ 538              		@ args = 0, pretend = 0, frame = 0
+ 539              		@ frame_needed = 0, uses_anonymous_args = 0
+ 540              		@ link register save eliminated.
+ 135:Core/Src/syscalls.c **** 	return -1;
+ 541              		.loc 1 135 2 view .LVU106
+ 136:Core/Src/syscalls.c **** }
+ 542              		.loc 1 136 1 is_stmt 0 view .LVU107
+ 543 0000 4FF0FF30 		mov	r0, #-1
+ 544              	.LVL40:
+ 545              		.loc 1 136 1 view .LVU108
+ 546 0004 7047     		bx	lr
+ 547              		.cfi_endproc
+ 548              	.LFE39:
+ 550              		.section	.text._stat,"ax",%progbits
+ 551              		.align	1
+ 552              		.global	_stat
+ 553              		.syntax unified
+ 554              		.thumb
+ 555              		.thumb_func
+ 557              	_stat:
+ 558              	.LVL41:
+ 559              	.LFB40:
+ 137:Core/Src/syscalls.c **** 
+ 138:Core/Src/syscalls.c **** int _stat(char *file, struct stat *st)
+ 139:Core/Src/syscalls.c **** {
+ 560              		.loc 1 139 1 is_stmt 1 view -0
+ 561              		.cfi_startproc
+ 562              		@ args = 0, pretend = 0, frame = 0
+ 563              		@ frame_needed = 0, uses_anonymous_args = 0
+ 564              		@ link register save eliminated.
+ 140:Core/Src/syscalls.c **** 	st->st_mode = S_IFCHR;
+ 565              		.loc 1 140 2 view .LVU110
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 13
+
+
+ 566              		.loc 1 140 14 is_stmt 0 view .LVU111
+ 567 0000 4FF40053 		mov	r3, #8192
+ 568 0004 4B60     		str	r3, [r1, #4]
+ 141:Core/Src/syscalls.c **** 	return 0;
+ 569              		.loc 1 141 2 is_stmt 1 view .LVU112
+ 142:Core/Src/syscalls.c **** }
+ 570              		.loc 1 142 1 is_stmt 0 view .LVU113
+ 571 0006 0020     		movs	r0, #0
+ 572              	.LVL42:
+ 573              		.loc 1 142 1 view .LVU114
+ 574 0008 7047     		bx	lr
+ 575              		.cfi_endproc
+ 576              	.LFE40:
+ 578              		.section	.text._link,"ax",%progbits
+ 579              		.align	1
+ 580              		.global	_link
+ 581              		.syntax unified
+ 582              		.thumb
+ 583              		.thumb_func
+ 585              	_link:
+ 586              	.LVL43:
+ 587              	.LFB41:
+ 143:Core/Src/syscalls.c **** 
+ 144:Core/Src/syscalls.c **** int _link(char *old, char *new)
+ 145:Core/Src/syscalls.c **** {
+ 588              		.loc 1 145 1 is_stmt 1 view -0
+ 589              		.cfi_startproc
+ 590              		@ args = 0, pretend = 0, frame = 0
+ 591              		@ frame_needed = 0, uses_anonymous_args = 0
+ 592              		.loc 1 145 1 is_stmt 0 view .LVU116
+ 593 0000 08B5     		push	{r3, lr}
+ 594              	.LCFI9:
+ 595              		.cfi_def_cfa_offset 8
+ 596              		.cfi_offset 3, -8
+ 597              		.cfi_offset 14, -4
+ 146:Core/Src/syscalls.c **** 	errno = EMLINK;
+ 598              		.loc 1 146 2 is_stmt 1 view .LVU117
+ 599 0002 FFF7FEFF 		bl	__errno
+ 600              	.LVL44:
+ 601              		.loc 1 146 8 is_stmt 0 discriminator 1 view .LVU118
+ 602 0006 1F23     		movs	r3, #31
+ 603 0008 0360     		str	r3, [r0]
+ 147:Core/Src/syscalls.c **** 	return -1;
+ 604              		.loc 1 147 2 is_stmt 1 view .LVU119
+ 148:Core/Src/syscalls.c **** }
+ 605              		.loc 1 148 1 is_stmt 0 view .LVU120
+ 606 000a 4FF0FF30 		mov	r0, #-1
+ 607 000e 08BD     		pop	{r3, pc}
+ 608              		.cfi_endproc
+ 609              	.LFE41:
+ 611              		.section	.text._fork,"ax",%progbits
+ 612              		.align	1
+ 613              		.global	_fork
+ 614              		.syntax unified
+ 615              		.thumb
+ 616              		.thumb_func
+ 618              	_fork:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 14
+
+
+ 619              	.LFB42:
+ 149:Core/Src/syscalls.c **** 
+ 150:Core/Src/syscalls.c **** int _fork(void)
+ 151:Core/Src/syscalls.c **** {
+ 620              		.loc 1 151 1 is_stmt 1 view -0
+ 621              		.cfi_startproc
+ 622              		@ args = 0, pretend = 0, frame = 0
+ 623              		@ frame_needed = 0, uses_anonymous_args = 0
+ 624 0000 08B5     		push	{r3, lr}
+ 625              	.LCFI10:
+ 626              		.cfi_def_cfa_offset 8
+ 627              		.cfi_offset 3, -8
+ 628              		.cfi_offset 14, -4
+ 152:Core/Src/syscalls.c **** 	errno = EAGAIN;
+ 629              		.loc 1 152 2 view .LVU122
+ 630 0002 FFF7FEFF 		bl	__errno
+ 631              	.LVL45:
+ 632              		.loc 1 152 8 is_stmt 0 discriminator 1 view .LVU123
+ 633 0006 0B23     		movs	r3, #11
+ 634 0008 0360     		str	r3, [r0]
+ 153:Core/Src/syscalls.c **** 	return -1;
+ 635              		.loc 1 153 2 is_stmt 1 view .LVU124
+ 154:Core/Src/syscalls.c **** }
+ 636              		.loc 1 154 1 is_stmt 0 view .LVU125
+ 637 000a 4FF0FF30 		mov	r0, #-1
+ 638 000e 08BD     		pop	{r3, pc}
+ 639              		.cfi_endproc
+ 640              	.LFE42:
+ 642              		.section	.text._execve,"ax",%progbits
+ 643              		.align	1
+ 644              		.global	_execve
+ 645              		.syntax unified
+ 646              		.thumb
+ 647              		.thumb_func
+ 649              	_execve:
+ 650              	.LVL46:
+ 651              	.LFB43:
+ 155:Core/Src/syscalls.c **** 
+ 156:Core/Src/syscalls.c **** int _execve(char *name, char **argv, char **env)
+ 157:Core/Src/syscalls.c **** {
+ 652              		.loc 1 157 1 is_stmt 1 view -0
+ 653              		.cfi_startproc
+ 654              		@ args = 0, pretend = 0, frame = 0
+ 655              		@ frame_needed = 0, uses_anonymous_args = 0
+ 656              		.loc 1 157 1 is_stmt 0 view .LVU127
+ 657 0000 08B5     		push	{r3, lr}
+ 658              	.LCFI11:
+ 659              		.cfi_def_cfa_offset 8
+ 660              		.cfi_offset 3, -8
+ 661              		.cfi_offset 14, -4
+ 158:Core/Src/syscalls.c **** 	errno = ENOMEM;
+ 662              		.loc 1 158 2 is_stmt 1 view .LVU128
+ 663 0002 FFF7FEFF 		bl	__errno
+ 664              	.LVL47:
+ 665              		.loc 1 158 8 is_stmt 0 discriminator 1 view .LVU129
+ 666 0006 0C23     		movs	r3, #12
+ 667 0008 0360     		str	r3, [r0]
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 15
+
+
+ 159:Core/Src/syscalls.c **** 	return -1;
+ 668              		.loc 1 159 2 is_stmt 1 view .LVU130
+ 160:Core/Src/syscalls.c **** }
+ 669              		.loc 1 160 1 is_stmt 0 view .LVU131
+ 670 000a 4FF0FF30 		mov	r0, #-1
+ 671 000e 08BD     		pop	{r3, pc}
+ 672              		.cfi_endproc
+ 673              	.LFE43:
+ 675              		.section	.bss.heap_end.0,"aw",%nobits
+ 676              		.align	2
+ 679              	heap_end.0:
+ 680 0000 00000000 		.space	4
+ 681              		.global	environ
+ 682              		.section	.data.environ,"aw"
+ 683              		.align	2
+ 686              	environ:
+ 687 0000 00000000 		.word	__env
+ 688              		.global	__env
+ 689              		.section	.bss.__env,"aw",%nobits
+ 690              		.align	2
+ 693              	__env:
+ 694 0000 00000000 		.space	4
+ 695              		.weak	__io_putchar
+ 696              		.weak	__io_getchar
+ 697              		.text
+ 698              	.Letext0:
+ 699              		.file 2 "C:/msys64/mingw64/arm-none-eabi/include/machine/_default_types.h"
+ 700              		.file 3 "C:/msys64/mingw64/arm-none-eabi/include/sys/_types.h"
+ 701              		.file 4 "C:/msys64/mingw64/arm-none-eabi/include/sys/_timeval.h"
+ 702              		.file 5 "C:/msys64/mingw64/arm-none-eabi/include/sys/_timespec.h"
+ 703              		.file 6 "C:/msys64/mingw64/arm-none-eabi/include/sys/types.h"
+ 704              		.file 7 "C:/msys64/mingw64/arm-none-eabi/include/sys/stat.h"
+ 705              		.file 8 "C:/msys64/mingw64/arm-none-eabi/include/sys/times.h"
+ 706              		.file 9 "C:/msys64/mingw64/arm-none-eabi/include/sys/errno.h"
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s 			page 16
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 syscalls.c
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:21     .text.initialise_monitor_handles:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:27     .text.initialise_monitor_handles:00000000 initialise_monitor_handles
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:40     .text._getpid:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:46     .text._getpid:00000000 _getpid
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:61     .text._kill:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:67     .text._kill:00000000 _kill
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:94     .text._exit:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:100    .text._exit:00000000 _exit
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:127    .text._read:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:133    .text._read:00000000 _read
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:188    .text._write:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:194    .text._write:00000000 _write
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:243    .text._sbrk:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:249    .text._sbrk:00000000 _sbrk
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:318    .text._sbrk:00000034 $d
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:679    .bss.heap_end.0:00000000 heap_end.0
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:324    .text._close:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:330    .text._close:00000000 _close
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:348    .text._fstat:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:354    .text._fstat:00000000 _fstat
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:376    .text._isatty:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:382    .text._isatty:00000000 _isatty
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:400    .text._lseek:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:406    .text._lseek:00000000 _lseek
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:424    .text._open:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:430    .text._open:00000000 _open
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:461    .text._wait:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:467    .text._wait:00000000 _wait
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:494    .text._unlink:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:500    .text._unlink:00000000 _unlink
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:527    .text._times:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:533    .text._times:00000000 _times
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:551    .text._stat:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:557    .text._stat:00000000 _stat
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:579    .text._link:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:585    .text._link:00000000 _link
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:612    .text._fork:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:618    .text._fork:00000000 _fork
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:643    .text._execve:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:649    .text._execve:00000000 _execve
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:676    .bss.heap_end.0:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:686    .data.environ:00000000 environ
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:683    .data.environ:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:693    .bss.__env:00000000 __env
+C:\Users\LENOVO\AppData\Local\Temp\cckCXhac.s:690    .bss.__env:00000000 $d
+
+UNDEFINED SYMBOLS
+__errno
+__io_getchar
+__io_putchar
+end

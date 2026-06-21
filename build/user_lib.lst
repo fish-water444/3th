@@ -1,0 +1,2864 @@
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"user_lib.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Middlewares/Algorithm/Include/user_lib.c"
+  20              		.section	.text.Sqrt,"ax",%progbits
+  21              		.align	1
+  22              		.global	Sqrt
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	Sqrt:
+  28              	.LVL0:
+  29              	.LFB135:
+   1:Middlewares/Algorithm/Include/user_lib.c **** /**
+   2:Middlewares/Algorithm/Include/user_lib.c ****  ******************************************************************************
+   3:Middlewares/Algorithm/Include/user_lib.c ****  * @file	 user_lib.c
+   4:Middlewares/Algorithm/Include/user_lib.c ****  * @author  Wang Hongxi
+   5:Middlewares/Algorithm/Include/user_lib.c ****  * @version V1.0.0
+   6:Middlewares/Algorithm/Include/user_lib.c ****  * @date    2021/2/18
+   7:Middlewares/Algorithm/Include/user_lib.c ****  * @brief
+   8:Middlewares/Algorithm/Include/user_lib.c ****  ******************************************************************************
+   9:Middlewares/Algorithm/Include/user_lib.c ****  * @attention
+  10:Middlewares/Algorithm/Include/user_lib.c ****  *
+  11:Middlewares/Algorithm/Include/user_lib.c ****  ******************************************************************************
+  12:Middlewares/Algorithm/Include/user_lib.c ****  */
+  13:Middlewares/Algorithm/Include/user_lib.c **** #include "stdlib.h"
+  14:Middlewares/Algorithm/Include/user_lib.c **** #include "string.h"
+  15:Middlewares/Algorithm/Include/user_lib.c **** #include "user_lib.h"
+  16:Middlewares/Algorithm/Include/user_lib.c **** #include "math.h"
+  17:Middlewares/Algorithm/Include/user_lib.c **** #include "main.h"
+  18:Middlewares/Algorithm/Include/user_lib.c **** 
+  19:Middlewares/Algorithm/Include/user_lib.c **** #ifdef _CMSIS_OS_H
+  20:Middlewares/Algorithm/Include/user_lib.c **** #define user_malloc pvPortMalloc
+  21:Middlewares/Algorithm/Include/user_lib.c **** #else
+  22:Middlewares/Algorithm/Include/user_lib.c **** #define user_malloc malloc
+  23:Middlewares/Algorithm/Include/user_lib.c **** #endif
+  24:Middlewares/Algorithm/Include/user_lib.c **** 
+  25:Middlewares/Algorithm/Include/user_lib.c **** uint8_t GlobalDebugMode = 1;
+  26:Middlewares/Algorithm/Include/user_lib.c **** 
+  27:Middlewares/Algorithm/Include/user_lib.c **** // 快速开方
+  28:Middlewares/Algorithm/Include/user_lib.c **** float Sqrt(float x)
+  29:Middlewares/Algorithm/Include/user_lib.c **** {
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 2
+
+
+  30              		.loc 1 29 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  35              		.loc 1 29 1 is_stmt 0 view .LVU1
+  36 0000 F0EE405A 		vmov.f32	s11, s0
+  30:Middlewares/Algorithm/Include/user_lib.c ****     float y;
+  37              		.loc 1 30 5 is_stmt 1 view .LVU2
+  31:Middlewares/Algorithm/Include/user_lib.c ****     float delta;
+  38              		.loc 1 31 5 view .LVU3
+  32:Middlewares/Algorithm/Include/user_lib.c ****     float maxError;
+  39              		.loc 1 32 5 view .LVU4
+  33:Middlewares/Algorithm/Include/user_lib.c **** 
+  34:Middlewares/Algorithm/Include/user_lib.c ****     if (x <= 0)
+  40              		.loc 1 34 5 view .LVU5
+  41              		.loc 1 34 8 is_stmt 0 view .LVU6
+  42 0004 B5EEC00A 		vcmpe.f32	s0, #0
+  43 0008 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  44 000c 1ED9     		bls	.L4
+  35:Middlewares/Algorithm/Include/user_lib.c ****     {
+  36:Middlewares/Algorithm/Include/user_lib.c ****         return 0;
+  37:Middlewares/Algorithm/Include/user_lib.c ****     }
+  38:Middlewares/Algorithm/Include/user_lib.c **** 
+  39:Middlewares/Algorithm/Include/user_lib.c ****     // initial guess
+  40:Middlewares/Algorithm/Include/user_lib.c ****     y = x / 2;
+  45              		.loc 1 40 5 is_stmt 1 view .LVU7
+  46              		.loc 1 40 7 is_stmt 0 view .LVU8
+  47 000e F6EE007A 		vmov.f32	s15, #5.0e-1
+  48 0012 20EE270A 		vmul.f32	s0, s0, s15
+  49              	.LVL1:
+  41:Middlewares/Algorithm/Include/user_lib.c **** 
+  42:Middlewares/Algorithm/Include/user_lib.c ****     // refine
+  43:Middlewares/Algorithm/Include/user_lib.c ****     maxError = x * 0.001f;
+  50              		.loc 1 43 5 is_stmt 1 view .LVU9
+  51              		.loc 1 43 14 is_stmt 0 view .LVU10
+  52 0016 9FED0F6A 		vldr.32	s12, .L5
+  53 001a 25EE866A 		vmul.f32	s12, s11, s12
+  54              	.LVL2:
+  55              	.L3:
+  44:Middlewares/Algorithm/Include/user_lib.c **** 
+  45:Middlewares/Algorithm/Include/user_lib.c ****     do
+  56              		.loc 1 45 5 is_stmt 1 view .LVU11
+  46:Middlewares/Algorithm/Include/user_lib.c ****     {
+  47:Middlewares/Algorithm/Include/user_lib.c ****         delta = (y * y) - x;
+  57              		.loc 1 47 9 view .LVU12
+  58              		.loc 1 47 20 is_stmt 0 view .LVU13
+  59 001e 60EE007A 		vmul.f32	s15, s0, s0
+  60              		.loc 1 47 15 view .LVU14
+  61 0022 77EEE57A 		vsub.f32	s15, s15, s11
+  62              	.LVL3:
+  48:Middlewares/Algorithm/Include/user_lib.c ****         y -= delta / (2 * y);
+  63              		.loc 1 48 9 is_stmt 1 view .LVU15
+  64              		.loc 1 48 25 is_stmt 0 view .LVU16
+  65 0026 70EE006A 		vadd.f32	s13, s0, s0
+  66              		.loc 1 48 20 view .LVU17
+  67 002a 87EEA67A 		vdiv.f32	s14, s15, s13
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 3
+
+
+  68              		.loc 1 48 11 view .LVU18
+  69 002e 30EE470A 		vsub.f32	s0, s0, s14
+  70              	.LVL4:
+  49:Middlewares/Algorithm/Include/user_lib.c ****     } while (delta > maxError || delta < -maxError);
+  71              		.loc 1 49 31 is_stmt 1 discriminator 3 view .LVU19
+  72 0032 B4EEE76A 		vcmpe.f32	s12, s15
+  73 0036 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  74 003a F0D4     		bmi	.L3
+  75              		.loc 1 49 42 is_stmt 0 discriminator 2 view .LVU20
+  76 003c B1EE467A 		vneg.f32	s14, s12
+  77              		.loc 1 49 31 discriminator 2 view .LVU21
+  78 0040 B4EEE77A 		vcmpe.f32	s14, s15
+  79 0044 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  80 0048 E9DC     		bgt	.L3
+  81 004a 7047     		bx	lr
+  82              	.LVL5:
+  83              	.L4:
+  36:Middlewares/Algorithm/Include/user_lib.c ****     }
+  84              		.loc 1 36 16 view .LVU22
+  85 004c 9FED020A 		vldr.32	s0, .L5+4
+  86              	.LVL6:
+  50:Middlewares/Algorithm/Include/user_lib.c **** 
+  51:Middlewares/Algorithm/Include/user_lib.c ****     return y;
+  52:Middlewares/Algorithm/Include/user_lib.c **** }
+  87              		.loc 1 52 1 view .LVU23
+  88 0050 7047     		bx	lr
+  89              	.L6:
+  90 0052 00BF     		.align	2
+  91              	.L5:
+  92 0054 6F12833A 		.word	981668463
+  93 0058 00000000 		.word	0
+  94              		.cfi_endproc
+  95              	.LFE135:
+  97              		.section	.text.ramp_init,"ax",%progbits
+  98              		.align	1
+  99              		.global	ramp_init
+ 100              		.syntax unified
+ 101              		.thumb
+ 102              		.thumb_func
+ 104              	ramp_init:
+ 105              	.LVL7:
+ 106              	.LFB136:
+  53:Middlewares/Algorithm/Include/user_lib.c **** 
+  54:Middlewares/Algorithm/Include/user_lib.c **** // 快速求平方根倒数
+  55:Middlewares/Algorithm/Include/user_lib.c **** /*
+  56:Middlewares/Algorithm/Include/user_lib.c **** float invSqrt(float num)
+  57:Middlewares/Algorithm/Include/user_lib.c **** {
+  58:Middlewares/Algorithm/Include/user_lib.c ****     float halfnum = 0.5f * num;
+  59:Middlewares/Algorithm/Include/user_lib.c ****     float y = num;
+  60:Middlewares/Algorithm/Include/user_lib.c ****     long i = *(long *)&y;
+  61:Middlewares/Algorithm/Include/user_lib.c ****     i = 0x5f375a86- (i >> 1);
+  62:Middlewares/Algorithm/Include/user_lib.c ****     y = *(float *)&i;
+  63:Middlewares/Algorithm/Include/user_lib.c ****     y = y * (1.5f - (halfnum * y * y));
+  64:Middlewares/Algorithm/Include/user_lib.c ****     return y;
+  65:Middlewares/Algorithm/Include/user_lib.c **** }*/
+  66:Middlewares/Algorithm/Include/user_lib.c **** 
+  67:Middlewares/Algorithm/Include/user_lib.c **** /**
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 4
+
+
+  68:Middlewares/Algorithm/Include/user_lib.c ****  * @brief          斜波函数初始化
+  69:Middlewares/Algorithm/Include/user_lib.c ****  * @author         RM
+  70:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      斜波函数结构体
+  71:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      间隔的时间，单位 s
+  72:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      最大值
+  73:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      最小值
+  74:Middlewares/Algorithm/Include/user_lib.c ****  * @retval         返回空
+  75:Middlewares/Algorithm/Include/user_lib.c ****  */
+  76:Middlewares/Algorithm/Include/user_lib.c **** void ramp_init(ramp_function_source_t *ramp_source_type, float frame_period, float max, float min)
+  77:Middlewares/Algorithm/Include/user_lib.c **** {
+ 107              		.loc 1 77 1 is_stmt 1 view -0
+ 108              		.cfi_startproc
+ 109              		@ args = 0, pretend = 0, frame = 0
+ 110              		@ frame_needed = 0, uses_anonymous_args = 0
+ 111              		@ link register save eliminated.
+  78:Middlewares/Algorithm/Include/user_lib.c ****     ramp_source_type->frame_period = frame_period;
+ 112              		.loc 1 78 5 view .LVU25
+ 113              		.loc 1 78 36 is_stmt 0 view .LVU26
+ 114 0000 80ED040A 		vstr.32	s0, [r0, #16]
+  79:Middlewares/Algorithm/Include/user_lib.c ****     ramp_source_type->max_value = max;
+ 115              		.loc 1 79 5 is_stmt 1 view .LVU27
+ 116              		.loc 1 79 33 is_stmt 0 view .LVU28
+ 117 0004 C0ED030A 		vstr.32	s1, [r0, #12]
+  80:Middlewares/Algorithm/Include/user_lib.c ****     ramp_source_type->min_value = min;
+ 118              		.loc 1 80 5 is_stmt 1 view .LVU29
+ 119              		.loc 1 80 33 is_stmt 0 view .LVU30
+ 120 0008 80ED021A 		vstr.32	s2, [r0, #8]
+  81:Middlewares/Algorithm/Include/user_lib.c ****     ramp_source_type->input = 0.0f;
+ 121              		.loc 1 81 5 is_stmt 1 view .LVU31
+ 122              		.loc 1 81 29 is_stmt 0 view .LVU32
+ 123 000c 0023     		movs	r3, #0
+ 124 000e 0360     		str	r3, [r0]	@ float
+  82:Middlewares/Algorithm/Include/user_lib.c ****     ramp_source_type->out = 0.0f;
+ 125              		.loc 1 82 5 is_stmt 1 view .LVU33
+ 126              		.loc 1 82 27 is_stmt 0 view .LVU34
+ 127 0010 4360     		str	r3, [r0, #4]	@ float
+  83:Middlewares/Algorithm/Include/user_lib.c **** }
+ 128              		.loc 1 83 1 view .LVU35
+ 129 0012 7047     		bx	lr
+ 130              		.cfi_endproc
+ 131              	.LFE136:
+ 133              		.section	.text.ramp_calc,"ax",%progbits
+ 134              		.align	1
+ 135              		.global	ramp_calc
+ 136              		.syntax unified
+ 137              		.thumb
+ 138              		.thumb_func
+ 140              	ramp_calc:
+ 141              	.LVL8:
+ 142              	.LFB137:
+  84:Middlewares/Algorithm/Include/user_lib.c **** 
+  85:Middlewares/Algorithm/Include/user_lib.c **** /**
+  86:Middlewares/Algorithm/Include/user_lib.c ****  * @brief          斜波函数计算，根据输入的值进行叠加， 输入单位为 /s 即一
+  87:Middlewares/Algorithm/Include/user_lib.c ****  * @author         RM
+  88:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      斜波函数结构体
+  89:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      输入值
+  90:Middlewares/Algorithm/Include/user_lib.c ****  * @retval         返回空
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 5
+
+
+  91:Middlewares/Algorithm/Include/user_lib.c ****  */
+  92:Middlewares/Algorithm/Include/user_lib.c **** float ramp_calc(ramp_function_source_t *ramp_source_type, float input)
+  93:Middlewares/Algorithm/Include/user_lib.c **** {
+ 143              		.loc 1 93 1 is_stmt 1 view -0
+ 144              		.cfi_startproc
+ 145              		@ args = 0, pretend = 0, frame = 0
+ 146              		@ frame_needed = 0, uses_anonymous_args = 0
+ 147              		@ link register save eliminated.
+  94:Middlewares/Algorithm/Include/user_lib.c ****     ramp_source_type->input = input;
+ 148              		.loc 1 94 5 view .LVU37
+ 149              		.loc 1 94 29 is_stmt 0 view .LVU38
+ 150 0000 80ED000A 		vstr.32	s0, [r0]
+  95:Middlewares/Algorithm/Include/user_lib.c ****     ramp_source_type->out += ramp_source_type->input * ramp_source_type->frame_period;
+ 151              		.loc 1 95 5 is_stmt 1 view .LVU39
+ 152              		.loc 1 95 21 is_stmt 0 view .LVU40
+ 153 0004 D0ED017A 		vldr.32	s15, [r0, #4]
+ 154              		.loc 1 95 72 view .LVU41
+ 155 0008 90ED047A 		vldr.32	s14, [r0, #16]
+ 156              		.loc 1 95 54 view .LVU42
+ 157 000c 27EE007A 		vmul.f32	s14, s14, s0
+ 158              		.loc 1 95 27 view .LVU43
+ 159 0010 37EE870A 		vadd.f32	s0, s15, s14
+ 160              	.LVL9:
+ 161              		.loc 1 95 27 view .LVU44
+ 162 0014 80ED010A 		vstr.32	s0, [r0, #4]
+  96:Middlewares/Algorithm/Include/user_lib.c ****     if (ramp_source_type->out > ramp_source_type->max_value)
+ 163              		.loc 1 96 5 is_stmt 1 view .LVU45
+ 164              		.loc 1 96 49 is_stmt 0 view .LVU46
+ 165 0018 D0ED037A 		vldr.32	s15, [r0, #12]
+ 166              		.loc 1 96 8 view .LVU47
+ 167 001c B4EEE70A 		vcmpe.f32	s0, s15
+ 168 0020 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 169 0024 04DD     		ble	.L15
+  97:Middlewares/Algorithm/Include/user_lib.c ****     {
+  98:Middlewares/Algorithm/Include/user_lib.c ****         ramp_source_type->out = ramp_source_type->max_value;
+ 170              		.loc 1 98 9 is_stmt 1 view .LVU48
+ 171              		.loc 1 98 31 is_stmt 0 view .LVU49
+ 172 0026 C0ED017A 		vstr.32	s15, [r0, #4]
+ 173              	.L11:
+  99:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 100:Middlewares/Algorithm/Include/user_lib.c ****     else if (ramp_source_type->out < ramp_source_type->min_value)
+ 101:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 102:Middlewares/Algorithm/Include/user_lib.c ****         ramp_source_type->out = ramp_source_type->min_value;
+ 103:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 104:Middlewares/Algorithm/Include/user_lib.c ****     return ramp_source_type->out;
+ 174              		.loc 1 104 5 is_stmt 1 view .LVU50
+ 105:Middlewares/Algorithm/Include/user_lib.c **** }
+ 175              		.loc 1 105 1 is_stmt 0 view .LVU51
+ 176 002a 90ED010A 		vldr.32	s0, [r0, #4]
+ 177 002e 7047     		bx	lr
+ 178              	.L15:
+ 100:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 179              		.loc 1 100 10 is_stmt 1 view .LVU52
+ 100:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 180              		.loc 1 100 54 is_stmt 0 view .LVU53
+ 181 0030 D0ED027A 		vldr.32	s15, [r0, #8]
+ 100:Middlewares/Algorithm/Include/user_lib.c ****     {
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 6
+
+
+ 182              		.loc 1 100 13 view .LVU54
+ 183 0034 B4EEE70A 		vcmpe.f32	s0, s15
+ 184 0038 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 185 003c F5D5     		bpl	.L11
+ 102:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 186              		.loc 1 102 9 is_stmt 1 view .LVU55
+ 102:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 187              		.loc 1 102 31 is_stmt 0 view .LVU56
+ 188 003e C0ED017A 		vstr.32	s15, [r0, #4]
+ 189 0042 F2E7     		b	.L11
+ 190              		.cfi_endproc
+ 191              	.LFE137:
+ 193              		.section	.text.abs_limit,"ax",%progbits
+ 194              		.align	1
+ 195              		.global	abs_limit
+ 196              		.syntax unified
+ 197              		.thumb
+ 198              		.thumb_func
+ 200              	abs_limit:
+ 201              	.LVL10:
+ 202              	.LFB138:
+ 106:Middlewares/Algorithm/Include/user_lib.c **** 
+ 107:Middlewares/Algorithm/Include/user_lib.c **** // 绝对值限制
+ 108:Middlewares/Algorithm/Include/user_lib.c **** float abs_limit(float num, float Limit)
+ 109:Middlewares/Algorithm/Include/user_lib.c **** {
+ 203              		.loc 1 109 1 is_stmt 1 view -0
+ 204              		.cfi_startproc
+ 205              		@ args = 0, pretend = 0, frame = 0
+ 206              		@ frame_needed = 0, uses_anonymous_args = 0
+ 207              		@ link register save eliminated.
+ 208              		.loc 1 109 1 is_stmt 0 view .LVU58
+ 209 0000 F0EE407A 		vmov.f32	s15, s0
+ 210 0004 B0EE600A 		vmov.f32	s0, s1
+ 211              	.LVL11:
+ 110:Middlewares/Algorithm/Include/user_lib.c ****     if (num > Limit)
+ 212              		.loc 1 110 5 is_stmt 1 view .LVU59
+ 213              		.loc 1 110 8 is_stmt 0 view .LVU60
+ 214 0008 F4EEE07A 		vcmpe.f32	s15, s1
+ 215 000c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 216 0010 08DC     		bgt	.L17
+ 111:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 112:Middlewares/Algorithm/Include/user_lib.c ****         num = Limit;
+ 113:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 114:Middlewares/Algorithm/Include/user_lib.c ****     else if (num < -Limit)
+ 217              		.loc 1 114 10 is_stmt 1 view .LVU61
+ 218              		.loc 1 114 20 is_stmt 0 view .LVU62
+ 219 0012 B1EE600A 		vneg.f32	s0, s1
+ 220              		.loc 1 114 13 view .LVU63
+ 221 0016 B4EEE70A 		vcmpe.f32	s0, s15
+ 222 001a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 223 001e 01DC     		bgt	.L17
+ 224 0020 B0EE670A 		vmov.f32	s0, s15
+ 225              	.L17:
+ 226              	.LVL12:
+ 115:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 116:Middlewares/Algorithm/Include/user_lib.c ****         num = -Limit;
+ 117:Middlewares/Algorithm/Include/user_lib.c ****     }
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 7
+
+
+ 118:Middlewares/Algorithm/Include/user_lib.c ****     return num;
+ 227              		.loc 1 118 5 is_stmt 1 view .LVU64
+ 119:Middlewares/Algorithm/Include/user_lib.c **** }
+ 228              		.loc 1 119 1 is_stmt 0 view .LVU65
+ 229 0024 7047     		bx	lr
+ 230              		.cfi_endproc
+ 231              	.LFE138:
+ 233              		.section	.text.sign,"ax",%progbits
+ 234              		.align	1
+ 235              		.global	sign
+ 236              		.syntax unified
+ 237              		.thumb
+ 238              		.thumb_func
+ 240              	sign:
+ 241              	.LVL13:
+ 242              	.LFB139:
+ 120:Middlewares/Algorithm/Include/user_lib.c **** 
+ 121:Middlewares/Algorithm/Include/user_lib.c **** // 判断符号位
+ 122:Middlewares/Algorithm/Include/user_lib.c **** float sign(float value)
+ 123:Middlewares/Algorithm/Include/user_lib.c **** {
+ 243              		.loc 1 123 1 is_stmt 1 view -0
+ 244              		.cfi_startproc
+ 245              		@ args = 0, pretend = 0, frame = 0
+ 246              		@ frame_needed = 0, uses_anonymous_args = 0
+ 247              		@ link register save eliminated.
+ 124:Middlewares/Algorithm/Include/user_lib.c ****     if (value >= 0.0f)
+ 248              		.loc 1 124 5 view .LVU67
+ 249              		.loc 1 124 8 is_stmt 0 view .LVU68
+ 250 0000 B5EEC00A 		vcmpe.f32	s0, #0
+ 251 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 252 0008 02DB     		blt	.L23
+ 125:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 126:Middlewares/Algorithm/Include/user_lib.c ****         return 1.0f;
+ 253              		.loc 1 126 16 view .LVU69
+ 254 000a B7EE000A 		vmov.f32	s0, #1.0e+0
+ 255              	.LVL14:
+ 256              		.loc 1 126 16 view .LVU70
+ 257 000e 7047     		bx	lr
+ 258              	.LVL15:
+ 259              	.L23:
+ 127:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 128:Middlewares/Algorithm/Include/user_lib.c ****     else
+ 129:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 130:Middlewares/Algorithm/Include/user_lib.c ****         return -1.0f;
+ 260              		.loc 1 130 16 view .LVU71
+ 261 0010 BFEE000A 		vmov.f32	s0, #-1.0e+0
+ 262              	.LVL16:
+ 131:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 132:Middlewares/Algorithm/Include/user_lib.c **** }
+ 263              		.loc 1 132 1 view .LVU72
+ 264 0014 7047     		bx	lr
+ 265              		.cfi_endproc
+ 266              	.LFE139:
+ 268              		.section	.text.float_deadband,"ax",%progbits
+ 269              		.align	1
+ 270              		.global	float_deadband
+ 271              		.syntax unified
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 8
+
+
+ 272              		.thumb
+ 273              		.thumb_func
+ 275              	float_deadband:
+ 276              	.LVL17:
+ 277              	.LFB140:
+ 133:Middlewares/Algorithm/Include/user_lib.c **** 
+ 134:Middlewares/Algorithm/Include/user_lib.c **** // 浮点死区
+ 135:Middlewares/Algorithm/Include/user_lib.c **** float float_deadband(float Value, float minValue, float maxValue)
+ 136:Middlewares/Algorithm/Include/user_lib.c **** {
+ 278              		.loc 1 136 1 is_stmt 1 view -0
+ 279              		.cfi_startproc
+ 280              		@ args = 0, pretend = 0, frame = 0
+ 281              		@ frame_needed = 0, uses_anonymous_args = 0
+ 282              		@ link register save eliminated.
+ 137:Middlewares/Algorithm/Include/user_lib.c ****     if (Value < maxValue && Value > minValue)
+ 283              		.loc 1 137 5 view .LVU74
+ 284              		.loc 1 137 8 is_stmt 0 view .LVU75
+ 285 0000 B4EEC10A 		vcmpe.f32	s0, s2
+ 286 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 287 0008 06D5     		bpl	.L25
+ 288              		.loc 1 137 26 discriminator 1 view .LVU76
+ 289 000a B4EEE00A 		vcmpe.f32	s0, s1
+ 290 000e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 291 0012 01DD     		ble	.L25
+ 138:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 139:Middlewares/Algorithm/Include/user_lib.c ****         Value = 0.0f;
+ 292              		.loc 1 139 15 view .LVU77
+ 293 0014 9FED010A 		vldr.32	s0, .L29
+ 294              	.LVL18:
+ 295              	.L25:
+ 140:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 141:Middlewares/Algorithm/Include/user_lib.c ****     return Value;
+ 296              		.loc 1 141 5 is_stmt 1 view .LVU78
+ 142:Middlewares/Algorithm/Include/user_lib.c **** }
+ 297              		.loc 1 142 1 is_stmt 0 view .LVU79
+ 298 0018 7047     		bx	lr
+ 299              	.L30:
+ 300 001a 00BF     		.align	2
+ 301              	.L29:
+ 302 001c 00000000 		.word	0
+ 303              		.cfi_endproc
+ 304              	.LFE140:
+ 306              		.section	.text.int16_deadband,"ax",%progbits
+ 307              		.align	1
+ 308              		.global	int16_deadband
+ 309              		.syntax unified
+ 310              		.thumb
+ 311              		.thumb_func
+ 313              	int16_deadband:
+ 314              	.LVL19:
+ 315              	.LFB141:
+ 143:Middlewares/Algorithm/Include/user_lib.c **** 
+ 144:Middlewares/Algorithm/Include/user_lib.c **** // int16死区
+ 145:Middlewares/Algorithm/Include/user_lib.c **** int16_t int16_deadband(int16_t Value, int16_t minValue, int16_t maxValue)
+ 146:Middlewares/Algorithm/Include/user_lib.c **** {
+ 316              		.loc 1 146 1 is_stmt 1 view -0
+ 317              		.cfi_startproc
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 9
+
+
+ 318              		@ args = 0, pretend = 0, frame = 0
+ 319              		@ frame_needed = 0, uses_anonymous_args = 0
+ 320              		@ link register save eliminated.
+ 147:Middlewares/Algorithm/Include/user_lib.c ****     if (Value < maxValue && Value > minValue)
+ 321              		.loc 1 147 5 view .LVU81
+ 322              		.loc 1 147 8 is_stmt 0 view .LVU82
+ 323 0000 9042     		cmp	r0, r2
+ 324 0002 02DA     		bge	.L32
+ 325              		.loc 1 147 26 discriminator 1 view .LVU83
+ 326 0004 8842     		cmp	r0, r1
+ 327 0006 00DD     		ble	.L32
+ 148:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 149:Middlewares/Algorithm/Include/user_lib.c ****         Value = 0;
+ 328              		.loc 1 149 15 view .LVU84
+ 329 0008 0020     		movs	r0, #0
+ 330              	.LVL20:
+ 331              	.L32:
+ 150:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 151:Middlewares/Algorithm/Include/user_lib.c ****     return Value;
+ 332              		.loc 1 151 5 is_stmt 1 view .LVU85
+ 152:Middlewares/Algorithm/Include/user_lib.c **** }
+ 333              		.loc 1 152 1 is_stmt 0 view .LVU86
+ 334 000a 7047     		bx	lr
+ 335              		.cfi_endproc
+ 336              	.LFE141:
+ 338              		.section	.text.float_constrain,"ax",%progbits
+ 339              		.align	1
+ 340              		.global	float_constrain
+ 341              		.syntax unified
+ 342              		.thumb
+ 343              		.thumb_func
+ 345              	float_constrain:
+ 346              	.LVL21:
+ 347              	.LFB142:
+ 153:Middlewares/Algorithm/Include/user_lib.c **** 
+ 154:Middlewares/Algorithm/Include/user_lib.c **** // 限幅函数
+ 155:Middlewares/Algorithm/Include/user_lib.c **** float float_constrain(float Value, float minValue, float maxValue)
+ 156:Middlewares/Algorithm/Include/user_lib.c **** {
+ 348              		.loc 1 156 1 is_stmt 1 view -0
+ 349              		.cfi_startproc
+ 350              		@ args = 0, pretend = 0, frame = 0
+ 351              		@ frame_needed = 0, uses_anonymous_args = 0
+ 352              		@ link register save eliminated.
+ 157:Middlewares/Algorithm/Include/user_lib.c ****     if (Value < minValue)
+ 353              		.loc 1 157 5 view .LVU88
+ 354              		.loc 1 157 8 is_stmt 0 view .LVU89
+ 355 0000 B4EEE00A 		vcmpe.f32	s0, s1
+ 356 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 357 0008 07D4     		bmi	.L37
+ 158:Middlewares/Algorithm/Include/user_lib.c ****         return minValue;
+ 159:Middlewares/Algorithm/Include/user_lib.c ****     else if (Value > maxValue)
+ 358              		.loc 1 159 10 is_stmt 1 view .LVU90
+ 359              		.loc 1 159 13 is_stmt 0 view .LVU91
+ 360 000a B4EEC10A 		vcmpe.f32	s0, s2
+ 361 000e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 362 0012 04DD     		ble	.L34
+ 160:Middlewares/Algorithm/Include/user_lib.c ****         return maxValue;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 10
+
+
+ 363              		.loc 1 160 16 view .LVU92
+ 364 0014 B0EE410A 		vmov.f32	s0, s2
+ 365              	.LVL22:
+ 366              		.loc 1 160 16 view .LVU93
+ 367 0018 7047     		bx	lr
+ 368              	.LVL23:
+ 369              	.L37:
+ 158:Middlewares/Algorithm/Include/user_lib.c ****         return minValue;
+ 370              		.loc 1 158 16 view .LVU94
+ 371 001a B0EE600A 		vmov.f32	s0, s1
+ 372              	.LVL24:
+ 373              	.L34:
+ 161:Middlewares/Algorithm/Include/user_lib.c ****     else
+ 162:Middlewares/Algorithm/Include/user_lib.c ****         return Value;
+ 163:Middlewares/Algorithm/Include/user_lib.c **** }
+ 374              		.loc 1 163 1 view .LVU95
+ 375 001e 7047     		bx	lr
+ 376              		.cfi_endproc
+ 377              	.LFE142:
+ 379              		.section	.text.int16_constrain,"ax",%progbits
+ 380              		.align	1
+ 381              		.global	int16_constrain
+ 382              		.syntax unified
+ 383              		.thumb
+ 384              		.thumb_func
+ 386              	int16_constrain:
+ 387              	.LVL25:
+ 388              	.LFB143:
+ 164:Middlewares/Algorithm/Include/user_lib.c **** 
+ 165:Middlewares/Algorithm/Include/user_lib.c **** // 限幅函数
+ 166:Middlewares/Algorithm/Include/user_lib.c **** int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue)
+ 167:Middlewares/Algorithm/Include/user_lib.c **** {
+ 389              		.loc 1 167 1 is_stmt 1 view -0
+ 390              		.cfi_startproc
+ 391              		@ args = 0, pretend = 0, frame = 0
+ 392              		@ frame_needed = 0, uses_anonymous_args = 0
+ 393              		@ link register save eliminated.
+ 168:Middlewares/Algorithm/Include/user_lib.c ****     if (Value < minValue)
+ 394              		.loc 1 168 5 view .LVU97
+ 395              		.loc 1 168 8 is_stmt 0 view .LVU98
+ 396 0000 8842     		cmp	r0, r1
+ 397 0002 03DB     		blt	.L43
+ 169:Middlewares/Algorithm/Include/user_lib.c ****         return minValue;
+ 170:Middlewares/Algorithm/Include/user_lib.c ****     else if (Value > maxValue)
+ 398              		.loc 1 170 10 is_stmt 1 view .LVU99
+ 399              		.loc 1 170 13 is_stmt 0 view .LVU100
+ 400 0004 9042     		cmp	r0, r2
+ 401 0006 02DD     		ble	.L42
+ 171:Middlewares/Algorithm/Include/user_lib.c ****         return maxValue;
+ 402              		.loc 1 171 16 view .LVU101
+ 403 0008 1046     		mov	r0, r2
+ 404              	.LVL26:
+ 405              		.loc 1 171 16 view .LVU102
+ 406 000a 7047     		bx	lr
+ 407              	.LVL27:
+ 408              	.L43:
+ 169:Middlewares/Algorithm/Include/user_lib.c ****         return minValue;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 11
+
+
+ 409              		.loc 1 169 16 view .LVU103
+ 410 000c 0846     		mov	r0, r1
+ 411              	.LVL28:
+ 412              	.L42:
+ 172:Middlewares/Algorithm/Include/user_lib.c ****     else
+ 173:Middlewares/Algorithm/Include/user_lib.c ****         return Value;
+ 174:Middlewares/Algorithm/Include/user_lib.c **** }
+ 413              		.loc 1 174 1 view .LVU104
+ 414 000e 7047     		bx	lr
+ 415              		.cfi_endproc
+ 416              	.LFE143:
+ 418              		.section	.text.loop_float_constrain,"ax",%progbits
+ 419              		.align	1
+ 420              		.global	loop_float_constrain
+ 421              		.syntax unified
+ 422              		.thumb
+ 423              		.thumb_func
+ 425              	loop_float_constrain:
+ 426              	.LVL29:
+ 427              	.LFB144:
+ 175:Middlewares/Algorithm/Include/user_lib.c **** 
+ 176:Middlewares/Algorithm/Include/user_lib.c **** // 循环限幅函数
+ 177:Middlewares/Algorithm/Include/user_lib.c **** float loop_float_constrain(float Input, float minValue, float maxValue)
+ 178:Middlewares/Algorithm/Include/user_lib.c **** {
+ 428              		.loc 1 178 1 is_stmt 1 view -0
+ 429              		.cfi_startproc
+ 430              		@ args = 0, pretend = 0, frame = 0
+ 431              		@ frame_needed = 0, uses_anonymous_args = 0
+ 432              		@ link register save eliminated.
+ 179:Middlewares/Algorithm/Include/user_lib.c ****     if (maxValue < minValue)
+ 433              		.loc 1 179 5 view .LVU106
+ 434              		.loc 1 179 8 is_stmt 0 view .LVU107
+ 435 0000 B4EEE01A 		vcmpe.f32	s2, s1
+ 436 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 437 0008 1ED4     		bmi	.L46
+ 180:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 181:Middlewares/Algorithm/Include/user_lib.c ****         return Input;
+ 182:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 183:Middlewares/Algorithm/Include/user_lib.c **** 
+ 184:Middlewares/Algorithm/Include/user_lib.c ****     if (Input > maxValue)
+ 438              		.loc 1 184 5 is_stmt 1 view .LVU108
+ 439              		.loc 1 184 8 is_stmt 0 view .LVU109
+ 440 000a B4EEC01A 		vcmpe.f32	s2, s0
+ 441 000e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 442 0012 0AD5     		bpl	.L56
+ 443              	.LBB2:
+ 185:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 186:Middlewares/Algorithm/Include/user_lib.c ****         float len = maxValue - minValue;
+ 444              		.loc 1 186 9 is_stmt 1 view .LVU110
+ 445              		.loc 1 186 15 is_stmt 0 view .LVU111
+ 446 0014 71EE600A 		vsub.f32	s1, s2, s1
+ 447              	.LVL30:
+ 187:Middlewares/Algorithm/Include/user_lib.c ****         while (Input > maxValue)
+ 448              		.loc 1 187 9 is_stmt 1 view .LVU112
+ 449              		.loc 1 187 15 is_stmt 0 view .LVU113
+ 450 0018 01E0     		b	.L49
+ 451              	.L50:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 12
+
+
+ 188:Middlewares/Algorithm/Include/user_lib.c ****         {
+ 189:Middlewares/Algorithm/Include/user_lib.c ****             Input -= len;
+ 452              		.loc 1 189 13 is_stmt 1 view .LVU114
+ 453              		.loc 1 189 19 is_stmt 0 view .LVU115
+ 454 001a 30EE600A 		vsub.f32	s0, s0, s1
+ 455              	.LVL31:
+ 456              	.L49:
+ 187:Middlewares/Algorithm/Include/user_lib.c ****         while (Input > maxValue)
+ 457              		.loc 1 187 22 is_stmt 1 view .LVU116
+ 458 001e B4EEC10A 		vcmpe.f32	s0, s2
+ 459 0022 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 460 0026 F8DC     		bgt	.L50
+ 187:Middlewares/Algorithm/Include/user_lib.c ****         while (Input > maxValue)
+ 461              		.loc 1 187 22 is_stmt 0 view .LVU117
+ 462 0028 7047     		bx	lr
+ 463              	.LVL32:
+ 464              	.L56:
+ 187:Middlewares/Algorithm/Include/user_lib.c ****         while (Input > maxValue)
+ 465              		.loc 1 187 22 view .LVU118
+ 466              	.LBE2:
+ 190:Middlewares/Algorithm/Include/user_lib.c ****         }
+ 191:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 192:Middlewares/Algorithm/Include/user_lib.c ****     else if (Input < minValue)
+ 467              		.loc 1 192 10 is_stmt 1 view .LVU119
+ 468              		.loc 1 192 13 is_stmt 0 view .LVU120
+ 469 002a F4EEC00A 		vcmpe.f32	s1, s0
+ 470 002e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 471 0032 09DD     		ble	.L46
+ 472              	.LBB3:
+ 193:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 194:Middlewares/Algorithm/Include/user_lib.c ****         float len = maxValue - minValue;
+ 473              		.loc 1 194 9 is_stmt 1 view .LVU121
+ 474              		.loc 1 194 15 is_stmt 0 view .LVU122
+ 475 0034 31EE601A 		vsub.f32	s2, s2, s1
+ 476              	.LVL33:
+ 195:Middlewares/Algorithm/Include/user_lib.c ****         while (Input < minValue)
+ 477              		.loc 1 195 9 is_stmt 1 view .LVU123
+ 478              	.L52:
+ 479              		.loc 1 195 22 view .LVU124
+ 480 0038 B4EEE00A 		vcmpe.f32	s0, s1
+ 481 003c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 482 0040 02D5     		bpl	.L46
+ 196:Middlewares/Algorithm/Include/user_lib.c ****         {
+ 197:Middlewares/Algorithm/Include/user_lib.c ****             Input += len;
+ 483              		.loc 1 197 13 view .LVU125
+ 484              		.loc 1 197 19 is_stmt 0 view .LVU126
+ 485 0042 30EE010A 		vadd.f32	s0, s0, s2
+ 486              	.LVL34:
+ 487              		.loc 1 197 19 view .LVU127
+ 488 0046 F7E7     		b	.L52
+ 489              	.LVL35:
+ 490              	.L46:
+ 491              		.loc 1 197 19 view .LVU128
+ 492              	.LBE3:
+ 198:Middlewares/Algorithm/Include/user_lib.c ****         }
+ 199:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 200:Middlewares/Algorithm/Include/user_lib.c ****     return Input;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 13
+
+
+ 201:Middlewares/Algorithm/Include/user_lib.c **** }
+ 493              		.loc 1 201 1 view .LVU129
+ 494 0048 7047     		bx	lr
+ 495              		.cfi_endproc
+ 496              	.LFE144:
+ 498              		.section	.text.loop_int_constrain,"ax",%progbits
+ 499              		.align	1
+ 500              		.global	loop_int_constrain
+ 501              		.syntax unified
+ 502              		.thumb
+ 503              		.thumb_func
+ 505              	loop_int_constrain:
+ 506              	.LVL36:
+ 507              	.LFB145:
+ 202:Middlewares/Algorithm/Include/user_lib.c **** uint8_t loop_int_constrain(uint8_t Input, int8_t minValue, int8_t maxValue)
+ 203:Middlewares/Algorithm/Include/user_lib.c **** {
+ 508              		.loc 1 203 1 is_stmt 1 view -0
+ 509              		.cfi_startproc
+ 510              		@ args = 0, pretend = 0, frame = 0
+ 511              		@ frame_needed = 0, uses_anonymous_args = 0
+ 512              		@ link register save eliminated.
+ 204:Middlewares/Algorithm/Include/user_lib.c ****     if (maxValue < minValue)
+ 513              		.loc 1 204 5 view .LVU131
+ 514              		.loc 1 204 8 is_stmt 0 view .LVU132
+ 515 0000 8A42     		cmp	r2, r1
+ 516 0002 16DB     		blt	.L58
+ 205:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 206:Middlewares/Algorithm/Include/user_lib.c ****         return Input;
+ 207:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 208:Middlewares/Algorithm/Include/user_lib.c **** 
+ 209:Middlewares/Algorithm/Include/user_lib.c ****     if (Input > maxValue)
+ 517              		.loc 1 209 5 is_stmt 1 view .LVU133
+ 518              		.loc 1 209 8 is_stmt 0 view .LVU134
+ 519 0004 9042     		cmp	r0, r2
+ 520 0006 09DD     		ble	.L59
+ 521              	.LBB4:
+ 210:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 211:Middlewares/Algorithm/Include/user_lib.c ****         uint8_t len = maxValue - minValue + 1;
+ 522              		.loc 1 211 9 is_stmt 1 view .LVU135
+ 523              		.loc 1 211 32 is_stmt 0 view .LVU136
+ 524 0008 531A     		subs	r3, r2, r1
+ 525 000a DBB2     		uxtb	r3, r3
+ 526              		.loc 1 211 17 view .LVU137
+ 527 000c 0133     		adds	r3, r3, #1
+ 528 000e DBB2     		uxtb	r3, r3
+ 529              	.LVL37:
+ 212:Middlewares/Algorithm/Include/user_lib.c ****         while (Input > maxValue)
+ 530              		.loc 1 212 9 is_stmt 1 view .LVU138
+ 531              		.loc 1 212 15 is_stmt 0 view .LVU139
+ 532 0010 01E0     		b	.L60
+ 533              	.L61:
+ 213:Middlewares/Algorithm/Include/user_lib.c ****         {
+ 214:Middlewares/Algorithm/Include/user_lib.c ****             Input -= len;
+ 534              		.loc 1 214 13 is_stmt 1 view .LVU140
+ 535              		.loc 1 214 19 is_stmt 0 view .LVU141
+ 536 0012 C01A     		subs	r0, r0, r3
+ 537              	.LVL38:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 14
+
+
+ 538              		.loc 1 214 19 view .LVU142
+ 539 0014 C0B2     		uxtb	r0, r0
+ 540              	.LVL39:
+ 541              	.L60:
+ 212:Middlewares/Algorithm/Include/user_lib.c ****         while (Input > maxValue)
+ 542              		.loc 1 212 22 is_stmt 1 view .LVU143
+ 543 0016 8242     		cmp	r2, r0
+ 544 0018 FBDB     		blt	.L61
+ 212:Middlewares/Algorithm/Include/user_lib.c ****         while (Input > maxValue)
+ 545              		.loc 1 212 22 is_stmt 0 view .LVU144
+ 546 001a 7047     		bx	lr
+ 547              	.LVL40:
+ 548              	.L59:
+ 212:Middlewares/Algorithm/Include/user_lib.c ****         while (Input > maxValue)
+ 549              		.loc 1 212 22 view .LVU145
+ 550              	.LBE4:
+ 215:Middlewares/Algorithm/Include/user_lib.c ****         }
+ 216:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 217:Middlewares/Algorithm/Include/user_lib.c ****     else if (Input < minValue)
+ 551              		.loc 1 217 10 is_stmt 1 view .LVU146
+ 552              		.loc 1 217 13 is_stmt 0 view .LVU147
+ 553 001c 8842     		cmp	r0, r1
+ 554 001e 08DA     		bge	.L58
+ 555              	.LBB5:
+ 218:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 219:Middlewares/Algorithm/Include/user_lib.c ****         uint8_t len = maxValue - minValue;
+ 556              		.loc 1 219 9 is_stmt 1 view .LVU148
+ 557              		.loc 1 219 32 is_stmt 0 view .LVU149
+ 558 0020 D3B2     		uxtb	r3, r2
+ 559 0022 CAB2     		uxtb	r2, r1
+ 560              	.LVL41:
+ 561              		.loc 1 219 17 view .LVU150
+ 562 0024 9B1A     		subs	r3, r3, r2
+ 563              	.LVL42:
+ 564              		.loc 1 219 17 view .LVU151
+ 565 0026 DBB2     		uxtb	r3, r3
+ 566              	.LVL43:
+ 220:Middlewares/Algorithm/Include/user_lib.c ****         while (Input < minValue)
+ 567              		.loc 1 220 9 is_stmt 1 view .LVU152
+ 568              	.L62:
+ 569              		.loc 1 220 22 view .LVU153
+ 570 0028 8142     		cmp	r1, r0
+ 571 002a 02DD     		ble	.L58
+ 221:Middlewares/Algorithm/Include/user_lib.c ****         {
+ 222:Middlewares/Algorithm/Include/user_lib.c ****             Input += len;
+ 572              		.loc 1 222 13 view .LVU154
+ 573              		.loc 1 222 19 is_stmt 0 view .LVU155
+ 574 002c 1844     		add	r0, r0, r3
+ 575              	.LVL44:
+ 576              		.loc 1 222 19 view .LVU156
+ 577 002e C0B2     		uxtb	r0, r0
+ 578              	.LVL45:
+ 579              		.loc 1 222 19 view .LVU157
+ 580 0030 FAE7     		b	.L62
+ 581              	.LVL46:
+ 582              	.L58:
+ 583              		.loc 1 222 19 view .LVU158
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 15
+
+
+ 584              	.LBE5:
+ 223:Middlewares/Algorithm/Include/user_lib.c ****         }
+ 224:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 225:Middlewares/Algorithm/Include/user_lib.c ****     return Input;
+ 226:Middlewares/Algorithm/Include/user_lib.c **** }
+ 585              		.loc 1 226 1 view .LVU159
+ 586 0032 7047     		bx	lr
+ 587              		.cfi_endproc
+ 588              	.LFE145:
+ 590              		.section	.text.theta_format,"ax",%progbits
+ 591              		.align	1
+ 592              		.global	theta_format
+ 593              		.syntax unified
+ 594              		.thumb
+ 595              		.thumb_func
+ 597              	theta_format:
+ 598              	.LVL47:
+ 599              	.LFB146:
+ 227:Middlewares/Algorithm/Include/user_lib.c **** // 弧度格式化为-PI~PI
+ 228:Middlewares/Algorithm/Include/user_lib.c **** 
+ 229:Middlewares/Algorithm/Include/user_lib.c **** // 角度格式化为-180~180
+ 230:Middlewares/Algorithm/Include/user_lib.c **** float theta_format(float Ang)
+ 231:Middlewares/Algorithm/Include/user_lib.c **** {
+ 600              		.loc 1 231 1 is_stmt 1 view -0
+ 601              		.cfi_startproc
+ 602              		@ args = 0, pretend = 0, frame = 0
+ 603              		@ frame_needed = 0, uses_anonymous_args = 0
+ 604              		.loc 1 231 1 is_stmt 0 view .LVU161
+ 605 0000 08B5     		push	{r3, lr}
+ 606              	.LCFI0:
+ 607              		.cfi_def_cfa_offset 8
+ 608              		.cfi_offset 3, -8
+ 609              		.cfi_offset 14, -4
+ 232:Middlewares/Algorithm/Include/user_lib.c ****     return loop_float_constrain(Ang, -180.0f, 180.0f);
+ 610              		.loc 1 232 5 is_stmt 1 view .LVU162
+ 611              		.loc 1 232 12 is_stmt 0 view .LVU163
+ 612 0002 9FED031A 		vldr.32	s2, .L66
+ 613 0006 DFED030A 		vldr.32	s1, .L66+4
+ 614 000a FFF7FEFF 		bl	loop_float_constrain
+ 615              	.LVL48:
+ 233:Middlewares/Algorithm/Include/user_lib.c **** }
+ 616              		.loc 1 233 1 view .LVU164
+ 617 000e 08BD     		pop	{r3, pc}
+ 618              	.L67:
+ 619              		.align	2
+ 620              	.L66:
+ 621 0010 00003443 		.word	1127481344
+ 622 0014 000034C3 		.word	-1020002304
+ 623              		.cfi_endproc
+ 624              	.LFE146:
+ 626              		.section	.text.float_rounding,"ax",%progbits
+ 627              		.align	1
+ 628              		.global	float_rounding
+ 629              		.syntax unified
+ 630              		.thumb
+ 631              		.thumb_func
+ 633              	float_rounding:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 16
+
+
+ 634              	.LVL49:
+ 635              	.LFB147:
+ 234:Middlewares/Algorithm/Include/user_lib.c **** 
+ 235:Middlewares/Algorithm/Include/user_lib.c **** int float_rounding(float raw)
+ 236:Middlewares/Algorithm/Include/user_lib.c **** {
+ 636              		.loc 1 236 1 is_stmt 1 view -0
+ 637              		.cfi_startproc
+ 638              		@ args = 0, pretend = 0, frame = 0
+ 639              		@ frame_needed = 0, uses_anonymous_args = 0
+ 640              		@ link register save eliminated.
+ 237:Middlewares/Algorithm/Include/user_lib.c ****     static int integer;
+ 641              		.loc 1 237 5 view .LVU166
+ 238:Middlewares/Algorithm/Include/user_lib.c ****     static float decimal;
+ 642              		.loc 1 238 5 view .LVU167
+ 239:Middlewares/Algorithm/Include/user_lib.c ****     integer = (int)raw;
+ 643              		.loc 1 239 5 view .LVU168
+ 644              		.loc 1 239 15 is_stmt 0 view .LVU169
+ 645 0000 FDEEC07A 		vcvt.s32.f32	s15, s0
+ 646              		.loc 1 239 13 view .LVU170
+ 647 0004 0C4B     		ldr	r3, .L72
+ 648 0006 C3ED007A 		vstr.32	s15, [r3]	@ int
+ 240:Middlewares/Algorithm/Include/user_lib.c ****     decimal = raw - integer;
+ 649              		.loc 1 240 5 is_stmt 1 view .LVU171
+ 650              		.loc 1 240 19 is_stmt 0 view .LVU172
+ 651 000a B8EEE77A 		vcvt.f32.s32	s14, s15
+ 652 000e 30EE470A 		vsub.f32	s0, s0, s14
+ 653              	.LVL50:
+ 654              		.loc 1 240 13 view .LVU173
+ 655 0012 0A4B     		ldr	r3, .L72+4
+ 656 0014 83ED000A 		vstr.32	s0, [r3]
+ 241:Middlewares/Algorithm/Include/user_lib.c ****     if (decimal > 0.5f)
+ 657              		.loc 1 241 5 is_stmt 1 view .LVU174
+ 658              		.loc 1 241 8 is_stmt 0 view .LVU175
+ 659 0018 B6EE007A 		vmov.f32	s14, #5.0e-1
+ 660 001c B4EEC70A 		vcmpe.f32	s0, s14
+ 661 0020 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 662 0024 04DD     		ble	.L69
+ 242:Middlewares/Algorithm/Include/user_lib.c ****         integer++;
+ 663              		.loc 1 242 9 is_stmt 1 view .LVU176
+ 664              		.loc 1 242 16 is_stmt 0 view .LVU177
+ 665 0026 17EE903A 		vmov	r3, s15	@ int
+ 666 002a 0133     		adds	r3, r3, #1
+ 667 002c 024A     		ldr	r2, .L72
+ 668 002e 1360     		str	r3, [r2]
+ 669              	.L69:
+ 243:Middlewares/Algorithm/Include/user_lib.c ****     return integer;
+ 670              		.loc 1 243 5 is_stmt 1 view .LVU178
+ 244:Middlewares/Algorithm/Include/user_lib.c **** }
+ 671              		.loc 1 244 1 is_stmt 0 view .LVU179
+ 672 0030 014B     		ldr	r3, .L72
+ 673 0032 1868     		ldr	r0, [r3]
+ 674 0034 7047     		bx	lr
+ 675              	.L73:
+ 676 0036 00BF     		.align	2
+ 677              	.L72:
+ 678 0038 00000000 		.word	integer.6
+ 679 003c 00000000 		.word	decimal.5
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 17
+
+
+ 680              		.cfi_endproc
+ 681              	.LFE147:
+ 683              		.section	.text.OLS_Init,"ax",%progbits
+ 684              		.align	1
+ 685              		.global	OLS_Init
+ 686              		.syntax unified
+ 687              		.thumb
+ 688              		.thumb_func
+ 690              	OLS_Init:
+ 691              	.LVL51:
+ 692              	.LFB148:
+ 245:Middlewares/Algorithm/Include/user_lib.c **** 
+ 246:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 247:Middlewares/Algorithm/Include/user_lib.c ****  * @brief          最小二乘法初始化
+ 248:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      最小二乘法结构体
+ 249:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      样本数
+ 250:Middlewares/Algorithm/Include/user_lib.c ****  * @retval         返回空
+ 251:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 252:Middlewares/Algorithm/Include/user_lib.c **** void OLS_Init(Ordinary_Least_Squares_t *OLS, uint16_t order)
+ 253:Middlewares/Algorithm/Include/user_lib.c **** {
+ 693              		.loc 1 253 1 is_stmt 1 view -0
+ 694              		.cfi_startproc
+ 695              		@ args = 0, pretend = 0, frame = 0
+ 696              		@ frame_needed = 0, uses_anonymous_args = 0
+ 697              		.loc 1 253 1 is_stmt 0 view .LVU181
+ 698 0000 70B5     		push	{r4, r5, r6, lr}
+ 699              	.LCFI1:
+ 700              		.cfi_def_cfa_offset 16
+ 701              		.cfi_offset 4, -16
+ 702              		.cfi_offset 5, -12
+ 703              		.cfi_offset 6, -8
+ 704              		.cfi_offset 14, -4
+ 705 0002 0446     		mov	r4, r0
+ 254:Middlewares/Algorithm/Include/user_lib.c ****     OLS->Order = order;
+ 706              		.loc 1 254 5 is_stmt 1 view .LVU182
+ 707              		.loc 1 254 16 is_stmt 0 view .LVU183
+ 708 0004 0180     		strh	r1, [r0]	@ movhi
+ 255:Middlewares/Algorithm/Include/user_lib.c ****     OLS->Count = 0;
+ 709              		.loc 1 255 5 is_stmt 1 view .LVU184
+ 710              		.loc 1 255 16 is_stmt 0 view .LVU185
+ 711 0006 0026     		movs	r6, #0
+ 712 0008 4660     		str	r6, [r0, #4]
+ 256:Middlewares/Algorithm/Include/user_lib.c ****     OLS->x = (float *)user_malloc(sizeof(float) * order);
+ 713              		.loc 1 256 5 is_stmt 1 view .LVU186
+ 714              		.loc 1 256 23 is_stmt 0 view .LVU187
+ 715 000a 8D00     		lsls	r5, r1, #2
+ 716 000c 2846     		mov	r0, r5
+ 717              	.LVL52:
+ 718              		.loc 1 256 23 view .LVU188
+ 719 000e FFF7FEFF 		bl	pvPortMalloc
+ 720              	.LVL53:
+ 721              		.loc 1 256 12 discriminator 1 view .LVU189
+ 722 0012 A060     		str	r0, [r4, #8]
+ 257:Middlewares/Algorithm/Include/user_lib.c ****     OLS->y = (float *)user_malloc(sizeof(float) * order);
+ 723              		.loc 1 257 5 is_stmt 1 view .LVU190
+ 724              		.loc 1 257 23 is_stmt 0 view .LVU191
+ 725 0014 2846     		mov	r0, r5
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 18
+
+
+ 726 0016 FFF7FEFF 		bl	pvPortMalloc
+ 727              	.LVL54:
+ 728              		.loc 1 257 12 discriminator 1 view .LVU192
+ 729 001a E060     		str	r0, [r4, #12]
+ 258:Middlewares/Algorithm/Include/user_lib.c ****     OLS->k = 0;
+ 730              		.loc 1 258 5 is_stmt 1 view .LVU193
+ 731              		.loc 1 258 12 is_stmt 0 view .LVU194
+ 732 001c 0023     		movs	r3, #0
+ 733 001e 2361     		str	r3, [r4, #16]	@ float
+ 259:Middlewares/Algorithm/Include/user_lib.c ****     OLS->b = 0;
+ 734              		.loc 1 259 5 is_stmt 1 view .LVU195
+ 735              		.loc 1 259 12 is_stmt 0 view .LVU196
+ 736 0020 6361     		str	r3, [r4, #20]	@ float
+ 260:Middlewares/Algorithm/Include/user_lib.c ****     memset((void *)OLS->x, 0, sizeof(float) * order);
+ 737              		.loc 1 260 5 is_stmt 1 view .LVU197
+ 738 0022 2A46     		mov	r2, r5
+ 739 0024 3146     		mov	r1, r6
+ 740 0026 A068     		ldr	r0, [r4, #8]
+ 741 0028 FFF7FEFF 		bl	memset
+ 742              	.LVL55:
+ 261:Middlewares/Algorithm/Include/user_lib.c ****     memset((void *)OLS->y, 0, sizeof(float) * order);
+ 743              		.loc 1 261 5 view .LVU198
+ 744 002c 2A46     		mov	r2, r5
+ 745 002e 3146     		mov	r1, r6
+ 746 0030 E068     		ldr	r0, [r4, #12]
+ 747 0032 FFF7FEFF 		bl	memset
+ 748              	.LVL56:
+ 262:Middlewares/Algorithm/Include/user_lib.c ****     memset((void *)OLS->t, 0, sizeof(float) * 4);
+ 749              		.loc 1 262 5 view .LVU199
+ 750 0036 E661     		str	r6, [r4, #28]	@ unaligned
+ 751 0038 2662     		str	r6, [r4, #32]	@ unaligned
+ 752 003a 6662     		str	r6, [r4, #36]	@ unaligned
+ 753 003c A662     		str	r6, [r4, #40]	@ unaligned
+ 263:Middlewares/Algorithm/Include/user_lib.c **** }
+ 754              		.loc 1 263 1 is_stmt 0 view .LVU200
+ 755 003e 70BD     		pop	{r4, r5, r6, pc}
+ 756              		.loc 1 263 1 view .LVU201
+ 757              		.cfi_endproc
+ 758              	.LFE148:
+ 760              		.section	.text.OLS_Update,"ax",%progbits
+ 761              		.align	1
+ 762              		.global	OLS_Update
+ 763              		.syntax unified
+ 764              		.thumb
+ 765              		.thumb_func
+ 767              	OLS_Update:
+ 768              	.LVL57:
+ 769              	.LFB149:
+ 264:Middlewares/Algorithm/Include/user_lib.c **** 
+ 265:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 266:Middlewares/Algorithm/Include/user_lib.c ****  * @brief          最小二乘法拟合
+ 267:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      最小二乘法结构体
+ 268:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      信号新样本距上一个样本时间间隔
+ 269:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      信号值
+ 270:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 271:Middlewares/Algorithm/Include/user_lib.c **** void OLS_Update(Ordinary_Least_Squares_t *OLS, float deltax, float y)
+ 272:Middlewares/Algorithm/Include/user_lib.c **** {
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 19
+
+
+ 770              		.loc 1 272 1 is_stmt 1 view -0
+ 771              		.cfi_startproc
+ 772              		@ args = 0, pretend = 0, frame = 0
+ 773              		@ frame_needed = 0, uses_anonymous_args = 0
+ 774              		@ link register save eliminated.
+ 273:Middlewares/Algorithm/Include/user_lib.c ****     static float temp = 0;
+ 775              		.loc 1 273 5 view .LVU203
+ 274:Middlewares/Algorithm/Include/user_lib.c ****     temp = OLS->x[1];
+ 776              		.loc 1 274 5 view .LVU204
+ 777              		.loc 1 274 15 is_stmt 0 view .LVU205
+ 778 0000 8368     		ldr	r3, [r0, #8]
+ 779              		.loc 1 274 10 view .LVU206
+ 780 0002 93ED017A 		vldr.32	s14, [r3, #4]
+ 781 0006 614B     		ldr	r3, .L84
+ 782 0008 83ED007A 		vstr.32	s14, [r3]
+ 275:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 783              		.loc 1 275 5 is_stmt 1 view .LVU207
+ 784              	.LBB6:
+ 785              		.loc 1 275 10 view .LVU208
+ 786              	.LVL58:
+ 787              		.loc 1 275 19 is_stmt 0 view .LVU209
+ 788 000c 0023     		movs	r3, #0
+ 789              		.loc 1 275 5 view .LVU210
+ 790 000e 13E0     		b	.L77
+ 791              	.LVL59:
+ 792              	.L78:
+ 276:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 277:Middlewares/Algorithm/Include/user_lib.c ****         OLS->x[i] = OLS->x[i + 1] - temp;
+ 793              		.loc 1 277 9 is_stmt 1 view .LVU211
+ 794              		.loc 1 277 24 is_stmt 0 view .LVU212
+ 795 0010 8268     		ldr	r2, [r0, #8]
+ 796              		.loc 1 277 27 view .LVU213
+ 797 0012 591C     		adds	r1, r3, #1
+ 798 0014 02EB810C 		add	ip, r2, r1, lsl #2
+ 799 0018 DCED007A 		vldr.32	s15, [ip]
+ 800              		.loc 1 277 15 view .LVU214
+ 801 001c 02EB8302 		add	r2, r2, r3, lsl #2
+ 802              		.loc 1 277 35 view .LVU215
+ 803 0020 77EEC77A 		vsub.f32	s15, s15, s14
+ 804              		.loc 1 277 19 view .LVU216
+ 805 0024 C2ED007A 		vstr.32	s15, [r2]
+ 278:Middlewares/Algorithm/Include/user_lib.c ****         OLS->y[i] = OLS->y[i + 1];
+ 806              		.loc 1 278 9 is_stmt 1 view .LVU217
+ 807              		.loc 1 278 24 is_stmt 0 view .LVU218
+ 808 0028 C268     		ldr	r2, [r0, #12]
+ 809              		.loc 1 278 15 view .LVU219
+ 810 002a 02EB8303 		add	r3, r2, r3, lsl #2
+ 811              	.LVL60:
+ 812              		.loc 1 278 27 view .LVU220
+ 813 002e 02EB8102 		add	r2, r2, r1, lsl #2
+ 814 0032 1268     		ldr	r2, [r2]	@ float
+ 815              		.loc 1 278 19 view .LVU221
+ 816 0034 1A60     		str	r2, [r3]	@ float
+ 275:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 817              		.loc 1 275 46 is_stmt 1 discriminator 3 view .LVU222
+ 818 0036 8BB2     		uxth	r3, r1
+ 819              	.LVL61:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 20
+
+
+ 820              	.L77:
+ 275:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 821              		.loc 1 275 28 discriminator 1 view .LVU223
+ 275:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 822              		.loc 1 275 33 is_stmt 0 discriminator 1 view .LVU224
+ 823 0038 0288     		ldrh	r2, [r0]
+ 275:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 824              		.loc 1 275 41 discriminator 1 view .LVU225
+ 825 003a 511E     		subs	r1, r2, #1
+ 275:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 826              		.loc 1 275 28 discriminator 1 view .LVU226
+ 827 003c 8B42     		cmp	r3, r1
+ 828 003e E7DB     		blt	.L78
+ 829              	.LBE6:
+ 279:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 280:Middlewares/Algorithm/Include/user_lib.c ****     OLS->x[OLS->Order - 1] = OLS->x[OLS->Order - 2] + deltax;
+ 830              		.loc 1 280 5 is_stmt 1 view .LVU227
+ 831              		.loc 1 280 33 is_stmt 0 view .LVU228
+ 832 0040 8168     		ldr	r1, [r0, #8]
+ 833              		.loc 1 280 36 view .LVU229
+ 834 0042 02F18043 		add	r3, r2, #1073741824
+ 835              	.LVL62:
+ 836              		.loc 1 280 36 view .LVU230
+ 837 0046 023B     		subs	r3, r3, #2
+ 838 0048 01EB8303 		add	r3, r1, r3, lsl #2
+ 839 004c D3ED007A 		vldr.32	s15, [r3]
+ 840              		.loc 1 280 11 view .LVU231
+ 841 0050 6FF0404C 		mvn	ip, #-1073741824
+ 842 0054 6244     		add	r2, r2, ip
+ 843 0056 01EB8201 		add	r1, r1, r2, lsl #2
+ 844              		.loc 1 280 53 view .LVU232
+ 845 005a 77EE807A 		vadd.f32	s15, s15, s0
+ 846              		.loc 1 280 28 view .LVU233
+ 847 005e C1ED007A 		vstr.32	s15, [r1]
+ 281:Middlewares/Algorithm/Include/user_lib.c ****     OLS->y[OLS->Order - 1] = y;
+ 848              		.loc 1 281 5 is_stmt 1 view .LVU234
+ 849              		.loc 1 281 8 is_stmt 0 view .LVU235
+ 850 0062 C368     		ldr	r3, [r0, #12]
+ 851              		.loc 1 281 15 view .LVU236
+ 852 0064 0288     		ldrh	r2, [r0]
+ 853              		.loc 1 281 11 view .LVU237
+ 854 0066 6244     		add	r2, r2, ip
+ 855 0068 03EB8203 		add	r3, r3, r2, lsl #2
+ 856              		.loc 1 281 28 view .LVU238
+ 857 006c C3ED000A 		vstr.32	s1, [r3]
+ 282:Middlewares/Algorithm/Include/user_lib.c **** 
+ 283:Middlewares/Algorithm/Include/user_lib.c ****     if (OLS->Count < OLS->Order)
+ 858              		.loc 1 283 5 is_stmt 1 view .LVU239
+ 859              		.loc 1 283 12 is_stmt 0 view .LVU240
+ 860 0070 4368     		ldr	r3, [r0, #4]
+ 861              		.loc 1 283 25 view .LVU241
+ 862 0072 B0F800C0 		ldrh	ip, [r0]
+ 863              		.loc 1 283 8 view .LVU242
+ 864 0076 6345     		cmp	r3, ip
+ 865 0078 01D2     		bcs	.L79
+ 284:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 285:Middlewares/Algorithm/Include/user_lib.c ****         OLS->Count++;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 21
+
+
+ 866              		.loc 1 285 9 is_stmt 1 view .LVU243
+ 867              		.loc 1 285 19 is_stmt 0 view .LVU244
+ 868 007a 0133     		adds	r3, r3, #1
+ 869 007c 4360     		str	r3, [r0, #4]
+ 870              	.L79:
+ 286:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 287:Middlewares/Algorithm/Include/user_lib.c ****     memset((void *)OLS->t, 0, sizeof(float) * 4);
+ 871              		.loc 1 287 5 is_stmt 1 view .LVU245
+ 872 007e 0023     		movs	r3, #0
+ 873 0080 C361     		str	r3, [r0, #28]	@ unaligned
+ 874 0082 0362     		str	r3, [r0, #32]	@ unaligned
+ 875 0084 4362     		str	r3, [r0, #36]	@ unaligned
+ 876 0086 8362     		str	r3, [r0, #40]	@ unaligned
+ 288:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 877              		.loc 1 288 5 view .LVU246
+ 878              	.LBB7:
+ 879              		.loc 1 288 10 view .LVU247
+ 880              		.loc 1 288 34 is_stmt 0 view .LVU248
+ 881 0088 8388     		ldrh	r3, [r0, #4]
+ 882              		.loc 1 288 19 view .LVU249
+ 883 008a ACEB0303 		sub	r3, ip, r3
+ 884 008e 9BB2     		uxth	r3, r3
+ 885              	.LVL63:
+ 886              		.loc 1 288 19 view .LVU250
+ 887 0090 1A46     		mov	r2, r3
+ 888              		.loc 1 288 5 view .LVU251
+ 889 0092 2DE0     		b	.L80
+ 890              	.LVL64:
+ 891              	.L81:
+ 289:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 290:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[0] += OLS->x[i] * OLS->x[i];
+ 892              		.loc 1 290 9 is_stmt 1 view .LVU252
+ 893              		.loc 1 290 15 is_stmt 0 view .LVU253
+ 894 0094 90ED077A 		vldr.32	s14, [r0, #28]
+ 895              		.loc 1 290 25 view .LVU254
+ 896 0098 8168     		ldr	r1, [r0, #8]
+ 897              		.loc 1 290 28 view .LVU255
+ 898 009a 01EB8201 		add	r1, r1, r2, lsl #2
+ 899 009e D1ED007A 		vldr.32	s15, [r1]
+ 900              		.loc 1 290 32 view .LVU256
+ 901 00a2 67EEA77A 		vmul.f32	s15, s15, s15
+ 902              		.loc 1 290 19 view .LVU257
+ 903 00a6 77EE277A 		vadd.f32	s15, s14, s15
+ 904 00aa C0ED077A 		vstr.32	s15, [r0, #28]
+ 291:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[1] += OLS->x[i];
+ 905              		.loc 1 291 9 is_stmt 1 view .LVU258
+ 906              		.loc 1 291 15 is_stmt 0 view .LVU259
+ 907 00ae D0ED087A 		vldr.32	s15, [r0, #32]
+ 908              		.loc 1 291 28 view .LVU260
+ 909 00b2 91ED007A 		vldr.32	s14, [r1]
+ 910              		.loc 1 291 19 view .LVU261
+ 911 00b6 77EE877A 		vadd.f32	s15, s15, s14
+ 912 00ba C0ED087A 		vstr.32	s15, [r0, #32]
+ 292:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[2] += OLS->x[i] * OLS->y[i];
+ 913              		.loc 1 292 9 is_stmt 1 view .LVU262
+ 914              		.loc 1 292 15 is_stmt 0 view .LVU263
+ 915 00be D0ED097A 		vldr.32	s15, [r0, #36]
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 22
+
+
+ 916              		.loc 1 292 28 view .LVU264
+ 917 00c2 91ED007A 		vldr.32	s14, [r1]
+ 918              		.loc 1 292 37 view .LVU265
+ 919 00c6 C168     		ldr	r1, [r0, #12]
+ 920              		.loc 1 292 40 view .LVU266
+ 921 00c8 01EB8201 		add	r1, r1, r2, lsl #2
+ 922 00cc D1ED006A 		vldr.32	s13, [r1]
+ 923              		.loc 1 292 32 view .LVU267
+ 924 00d0 27EE267A 		vmul.f32	s14, s14, s13
+ 925              		.loc 1 292 19 view .LVU268
+ 926 00d4 77EE877A 		vadd.f32	s15, s15, s14
+ 927 00d8 C0ED097A 		vstr.32	s15, [r0, #36]
+ 293:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[3] += OLS->y[i];
+ 928              		.loc 1 293 9 is_stmt 1 view .LVU269
+ 929              		.loc 1 293 15 is_stmt 0 view .LVU270
+ 930 00dc D0ED0A7A 		vldr.32	s15, [r0, #40]
+ 931              		.loc 1 293 28 view .LVU271
+ 932 00e0 91ED007A 		vldr.32	s14, [r1]
+ 933              		.loc 1 293 19 view .LVU272
+ 934 00e4 77EE877A 		vadd.f32	s15, s15, s14
+ 935 00e8 C0ED0A7A 		vstr.32	s15, [r0, #40]
+ 288:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 936              		.loc 1 288 64 is_stmt 1 discriminator 3 view .LVU273
+ 937 00ec 0132     		adds	r2, r2, #1
+ 938              	.LVL65:
+ 288:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 939              		.loc 1 288 64 is_stmt 0 discriminator 3 view .LVU274
+ 940 00ee 92B2     		uxth	r2, r2
+ 941              	.LVL66:
+ 942              	.L80:
+ 288:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 943              		.loc 1 288 50 is_stmt 1 discriminator 1 view .LVU275
+ 944 00f0 9445     		cmp	ip, r2
+ 945 00f2 CFD8     		bhi	.L81
+ 946              	.LBE7:
+ 294:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 295:Middlewares/Algorithm/Include/user_lib.c **** 
+ 296:Middlewares/Algorithm/Include/user_lib.c ****     OLS->k = (OLS->t[2] * OLS->Order - OLS->t[1] * OLS->t[3]) / (OLS->t[0] * OLS->Order - OLS->t[1]
+ 947              		.loc 1 296 5 view .LVU276
+ 948              		.loc 1 296 21 is_stmt 0 view .LVU277
+ 949 00f4 D0ED096A 		vldr.32	s13, [r0, #36]
+ 950              		.loc 1 296 25 view .LVU278
+ 951 00f8 07EE90CA 		vmov	s15, ip	@ int
+ 952 00fc B8EEE75A 		vcvt.f32.s32	s10, s15
+ 953 0100 66EE854A 		vmul.f32	s9, s13, s10
+ 954              		.loc 1 296 46 view .LVU279
+ 955 0104 90ED086A 		vldr.32	s12, [r0, #32]
+ 956              		.loc 1 296 58 view .LVU280
+ 957 0108 D0ED0A7A 		vldr.32	s15, [r0, #40]
+ 958              		.loc 1 296 50 view .LVU281
+ 959 010c 26EE277A 		vmul.f32	s14, s12, s15
+ 960              		.loc 1 296 38 view .LVU282
+ 961 0110 74EEC74A 		vsub.f32	s9, s9, s14
+ 962              		.loc 1 296 72 view .LVU283
+ 963 0114 90ED074A 		vldr.32	s8, [r0, #28]
+ 964              		.loc 1 296 76 view .LVU284
+ 965 0118 25EE047A 		vmul.f32	s14, s10, s8
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 23
+
+
+ 966              		.loc 1 296 101 view .LVU285
+ 967 011c 66EE065A 		vmul.f32	s11, s12, s12
+ 968              		.loc 1 296 89 view .LVU286
+ 969 0120 37EE657A 		vsub.f32	s14, s14, s11
+ 970              		.loc 1 296 63 view .LVU287
+ 971 0124 C4EE875A 		vdiv.f32	s11, s9, s14
+ 972              		.loc 1 296 12 view .LVU288
+ 973 0128 C0ED045A 		vstr.32	s11, [r0, #16]
+ 297:Middlewares/Algorithm/Include/user_lib.c ****     OLS->b = (OLS->t[0] * OLS->t[3] - OLS->t[1] * OLS->t[2]) / (OLS->t[0] * OLS->Order - OLS->t[1] 
+ 974              		.loc 1 297 5 is_stmt 1 view .LVU289
+ 975              		.loc 1 297 25 is_stmt 0 view .LVU290
+ 976 012c 67EE847A 		vmul.f32	s15, s15, s8
+ 977              		.loc 1 297 49 view .LVU291
+ 978 0130 66EE866A 		vmul.f32	s13, s13, s12
+ 979              		.loc 1 297 37 view .LVU292
+ 980 0134 77EEE67A 		vsub.f32	s15, s15, s13
+ 981              		.loc 1 297 62 view .LVU293
+ 982 0138 87EE876A 		vdiv.f32	s12, s15, s14
+ 983              		.loc 1 297 12 view .LVU294
+ 984 013c 80ED056A 		vstr.32	s12, [r0, #20]
+ 298:Middlewares/Algorithm/Include/user_lib.c **** 
+ 299:Middlewares/Algorithm/Include/user_lib.c ****     OLS->StandardDeviation = 0;
+ 985              		.loc 1 299 5 is_stmt 1 view .LVU295
+ 986              		.loc 1 299 28 is_stmt 0 view .LVU296
+ 987 0140 0022     		movs	r2, #0
+ 988              	.LVL67:
+ 989              		.loc 1 299 28 view .LVU297
+ 990 0142 8261     		str	r2, [r0, #24]	@ float
+ 300:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 991              		.loc 1 300 5 is_stmt 1 view .LVU298
+ 992              	.LBB8:
+ 993              		.loc 1 300 10 view .LVU299
+ 994              	.LVL68:
+ 995              		.loc 1 300 5 is_stmt 0 view .LVU300
+ 996 0144 19E0     		b	.L82
+ 997              	.L83:
+ 301:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 302:Middlewares/Algorithm/Include/user_lib.c ****         OLS->StandardDeviation += fabsf(OLS->k * OLS->x[i] + OLS->b - OLS->y[i]);
+ 998              		.loc 1 302 9 is_stmt 1 view .LVU301
+ 999              		.loc 1 302 12 is_stmt 0 view .LVU302
+ 1000 0146 90ED067A 		vldr.32	s14, [r0, #24]
+ 1001              		.loc 1 302 53 view .LVU303
+ 1002 014a 8268     		ldr	r2, [r0, #8]
+ 1003              		.loc 1 302 56 view .LVU304
+ 1004 014c 02EB8302 		add	r2, r2, r3, lsl #2
+ 1005 0150 D2ED007A 		vldr.32	s15, [r2]
+ 1006              		.loc 1 302 48 view .LVU305
+ 1007 0154 65EEA77A 		vmul.f32	s15, s11, s15
+ 1008              		.loc 1 302 60 view .LVU306
+ 1009 0158 76EE277A 		vadd.f32	s15, s12, s15
+ 1010              		.loc 1 302 74 view .LVU307
+ 1011 015c C268     		ldr	r2, [r0, #12]
+ 1012              		.loc 1 302 77 view .LVU308
+ 1013 015e 02EB8302 		add	r2, r2, r3, lsl #2
+ 1014 0162 D2ED006A 		vldr.32	s13, [r2]
+ 1015              		.loc 1 302 69 view .LVU309
+ 1016 0166 77EEE67A 		vsub.f32	s15, s15, s13
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 24
+
+
+ 1017              		.loc 1 302 35 view .LVU310
+ 1018 016a F0EEE77A 		vabs.f32	s15, s15
+ 1019              		.loc 1 302 32 view .LVU311
+ 1020 016e 77EE277A 		vadd.f32	s15, s14, s15
+ 1021 0172 C0ED067A 		vstr.32	s15, [r0, #24]
+ 300:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1022              		.loc 1 300 64 is_stmt 1 discriminator 3 view .LVU312
+ 1023 0176 0133     		adds	r3, r3, #1
+ 1024              	.LVL69:
+ 300:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1025              		.loc 1 300 64 is_stmt 0 discriminator 3 view .LVU313
+ 1026 0178 9BB2     		uxth	r3, r3
+ 1027              	.LVL70:
+ 1028              	.L82:
+ 300:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1029              		.loc 1 300 50 is_stmt 1 discriminator 1 view .LVU314
+ 1030 017a 9C45     		cmp	ip, r3
+ 1031 017c E3D8     		bhi	.L83
+ 300:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1032              		.loc 1 300 50 is_stmt 0 discriminator 1 view .LVU315
+ 1033              	.LBE8:
+ 303:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 304:Middlewares/Algorithm/Include/user_lib.c ****     OLS->StandardDeviation /= OLS->Order;
+ 1034              		.loc 1 304 5 is_stmt 1 view .LVU316
+ 1035              		.loc 1 304 8 is_stmt 0 view .LVU317
+ 1036 017e 90ED067A 		vldr.32	s14, [r0, #24]
+ 1037              		.loc 1 304 28 view .LVU318
+ 1038 0182 C7EE057A 		vdiv.f32	s15, s14, s10
+ 1039 0186 C0ED067A 		vstr.32	s15, [r0, #24]
+ 305:Middlewares/Algorithm/Include/user_lib.c **** }
+ 1040              		.loc 1 305 1 view .LVU319
+ 1041 018a 7047     		bx	lr
+ 1042              	.L85:
+ 1043              		.align	2
+ 1044              	.L84:
+ 1045 018c 00000000 		.word	temp.4
+ 1046              		.cfi_endproc
+ 1047              	.LFE149:
+ 1049              		.section	.text.OLS_Derivative,"ax",%progbits
+ 1050              		.align	1
+ 1051              		.global	OLS_Derivative
+ 1052              		.syntax unified
+ 1053              		.thumb
+ 1054              		.thumb_func
+ 1056              	OLS_Derivative:
+ 1057              	.LVL71:
+ 1058              	.LFB150:
+ 306:Middlewares/Algorithm/Include/user_lib.c **** 
+ 307:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 308:Middlewares/Algorithm/Include/user_lib.c ****  * @brief          最小二乘法提取信号微分
+ 309:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      最小二乘法结构体
+ 310:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      信号新样本距上一个样本时间间隔
+ 311:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      信号值
+ 312:Middlewares/Algorithm/Include/user_lib.c ****  * @retval         返回斜率k
+ 313:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 314:Middlewares/Algorithm/Include/user_lib.c **** float OLS_Derivative(Ordinary_Least_Squares_t *OLS, float deltax, float y)
+ 315:Middlewares/Algorithm/Include/user_lib.c **** {
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 25
+
+
+ 1059              		.loc 1 315 1 is_stmt 1 view -0
+ 1060              		.cfi_startproc
+ 1061              		@ args = 0, pretend = 0, frame = 0
+ 1062              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1063              		@ link register save eliminated.
+ 316:Middlewares/Algorithm/Include/user_lib.c ****     static float temp = 0;
+ 1064              		.loc 1 316 5 view .LVU321
+ 317:Middlewares/Algorithm/Include/user_lib.c ****     temp = OLS->x[1];
+ 1065              		.loc 1 317 5 view .LVU322
+ 1066              		.loc 1 317 15 is_stmt 0 view .LVU323
+ 1067 0000 8368     		ldr	r3, [r0, #8]
+ 1068              		.loc 1 317 10 view .LVU324
+ 1069 0002 93ED017A 		vldr.32	s14, [r3, #4]
+ 1070 0006 5D4B     		ldr	r3, .L94
+ 1071 0008 83ED007A 		vstr.32	s14, [r3]
+ 318:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1072              		.loc 1 318 5 is_stmt 1 view .LVU325
+ 1073              	.LBB9:
+ 1074              		.loc 1 318 10 view .LVU326
+ 1075              	.LVL72:
+ 1076              		.loc 1 318 19 is_stmt 0 view .LVU327
+ 1077 000c 0023     		movs	r3, #0
+ 1078              		.loc 1 318 5 view .LVU328
+ 1079 000e 13E0     		b	.L87
+ 1080              	.LVL73:
+ 1081              	.L88:
+ 319:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 320:Middlewares/Algorithm/Include/user_lib.c ****         OLS->x[i] = OLS->x[i + 1] - temp;
+ 1082              		.loc 1 320 9 is_stmt 1 view .LVU329
+ 1083              		.loc 1 320 24 is_stmt 0 view .LVU330
+ 1084 0010 8268     		ldr	r2, [r0, #8]
+ 1085              		.loc 1 320 27 view .LVU331
+ 1086 0012 591C     		adds	r1, r3, #1
+ 1087 0014 02EB810C 		add	ip, r2, r1, lsl #2
+ 1088 0018 DCED007A 		vldr.32	s15, [ip]
+ 1089              		.loc 1 320 15 view .LVU332
+ 1090 001c 02EB8302 		add	r2, r2, r3, lsl #2
+ 1091              		.loc 1 320 35 view .LVU333
+ 1092 0020 77EEC77A 		vsub.f32	s15, s15, s14
+ 1093              		.loc 1 320 19 view .LVU334
+ 1094 0024 C2ED007A 		vstr.32	s15, [r2]
+ 321:Middlewares/Algorithm/Include/user_lib.c ****         OLS->y[i] = OLS->y[i + 1];
+ 1095              		.loc 1 321 9 is_stmt 1 view .LVU335
+ 1096              		.loc 1 321 24 is_stmt 0 view .LVU336
+ 1097 0028 C268     		ldr	r2, [r0, #12]
+ 1098              		.loc 1 321 15 view .LVU337
+ 1099 002a 02EB8303 		add	r3, r2, r3, lsl #2
+ 1100              	.LVL74:
+ 1101              		.loc 1 321 27 view .LVU338
+ 1102 002e 02EB8102 		add	r2, r2, r1, lsl #2
+ 1103 0032 1268     		ldr	r2, [r2]	@ float
+ 1104              		.loc 1 321 19 view .LVU339
+ 1105 0034 1A60     		str	r2, [r3]	@ float
+ 318:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1106              		.loc 1 318 46 is_stmt 1 discriminator 3 view .LVU340
+ 1107 0036 8BB2     		uxth	r3, r1
+ 1108              	.LVL75:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 26
+
+
+ 1109              	.L87:
+ 318:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1110              		.loc 1 318 28 discriminator 1 view .LVU341
+ 318:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1111              		.loc 1 318 33 is_stmt 0 discriminator 1 view .LVU342
+ 1112 0038 0288     		ldrh	r2, [r0]
+ 318:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1113              		.loc 1 318 41 discriminator 1 view .LVU343
+ 1114 003a 511E     		subs	r1, r2, #1
+ 318:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1115              		.loc 1 318 28 discriminator 1 view .LVU344
+ 1116 003c 8B42     		cmp	r3, r1
+ 1117 003e E7DB     		blt	.L88
+ 1118              	.LBE9:
+ 322:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 323:Middlewares/Algorithm/Include/user_lib.c ****     OLS->x[OLS->Order - 1] = OLS->x[OLS->Order - 2] + deltax;
+ 1119              		.loc 1 323 5 is_stmt 1 view .LVU345
+ 1120              		.loc 1 323 33 is_stmt 0 view .LVU346
+ 1121 0040 8168     		ldr	r1, [r0, #8]
+ 1122              		.loc 1 323 36 view .LVU347
+ 1123 0042 02F18043 		add	r3, r2, #1073741824
+ 1124              	.LVL76:
+ 1125              		.loc 1 323 36 view .LVU348
+ 1126 0046 023B     		subs	r3, r3, #2
+ 1127 0048 01EB8303 		add	r3, r1, r3, lsl #2
+ 1128 004c D3ED007A 		vldr.32	s15, [r3]
+ 1129              		.loc 1 323 11 view .LVU349
+ 1130 0050 6FF0404C 		mvn	ip, #-1073741824
+ 1131 0054 6244     		add	r2, r2, ip
+ 1132 0056 01EB8201 		add	r1, r1, r2, lsl #2
+ 1133              		.loc 1 323 53 view .LVU350
+ 1134 005a 77EE807A 		vadd.f32	s15, s15, s0
+ 1135              		.loc 1 323 28 view .LVU351
+ 1136 005e C1ED007A 		vstr.32	s15, [r1]
+ 324:Middlewares/Algorithm/Include/user_lib.c ****     OLS->y[OLS->Order - 1] = y;
+ 1137              		.loc 1 324 5 is_stmt 1 view .LVU352
+ 1138              		.loc 1 324 8 is_stmt 0 view .LVU353
+ 1139 0062 C368     		ldr	r3, [r0, #12]
+ 1140              		.loc 1 324 15 view .LVU354
+ 1141 0064 0288     		ldrh	r2, [r0]
+ 1142              		.loc 1 324 11 view .LVU355
+ 1143 0066 6244     		add	r2, r2, ip
+ 1144 0068 03EB8203 		add	r3, r3, r2, lsl #2
+ 1145              		.loc 1 324 28 view .LVU356
+ 1146 006c C3ED000A 		vstr.32	s1, [r3]
+ 325:Middlewares/Algorithm/Include/user_lib.c **** 
+ 326:Middlewares/Algorithm/Include/user_lib.c ****     if (OLS->Count < OLS->Order)
+ 1147              		.loc 1 326 5 is_stmt 1 view .LVU357
+ 1148              		.loc 1 326 12 is_stmt 0 view .LVU358
+ 1149 0070 4368     		ldr	r3, [r0, #4]
+ 1150              		.loc 1 326 25 view .LVU359
+ 1151 0072 B0F800C0 		ldrh	ip, [r0]
+ 1152              		.loc 1 326 8 view .LVU360
+ 1153 0076 6345     		cmp	r3, ip
+ 1154 0078 01D2     		bcs	.L89
+ 327:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 328:Middlewares/Algorithm/Include/user_lib.c ****         OLS->Count++;
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 27
+
+
+ 1155              		.loc 1 328 9 is_stmt 1 view .LVU361
+ 1156              		.loc 1 328 19 is_stmt 0 view .LVU362
+ 1157 007a 0133     		adds	r3, r3, #1
+ 1158 007c 4360     		str	r3, [r0, #4]
+ 1159              	.L89:
+ 329:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 330:Middlewares/Algorithm/Include/user_lib.c **** 
+ 331:Middlewares/Algorithm/Include/user_lib.c ****     memset((void *)OLS->t, 0, sizeof(float) * 4);
+ 1160              		.loc 1 331 5 is_stmt 1 view .LVU363
+ 1161 007e 0023     		movs	r3, #0
+ 1162 0080 C361     		str	r3, [r0, #28]	@ unaligned
+ 1163 0082 0362     		str	r3, [r0, #32]	@ unaligned
+ 1164 0084 4362     		str	r3, [r0, #36]	@ unaligned
+ 1165 0086 8362     		str	r3, [r0, #40]	@ unaligned
+ 332:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1166              		.loc 1 332 5 view .LVU364
+ 1167              	.LBB10:
+ 1168              		.loc 1 332 10 view .LVU365
+ 1169              		.loc 1 332 34 is_stmt 0 view .LVU366
+ 1170 0088 8388     		ldrh	r3, [r0, #4]
+ 1171              		.loc 1 332 19 view .LVU367
+ 1172 008a ACEB0303 		sub	r3, ip, r3
+ 1173 008e 9BB2     		uxth	r3, r3
+ 1174              	.LVL77:
+ 1175              		.loc 1 332 19 view .LVU368
+ 1176 0090 1A46     		mov	r2, r3
+ 1177              		.loc 1 332 5 view .LVU369
+ 1178 0092 2DE0     		b	.L90
+ 1179              	.LVL78:
+ 1180              	.L91:
+ 333:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 334:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[0] += OLS->x[i] * OLS->x[i];
+ 1181              		.loc 1 334 9 is_stmt 1 view .LVU370
+ 1182              		.loc 1 334 15 is_stmt 0 view .LVU371
+ 1183 0094 90ED077A 		vldr.32	s14, [r0, #28]
+ 1184              		.loc 1 334 25 view .LVU372
+ 1185 0098 8168     		ldr	r1, [r0, #8]
+ 1186              		.loc 1 334 28 view .LVU373
+ 1187 009a 01EB8201 		add	r1, r1, r2, lsl #2
+ 1188 009e D1ED007A 		vldr.32	s15, [r1]
+ 1189              		.loc 1 334 32 view .LVU374
+ 1190 00a2 67EEA77A 		vmul.f32	s15, s15, s15
+ 1191              		.loc 1 334 19 view .LVU375
+ 1192 00a6 77EE277A 		vadd.f32	s15, s14, s15
+ 1193 00aa C0ED077A 		vstr.32	s15, [r0, #28]
+ 335:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[1] += OLS->x[i];
+ 1194              		.loc 1 335 9 is_stmt 1 view .LVU376
+ 1195              		.loc 1 335 15 is_stmt 0 view .LVU377
+ 1196 00ae D0ED087A 		vldr.32	s15, [r0, #32]
+ 1197              		.loc 1 335 28 view .LVU378
+ 1198 00b2 91ED007A 		vldr.32	s14, [r1]
+ 1199              		.loc 1 335 19 view .LVU379
+ 1200 00b6 77EE877A 		vadd.f32	s15, s15, s14
+ 1201 00ba C0ED087A 		vstr.32	s15, [r0, #32]
+ 336:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[2] += OLS->x[i] * OLS->y[i];
+ 1202              		.loc 1 336 9 is_stmt 1 view .LVU380
+ 1203              		.loc 1 336 15 is_stmt 0 view .LVU381
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 28
+
+
+ 1204 00be D0ED097A 		vldr.32	s15, [r0, #36]
+ 1205              		.loc 1 336 28 view .LVU382
+ 1206 00c2 91ED007A 		vldr.32	s14, [r1]
+ 1207              		.loc 1 336 37 view .LVU383
+ 1208 00c6 C168     		ldr	r1, [r0, #12]
+ 1209              		.loc 1 336 40 view .LVU384
+ 1210 00c8 01EB8201 		add	r1, r1, r2, lsl #2
+ 1211 00cc D1ED006A 		vldr.32	s13, [r1]
+ 1212              		.loc 1 336 32 view .LVU385
+ 1213 00d0 27EE267A 		vmul.f32	s14, s14, s13
+ 1214              		.loc 1 336 19 view .LVU386
+ 1215 00d4 77EE877A 		vadd.f32	s15, s15, s14
+ 1216 00d8 C0ED097A 		vstr.32	s15, [r0, #36]
+ 337:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[3] += OLS->y[i];
+ 1217              		.loc 1 337 9 is_stmt 1 view .LVU387
+ 1218              		.loc 1 337 15 is_stmt 0 view .LVU388
+ 1219 00dc D0ED0A7A 		vldr.32	s15, [r0, #40]
+ 1220              		.loc 1 337 28 view .LVU389
+ 1221 00e0 91ED007A 		vldr.32	s14, [r1]
+ 1222              		.loc 1 337 19 view .LVU390
+ 1223 00e4 77EE877A 		vadd.f32	s15, s15, s14
+ 1224 00e8 C0ED0A7A 		vstr.32	s15, [r0, #40]
+ 332:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 1225              		.loc 1 332 64 is_stmt 1 discriminator 3 view .LVU391
+ 1226 00ec 0132     		adds	r2, r2, #1
+ 1227              	.LVL79:
+ 332:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 1228              		.loc 1 332 64 is_stmt 0 discriminator 3 view .LVU392
+ 1229 00ee 92B2     		uxth	r2, r2
+ 1230              	.LVL80:
+ 1231              	.L90:
+ 332:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 1232              		.loc 1 332 50 is_stmt 1 discriminator 1 view .LVU393
+ 1233 00f0 9445     		cmp	ip, r2
+ 1234 00f2 CFD8     		bhi	.L91
+ 1235              	.LBE10:
+ 338:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 339:Middlewares/Algorithm/Include/user_lib.c **** 
+ 340:Middlewares/Algorithm/Include/user_lib.c ****     OLS->k = (OLS->t[2] * OLS->Order - OLS->t[1] * OLS->t[3]) / (OLS->t[0] * OLS->Order - OLS->t[1]
+ 1236              		.loc 1 340 5 view .LVU394
+ 1237              		.loc 1 340 21 is_stmt 0 view .LVU395
+ 1238 00f4 90ED097A 		vldr.32	s14, [r0, #36]
+ 1239              		.loc 1 340 25 view .LVU396
+ 1240 00f8 07EE90CA 		vmov	s15, ip	@ int
+ 1241 00fc B8EEE76A 		vcvt.f32.s32	s12, s15
+ 1242 0100 27EE067A 		vmul.f32	s14, s14, s12
+ 1243              		.loc 1 340 46 view .LVU397
+ 1244 0104 D0ED086A 		vldr.32	s13, [r0, #32]
+ 1245              		.loc 1 340 58 view .LVU398
+ 1246 0108 D0ED0A7A 		vldr.32	s15, [r0, #40]
+ 1247              		.loc 1 340 50 view .LVU399
+ 1248 010c 66EEA77A 		vmul.f32	s15, s13, s15
+ 1249              		.loc 1 340 38 view .LVU400
+ 1250 0110 37EE677A 		vsub.f32	s14, s14, s15
+ 1251              		.loc 1 340 72 view .LVU401
+ 1252 0114 D0ED077A 		vldr.32	s15, [r0, #28]
+ 1253              		.loc 1 340 76 view .LVU402
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 29
+
+
+ 1254 0118 66EE277A 		vmul.f32	s15, s12, s15
+ 1255              		.loc 1 340 101 view .LVU403
+ 1256 011c 66EEA66A 		vmul.f32	s13, s13, s13
+ 1257              		.loc 1 340 89 view .LVU404
+ 1258 0120 77EEE67A 		vsub.f32	s15, s15, s13
+ 1259              		.loc 1 340 63 view .LVU405
+ 1260 0124 87EE270A 		vdiv.f32	s0, s14, s15
+ 1261              	.LVL81:
+ 1262              		.loc 1 340 12 view .LVU406
+ 1263 0128 80ED040A 		vstr.32	s0, [r0, #16]
+ 341:Middlewares/Algorithm/Include/user_lib.c **** 
+ 342:Middlewares/Algorithm/Include/user_lib.c ****     OLS->StandardDeviation = 0;
+ 1264              		.loc 1 342 5 is_stmt 1 view .LVU407
+ 1265              		.loc 1 342 28 is_stmt 0 view .LVU408
+ 1266 012c 0022     		movs	r2, #0
+ 1267              	.LVL82:
+ 1268              		.loc 1 342 28 view .LVU409
+ 1269 012e 8261     		str	r2, [r0, #24]	@ float
+ 343:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1270              		.loc 1 343 5 is_stmt 1 view .LVU410
+ 1271              	.LBB11:
+ 1272              		.loc 1 343 10 view .LVU411
+ 1273              	.LVL83:
+ 1274              		.loc 1 343 5 is_stmt 0 view .LVU412
+ 1275 0130 1BE0     		b	.L92
+ 1276              	.L93:
+ 344:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 345:Middlewares/Algorithm/Include/user_lib.c ****         OLS->StandardDeviation += fabsf(OLS->k * OLS->x[i] + OLS->b - OLS->y[i]);
+ 1277              		.loc 1 345 9 is_stmt 1 view .LVU413
+ 1278              		.loc 1 345 12 is_stmt 0 view .LVU414
+ 1279 0132 90ED067A 		vldr.32	s14, [r0, #24]
+ 1280              		.loc 1 345 53 view .LVU415
+ 1281 0136 8268     		ldr	r2, [r0, #8]
+ 1282              		.loc 1 345 56 view .LVU416
+ 1283 0138 02EB8302 		add	r2, r2, r3, lsl #2
+ 1284 013c D2ED007A 		vldr.32	s15, [r2]
+ 1285              		.loc 1 345 48 view .LVU417
+ 1286 0140 60EE277A 		vmul.f32	s15, s0, s15
+ 1287              		.loc 1 345 65 view .LVU418
+ 1288 0144 D0ED056A 		vldr.32	s13, [r0, #20]
+ 1289              		.loc 1 345 60 view .LVU419
+ 1290 0148 77EEA67A 		vadd.f32	s15, s15, s13
+ 1291              		.loc 1 345 74 view .LVU420
+ 1292 014c C268     		ldr	r2, [r0, #12]
+ 1293              		.loc 1 345 77 view .LVU421
+ 1294 014e 02EB8302 		add	r2, r2, r3, lsl #2
+ 1295 0152 D2ED006A 		vldr.32	s13, [r2]
+ 1296              		.loc 1 345 69 view .LVU422
+ 1297 0156 77EEE67A 		vsub.f32	s15, s15, s13
+ 1298              		.loc 1 345 35 view .LVU423
+ 1299 015a F0EEE77A 		vabs.f32	s15, s15
+ 1300              		.loc 1 345 32 view .LVU424
+ 1301 015e 77EE277A 		vadd.f32	s15, s14, s15
+ 1302 0162 C0ED067A 		vstr.32	s15, [r0, #24]
+ 343:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1303              		.loc 1 343 64 is_stmt 1 discriminator 3 view .LVU425
+ 1304 0166 0133     		adds	r3, r3, #1
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 30
+
+
+ 1305              	.LVL84:
+ 343:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1306              		.loc 1 343 64 is_stmt 0 discriminator 3 view .LVU426
+ 1307 0168 9BB2     		uxth	r3, r3
+ 1308              	.LVL85:
+ 1309              	.L92:
+ 343:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1310              		.loc 1 343 50 is_stmt 1 discriminator 1 view .LVU427
+ 1311 016a 9C45     		cmp	ip, r3
+ 1312 016c E1D8     		bhi	.L93
+ 343:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1313              		.loc 1 343 50 is_stmt 0 discriminator 1 view .LVU428
+ 1314              	.LBE11:
+ 346:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 347:Middlewares/Algorithm/Include/user_lib.c ****     OLS->StandardDeviation /= OLS->Order;
+ 1315              		.loc 1 347 5 is_stmt 1 view .LVU429
+ 1316              		.loc 1 347 8 is_stmt 0 view .LVU430
+ 1317 016e 90ED067A 		vldr.32	s14, [r0, #24]
+ 1318              		.loc 1 347 28 view .LVU431
+ 1319 0172 C7EE067A 		vdiv.f32	s15, s14, s12
+ 1320 0176 C0ED067A 		vstr.32	s15, [r0, #24]
+ 348:Middlewares/Algorithm/Include/user_lib.c **** 
+ 349:Middlewares/Algorithm/Include/user_lib.c ****     return OLS->k;
+ 1321              		.loc 1 349 5 is_stmt 1 view .LVU432
+ 350:Middlewares/Algorithm/Include/user_lib.c **** }
+ 1322              		.loc 1 350 1 is_stmt 0 view .LVU433
+ 1323 017a 7047     		bx	lr
+ 1324              	.L95:
+ 1325              		.align	2
+ 1326              	.L94:
+ 1327 017c 00000000 		.word	temp.3
+ 1328              		.cfi_endproc
+ 1329              	.LFE150:
+ 1331              		.section	.text.Get_OLS_Derivative,"ax",%progbits
+ 1332              		.align	1
+ 1333              		.global	Get_OLS_Derivative
+ 1334              		.syntax unified
+ 1335              		.thumb
+ 1336              		.thumb_func
+ 1338              	Get_OLS_Derivative:
+ 1339              	.LVL86:
+ 1340              	.LFB151:
+ 351:Middlewares/Algorithm/Include/user_lib.c **** 
+ 352:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 353:Middlewares/Algorithm/Include/user_lib.c ****  * @brief          获取最小二乘法提取信号微分
+ 354:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      最小二乘法结构体
+ 355:Middlewares/Algorithm/Include/user_lib.c ****  * @retval         返回斜率k
+ 356:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 357:Middlewares/Algorithm/Include/user_lib.c **** float Get_OLS_Derivative(Ordinary_Least_Squares_t *OLS)
+ 358:Middlewares/Algorithm/Include/user_lib.c **** {
+ 1341              		.loc 1 358 1 is_stmt 1 view -0
+ 1342              		.cfi_startproc
+ 1343              		@ args = 0, pretend = 0, frame = 0
+ 1344              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1345              		@ link register save eliminated.
+ 359:Middlewares/Algorithm/Include/user_lib.c ****     return OLS->k;
+ 1346              		.loc 1 359 5 view .LVU435
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 31
+
+
+ 360:Middlewares/Algorithm/Include/user_lib.c **** }
+ 1347              		.loc 1 360 1 is_stmt 0 view .LVU436
+ 1348 0000 90ED040A 		vldr.32	s0, [r0, #16]
+ 1349 0004 7047     		bx	lr
+ 1350              		.cfi_endproc
+ 1351              	.LFE151:
+ 1353              		.section	.text.OLS_Smooth,"ax",%progbits
+ 1354              		.align	1
+ 1355              		.global	OLS_Smooth
+ 1356              		.syntax unified
+ 1357              		.thumb
+ 1358              		.thumb_func
+ 1360              	OLS_Smooth:
+ 1361              	.LVL87:
+ 1362              	.LFB152:
+ 361:Middlewares/Algorithm/Include/user_lib.c **** 
+ 362:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 363:Middlewares/Algorithm/Include/user_lib.c ****  * @brief          最小二乘法平滑信号
+ 364:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      最小二乘法结构体
+ 365:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      信号新样本距上一个样本时间间隔
+ 366:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      信号值
+ 367:Middlewares/Algorithm/Include/user_lib.c ****  * @retval         返回平滑输出
+ 368:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 369:Middlewares/Algorithm/Include/user_lib.c **** float OLS_Smooth(Ordinary_Least_Squares_t *OLS, float deltax, float y)
+ 370:Middlewares/Algorithm/Include/user_lib.c **** {
+ 1363              		.loc 1 370 1 is_stmt 1 view -0
+ 1364              		.cfi_startproc
+ 1365              		@ args = 0, pretend = 0, frame = 0
+ 1366              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1367              		@ link register save eliminated.
+ 371:Middlewares/Algorithm/Include/user_lib.c ****     static float temp = 0;
+ 1368              		.loc 1 371 5 view .LVU438
+ 372:Middlewares/Algorithm/Include/user_lib.c ****     temp = OLS->x[1];
+ 1369              		.loc 1 372 5 view .LVU439
+ 1370              		.loc 1 372 15 is_stmt 0 view .LVU440
+ 1371 0000 8368     		ldr	r3, [r0, #8]
+ 1372              		.loc 1 372 10 view .LVU441
+ 1373 0002 93ED017A 		vldr.32	s14, [r3, #4]
+ 1374 0006 684B     		ldr	r3, .L105
+ 1375 0008 83ED007A 		vstr.32	s14, [r3]
+ 373:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1376              		.loc 1 373 5 is_stmt 1 view .LVU442
+ 1377              	.LBB12:
+ 1378              		.loc 1 373 10 view .LVU443
+ 1379              	.LVL88:
+ 1380              		.loc 1 373 19 is_stmt 0 view .LVU444
+ 1381 000c 0023     		movs	r3, #0
+ 1382              		.loc 1 373 5 view .LVU445
+ 1383 000e 13E0     		b	.L98
+ 1384              	.LVL89:
+ 1385              	.L99:
+ 374:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 375:Middlewares/Algorithm/Include/user_lib.c ****         OLS->x[i] = OLS->x[i + 1] - temp;
+ 1386              		.loc 1 375 9 is_stmt 1 view .LVU446
+ 1387              		.loc 1 375 24 is_stmt 0 view .LVU447
+ 1388 0010 8268     		ldr	r2, [r0, #8]
+ 1389              		.loc 1 375 27 view .LVU448
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 32
+
+
+ 1390 0012 591C     		adds	r1, r3, #1
+ 1391 0014 02EB810C 		add	ip, r2, r1, lsl #2
+ 1392 0018 DCED007A 		vldr.32	s15, [ip]
+ 1393              		.loc 1 375 15 view .LVU449
+ 1394 001c 02EB8302 		add	r2, r2, r3, lsl #2
+ 1395              		.loc 1 375 35 view .LVU450
+ 1396 0020 77EEC77A 		vsub.f32	s15, s15, s14
+ 1397              		.loc 1 375 19 view .LVU451
+ 1398 0024 C2ED007A 		vstr.32	s15, [r2]
+ 376:Middlewares/Algorithm/Include/user_lib.c ****         OLS->y[i] = OLS->y[i + 1];
+ 1399              		.loc 1 376 9 is_stmt 1 view .LVU452
+ 1400              		.loc 1 376 24 is_stmt 0 view .LVU453
+ 1401 0028 C268     		ldr	r2, [r0, #12]
+ 1402              		.loc 1 376 15 view .LVU454
+ 1403 002a 02EB8303 		add	r3, r2, r3, lsl #2
+ 1404              	.LVL90:
+ 1405              		.loc 1 376 27 view .LVU455
+ 1406 002e 02EB8102 		add	r2, r2, r1, lsl #2
+ 1407 0032 1268     		ldr	r2, [r2]	@ float
+ 1408              		.loc 1 376 19 view .LVU456
+ 1409 0034 1A60     		str	r2, [r3]	@ float
+ 373:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1410              		.loc 1 373 46 is_stmt 1 discriminator 3 view .LVU457
+ 1411 0036 8BB2     		uxth	r3, r1
+ 1412              	.LVL91:
+ 1413              	.L98:
+ 373:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1414              		.loc 1 373 28 discriminator 1 view .LVU458
+ 373:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1415              		.loc 1 373 33 is_stmt 0 discriminator 1 view .LVU459
+ 1416 0038 0288     		ldrh	r2, [r0]
+ 373:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1417              		.loc 1 373 41 discriminator 1 view .LVU460
+ 1418 003a 511E     		subs	r1, r2, #1
+ 373:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = 0; i < OLS->Order - 1; ++i)
+ 1419              		.loc 1 373 28 discriminator 1 view .LVU461
+ 1420 003c 8B42     		cmp	r3, r1
+ 1421 003e E7DB     		blt	.L99
+ 1422              	.LBE12:
+ 377:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 378:Middlewares/Algorithm/Include/user_lib.c ****     OLS->x[OLS->Order - 1] = OLS->x[OLS->Order - 2] + deltax;
+ 1423              		.loc 1 378 5 is_stmt 1 view .LVU462
+ 1424              		.loc 1 378 33 is_stmt 0 view .LVU463
+ 1425 0040 8168     		ldr	r1, [r0, #8]
+ 1426              		.loc 1 378 36 view .LVU464
+ 1427 0042 02F18043 		add	r3, r2, #1073741824
+ 1428              	.LVL92:
+ 1429              		.loc 1 378 36 view .LVU465
+ 1430 0046 023B     		subs	r3, r3, #2
+ 1431 0048 01EB8303 		add	r3, r1, r3, lsl #2
+ 1432 004c D3ED007A 		vldr.32	s15, [r3]
+ 1433              		.loc 1 378 11 view .LVU466
+ 1434 0050 6FF0404C 		mvn	ip, #-1073741824
+ 1435 0054 6244     		add	r2, r2, ip
+ 1436 0056 01EB8201 		add	r1, r1, r2, lsl #2
+ 1437              		.loc 1 378 53 view .LVU467
+ 1438 005a 77EE807A 		vadd.f32	s15, s15, s0
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 33
+
+
+ 1439              		.loc 1 378 28 view .LVU468
+ 1440 005e C1ED007A 		vstr.32	s15, [r1]
+ 379:Middlewares/Algorithm/Include/user_lib.c ****     OLS->y[OLS->Order - 1] = y;
+ 1441              		.loc 1 379 5 is_stmt 1 view .LVU469
+ 1442              		.loc 1 379 8 is_stmt 0 view .LVU470
+ 1443 0062 C368     		ldr	r3, [r0, #12]
+ 1444              		.loc 1 379 15 view .LVU471
+ 1445 0064 0288     		ldrh	r2, [r0]
+ 1446              		.loc 1 379 11 view .LVU472
+ 1447 0066 6244     		add	r2, r2, ip
+ 1448 0068 03EB8203 		add	r3, r3, r2, lsl #2
+ 1449              		.loc 1 379 28 view .LVU473
+ 1450 006c C3ED000A 		vstr.32	s1, [r3]
+ 380:Middlewares/Algorithm/Include/user_lib.c **** 
+ 381:Middlewares/Algorithm/Include/user_lib.c ****     if (OLS->Count < OLS->Order)
+ 1451              		.loc 1 381 5 is_stmt 1 view .LVU474
+ 1452              		.loc 1 381 12 is_stmt 0 view .LVU475
+ 1453 0070 4368     		ldr	r3, [r0, #4]
+ 1454              		.loc 1 381 25 view .LVU476
+ 1455 0072 B0F800C0 		ldrh	ip, [r0]
+ 1456              		.loc 1 381 8 view .LVU477
+ 1457 0076 6345     		cmp	r3, ip
+ 1458 0078 01D2     		bcs	.L100
+ 382:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 383:Middlewares/Algorithm/Include/user_lib.c ****         OLS->Count++;
+ 1459              		.loc 1 383 9 is_stmt 1 view .LVU478
+ 1460              		.loc 1 383 19 is_stmt 0 view .LVU479
+ 1461 007a 0133     		adds	r3, r3, #1
+ 1462 007c 4360     		str	r3, [r0, #4]
+ 1463              	.L100:
+ 384:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 385:Middlewares/Algorithm/Include/user_lib.c **** 
+ 386:Middlewares/Algorithm/Include/user_lib.c ****     memset((void *)OLS->t, 0, sizeof(float) * 4);
+ 1464              		.loc 1 386 5 is_stmt 1 view .LVU480
+ 1465 007e 0023     		movs	r3, #0
+ 1466 0080 C361     		str	r3, [r0, #28]	@ unaligned
+ 1467 0082 0362     		str	r3, [r0, #32]	@ unaligned
+ 1468 0084 4362     		str	r3, [r0, #36]	@ unaligned
+ 1469 0086 8362     		str	r3, [r0, #40]	@ unaligned
+ 387:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1470              		.loc 1 387 5 view .LVU481
+ 1471              	.LBB13:
+ 1472              		.loc 1 387 10 view .LVU482
+ 1473              		.loc 1 387 34 is_stmt 0 view .LVU483
+ 1474 0088 8388     		ldrh	r3, [r0, #4]
+ 1475              		.loc 1 387 19 view .LVU484
+ 1476 008a ACEB0303 		sub	r3, ip, r3
+ 1477 008e 9BB2     		uxth	r3, r3
+ 1478              	.LVL93:
+ 1479              		.loc 1 387 19 view .LVU485
+ 1480 0090 1A46     		mov	r2, r3
+ 1481              		.loc 1 387 5 view .LVU486
+ 1482 0092 2DE0     		b	.L101
+ 1483              	.LVL94:
+ 1484              	.L102:
+ 388:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 389:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[0] += OLS->x[i] * OLS->x[i];
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 34
+
+
+ 1485              		.loc 1 389 9 is_stmt 1 view .LVU487
+ 1486              		.loc 1 389 15 is_stmt 0 view .LVU488
+ 1487 0094 90ED077A 		vldr.32	s14, [r0, #28]
+ 1488              		.loc 1 389 25 view .LVU489
+ 1489 0098 8168     		ldr	r1, [r0, #8]
+ 1490              		.loc 1 389 28 view .LVU490
+ 1491 009a 01EB8201 		add	r1, r1, r2, lsl #2
+ 1492 009e D1ED007A 		vldr.32	s15, [r1]
+ 1493              		.loc 1 389 32 view .LVU491
+ 1494 00a2 67EEA77A 		vmul.f32	s15, s15, s15
+ 1495              		.loc 1 389 19 view .LVU492
+ 1496 00a6 77EE277A 		vadd.f32	s15, s14, s15
+ 1497 00aa C0ED077A 		vstr.32	s15, [r0, #28]
+ 390:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[1] += OLS->x[i];
+ 1498              		.loc 1 390 9 is_stmt 1 view .LVU493
+ 1499              		.loc 1 390 15 is_stmt 0 view .LVU494
+ 1500 00ae D0ED087A 		vldr.32	s15, [r0, #32]
+ 1501              		.loc 1 390 28 view .LVU495
+ 1502 00b2 91ED007A 		vldr.32	s14, [r1]
+ 1503              		.loc 1 390 19 view .LVU496
+ 1504 00b6 77EE877A 		vadd.f32	s15, s15, s14
+ 1505 00ba C0ED087A 		vstr.32	s15, [r0, #32]
+ 391:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[2] += OLS->x[i] * OLS->y[i];
+ 1506              		.loc 1 391 9 is_stmt 1 view .LVU497
+ 1507              		.loc 1 391 15 is_stmt 0 view .LVU498
+ 1508 00be D0ED097A 		vldr.32	s15, [r0, #36]
+ 1509              		.loc 1 391 28 view .LVU499
+ 1510 00c2 91ED007A 		vldr.32	s14, [r1]
+ 1511              		.loc 1 391 37 view .LVU500
+ 1512 00c6 C168     		ldr	r1, [r0, #12]
+ 1513              		.loc 1 391 40 view .LVU501
+ 1514 00c8 01EB8201 		add	r1, r1, r2, lsl #2
+ 1515 00cc D1ED006A 		vldr.32	s13, [r1]
+ 1516              		.loc 1 391 32 view .LVU502
+ 1517 00d0 27EE267A 		vmul.f32	s14, s14, s13
+ 1518              		.loc 1 391 19 view .LVU503
+ 1519 00d4 77EE877A 		vadd.f32	s15, s15, s14
+ 1520 00d8 C0ED097A 		vstr.32	s15, [r0, #36]
+ 392:Middlewares/Algorithm/Include/user_lib.c ****         OLS->t[3] += OLS->y[i];
+ 1521              		.loc 1 392 9 is_stmt 1 view .LVU504
+ 1522              		.loc 1 392 15 is_stmt 0 view .LVU505
+ 1523 00dc D0ED0A7A 		vldr.32	s15, [r0, #40]
+ 1524              		.loc 1 392 28 view .LVU506
+ 1525 00e0 91ED007A 		vldr.32	s14, [r1]
+ 1526              		.loc 1 392 19 view .LVU507
+ 1527 00e4 77EE877A 		vadd.f32	s15, s15, s14
+ 1528 00e8 C0ED0A7A 		vstr.32	s15, [r0, #40]
+ 387:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 1529              		.loc 1 387 64 is_stmt 1 discriminator 3 view .LVU508
+ 1530 00ec 0132     		adds	r2, r2, #1
+ 1531              	.LVL95:
+ 387:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 1532              		.loc 1 387 64 is_stmt 0 discriminator 3 view .LVU509
+ 1533 00ee 92B2     		uxth	r2, r2
+ 1534              	.LVL96:
+ 1535              	.L101:
+ 387:Middlewares/Algorithm/Include/user_lib.c ****     {
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 35
+
+
+ 1536              		.loc 1 387 50 is_stmt 1 discriminator 1 view .LVU510
+ 1537 00f0 9445     		cmp	ip, r2
+ 1538 00f2 CFD8     		bhi	.L102
+ 1539              	.LBE13:
+ 393:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 394:Middlewares/Algorithm/Include/user_lib.c **** 
+ 395:Middlewares/Algorithm/Include/user_lib.c ****     OLS->k = (OLS->t[2] * OLS->Order - OLS->t[1] * OLS->t[3]) / (OLS->t[0] * OLS->Order - OLS->t[1]
+ 1540              		.loc 1 395 5 view .LVU511
+ 1541              		.loc 1 395 21 is_stmt 0 view .LVU512
+ 1542 00f4 D0ED096A 		vldr.32	s13, [r0, #36]
+ 1543              		.loc 1 395 25 view .LVU513
+ 1544 00f8 07EE90CA 		vmov	s15, ip	@ int
+ 1545 00fc B8EEE75A 		vcvt.f32.s32	s10, s15
+ 1546 0100 66EE854A 		vmul.f32	s9, s13, s10
+ 1547              		.loc 1 395 46 view .LVU514
+ 1548 0104 D0ED085A 		vldr.32	s11, [r0, #32]
+ 1549              		.loc 1 395 58 view .LVU515
+ 1550 0108 D0ED0A7A 		vldr.32	s15, [r0, #40]
+ 1551              		.loc 1 395 50 view .LVU516
+ 1552 010c 25EEA77A 		vmul.f32	s14, s11, s15
+ 1553              		.loc 1 395 38 view .LVU517
+ 1554 0110 74EEC74A 		vsub.f32	s9, s9, s14
+ 1555              		.loc 1 395 72 view .LVU518
+ 1556 0114 90ED074A 		vldr.32	s8, [r0, #28]
+ 1557              		.loc 1 395 76 view .LVU519
+ 1558 0118 25EE047A 		vmul.f32	s14, s10, s8
+ 1559              		.loc 1 395 101 view .LVU520
+ 1560 011c 25EEA56A 		vmul.f32	s12, s11, s11
+ 1561              		.loc 1 395 89 view .LVU521
+ 1562 0120 37EE467A 		vsub.f32	s14, s14, s12
+ 1563              		.loc 1 395 63 view .LVU522
+ 1564 0124 84EE876A 		vdiv.f32	s12, s9, s14
+ 1565              		.loc 1 395 12 view .LVU523
+ 1566 0128 80ED046A 		vstr.32	s12, [r0, #16]
+ 396:Middlewares/Algorithm/Include/user_lib.c ****     OLS->b = (OLS->t[0] * OLS->t[3] - OLS->t[1] * OLS->t[2]) / (OLS->t[0] * OLS->Order - OLS->t[1] 
+ 1567              		.loc 1 396 5 is_stmt 1 view .LVU524
+ 1568              		.loc 1 396 25 is_stmt 0 view .LVU525
+ 1569 012c 67EE847A 		vmul.f32	s15, s15, s8
+ 1570              		.loc 1 396 49 view .LVU526
+ 1571 0130 66EEA56A 		vmul.f32	s13, s13, s11
+ 1572              		.loc 1 396 37 view .LVU527
+ 1573 0134 77EEE67A 		vsub.f32	s15, s15, s13
+ 1574              		.loc 1 396 62 view .LVU528
+ 1575 0138 87EE870A 		vdiv.f32	s0, s15, s14
+ 1576              	.LVL97:
+ 1577              		.loc 1 396 12 view .LVU529
+ 1578 013c 80ED050A 		vstr.32	s0, [r0, #20]
+ 397:Middlewares/Algorithm/Include/user_lib.c **** 
+ 398:Middlewares/Algorithm/Include/user_lib.c ****     OLS->StandardDeviation = 0;
+ 1579              		.loc 1 398 5 is_stmt 1 view .LVU530
+ 1580              		.loc 1 398 28 is_stmt 0 view .LVU531
+ 1581 0140 0022     		movs	r2, #0
+ 1582              	.LVL98:
+ 1583              		.loc 1 398 28 view .LVU532
+ 1584 0142 8261     		str	r2, [r0, #24]	@ float
+ 399:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1585              		.loc 1 399 5 is_stmt 1 view .LVU533
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 36
+
+
+ 1586              	.LBB14:
+ 1587              		.loc 1 399 10 view .LVU534
+ 1588              	.LVL99:
+ 1589              		.loc 1 399 5 is_stmt 0 view .LVU535
+ 1590 0144 19E0     		b	.L103
+ 1591              	.L104:
+ 400:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 401:Middlewares/Algorithm/Include/user_lib.c ****         OLS->StandardDeviation += fabsf(OLS->k * OLS->x[i] + OLS->b - OLS->y[i]);
+ 1592              		.loc 1 401 9 is_stmt 1 view .LVU536
+ 1593              		.loc 1 401 12 is_stmt 0 view .LVU537
+ 1594 0146 90ED067A 		vldr.32	s14, [r0, #24]
+ 1595              		.loc 1 401 53 view .LVU538
+ 1596 014a 8268     		ldr	r2, [r0, #8]
+ 1597              		.loc 1 401 56 view .LVU539
+ 1598 014c 02EB8302 		add	r2, r2, r3, lsl #2
+ 1599 0150 D2ED007A 		vldr.32	s15, [r2]
+ 1600              		.loc 1 401 48 view .LVU540
+ 1601 0154 66EE277A 		vmul.f32	s15, s12, s15
+ 1602              		.loc 1 401 60 view .LVU541
+ 1603 0158 70EE277A 		vadd.f32	s15, s0, s15
+ 1604              		.loc 1 401 74 view .LVU542
+ 1605 015c C268     		ldr	r2, [r0, #12]
+ 1606              		.loc 1 401 77 view .LVU543
+ 1607 015e 02EB8302 		add	r2, r2, r3, lsl #2
+ 1608 0162 D2ED006A 		vldr.32	s13, [r2]
+ 1609              		.loc 1 401 69 view .LVU544
+ 1610 0166 77EEE67A 		vsub.f32	s15, s15, s13
+ 1611              		.loc 1 401 35 view .LVU545
+ 1612 016a F0EEE77A 		vabs.f32	s15, s15
+ 1613              		.loc 1 401 32 view .LVU546
+ 1614 016e 77EE277A 		vadd.f32	s15, s14, s15
+ 1615 0172 C0ED067A 		vstr.32	s15, [r0, #24]
+ 399:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1616              		.loc 1 399 64 is_stmt 1 discriminator 3 view .LVU547
+ 1617 0176 0133     		adds	r3, r3, #1
+ 1618              	.LVL100:
+ 399:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1619              		.loc 1 399 64 is_stmt 0 discriminator 3 view .LVU548
+ 1620 0178 9BB2     		uxth	r3, r3
+ 1621              	.LVL101:
+ 1622              	.L103:
+ 399:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1623              		.loc 1 399 50 is_stmt 1 discriminator 1 view .LVU549
+ 1624 017a 9C45     		cmp	ip, r3
+ 1625 017c E3D8     		bhi	.L104
+ 399:Middlewares/Algorithm/Include/user_lib.c ****     for (uint16_t i = OLS->Order - OLS->Count; i < OLS->Order; ++i)
+ 1626              		.loc 1 399 50 is_stmt 0 discriminator 1 view .LVU550
+ 1627              	.LBE14:
+ 402:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 403:Middlewares/Algorithm/Include/user_lib.c ****     OLS->StandardDeviation /= OLS->Order;
+ 1628              		.loc 1 403 5 is_stmt 1 view .LVU551
+ 1629              		.loc 1 403 8 is_stmt 0 view .LVU552
+ 1630 017e 90ED067A 		vldr.32	s14, [r0, #24]
+ 1631              		.loc 1 403 28 view .LVU553
+ 1632 0182 C7EE057A 		vdiv.f32	s15, s14, s10
+ 1633 0186 C0ED067A 		vstr.32	s15, [r0, #24]
+ 404:Middlewares/Algorithm/Include/user_lib.c **** 
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 37
+
+
+ 405:Middlewares/Algorithm/Include/user_lib.c ****     return OLS->k * OLS->x[OLS->Order - 1] + OLS->b;
+ 1634              		.loc 1 405 5 is_stmt 1 view .LVU554
+ 1635              		.loc 1 405 24 is_stmt 0 view .LVU555
+ 1636 018a 8368     		ldr	r3, [r0, #8]
+ 1637              	.LVL102:
+ 1638              		.loc 1 405 27 view .LVU556
+ 1639 018c 0CF1804C 		add	ip, ip, #1073741824
+ 1640 0190 0CF1FF3C 		add	ip, ip, #-1
+ 1641 0194 03EB8C03 		add	r3, r3, ip, lsl #2
+ 1642 0198 D3ED007A 		vldr.32	s15, [r3]
+ 1643              		.loc 1 405 19 view .LVU557
+ 1644 019c 26EE276A 		vmul.f32	s12, s12, s15
+ 406:Middlewares/Algorithm/Include/user_lib.c **** }
+ 1645              		.loc 1 406 1 view .LVU558
+ 1646 01a0 30EE060A 		vadd.f32	s0, s0, s12
+ 1647 01a4 7047     		bx	lr
+ 1648              	.L106:
+ 1649 01a6 00BF     		.align	2
+ 1650              	.L105:
+ 1651 01a8 00000000 		.word	temp.2
+ 1652              		.cfi_endproc
+ 1653              	.LFE152:
+ 1655              		.section	.text.Get_OLS_Smooth,"ax",%progbits
+ 1656              		.align	1
+ 1657              		.global	Get_OLS_Smooth
+ 1658              		.syntax unified
+ 1659              		.thumb
+ 1660              		.thumb_func
+ 1662              	Get_OLS_Smooth:
+ 1663              	.LVL103:
+ 1664              	.LFB153:
+ 407:Middlewares/Algorithm/Include/user_lib.c **** 
+ 408:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 409:Middlewares/Algorithm/Include/user_lib.c ****  * @brief          获取最小二乘法平滑信号
+ 410:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]      最小二乘法结构体
+ 411:Middlewares/Algorithm/Include/user_lib.c ****  * @retval         返回平滑输出
+ 412:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 413:Middlewares/Algorithm/Include/user_lib.c **** float Get_OLS_Smooth(Ordinary_Least_Squares_t *OLS)
+ 414:Middlewares/Algorithm/Include/user_lib.c **** {
+ 1665              		.loc 1 414 1 is_stmt 1 view -0
+ 1666              		.cfi_startproc
+ 1667              		@ args = 0, pretend = 0, frame = 0
+ 1668              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1669              		@ link register save eliminated.
+ 415:Middlewares/Algorithm/Include/user_lib.c ****     return OLS->k * OLS->x[OLS->Order - 1] + OLS->b;
+ 1670              		.loc 1 415 5 view .LVU560
+ 1671              		.loc 1 415 15 is_stmt 0 view .LVU561
+ 1672 0000 D0ED047A 		vldr.32	s15, [r0, #16]
+ 1673              		.loc 1 415 24 view .LVU562
+ 1674 0004 8268     		ldr	r2, [r0, #8]
+ 1675              		.loc 1 415 31 view .LVU563
+ 1676 0006 0388     		ldrh	r3, [r0]
+ 1677              		.loc 1 415 27 view .LVU564
+ 1678 0008 03F18043 		add	r3, r3, #1073741824
+ 1679 000c 013B     		subs	r3, r3, #1
+ 1680 000e 02EB8302 		add	r2, r2, r3, lsl #2
+ 1681 0012 92ED007A 		vldr.32	s14, [r2]
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 38
+
+
+ 1682              		.loc 1 415 19 view .LVU565
+ 1683 0016 67EE877A 		vmul.f32	s15, s15, s14
+ 1684              		.loc 1 415 49 view .LVU566
+ 1685 001a 90ED050A 		vldr.32	s0, [r0, #20]
+ 416:Middlewares/Algorithm/Include/user_lib.c **** }
+ 1686              		.loc 1 416 1 view .LVU567
+ 1687 001e 37EE800A 		vadd.f32	s0, s15, s0
+ 1688 0022 7047     		bx	lr
+ 1689              		.cfi_endproc
+ 1690              	.LFE153:
+ 1692              		.section	.text.Data_mapping,"ax",%progbits
+ 1693              		.align	1
+ 1694              		.global	Data_mapping
+ 1695              		.syntax unified
+ 1696              		.thumb
+ 1697              		.thumb_func
+ 1699              	Data_mapping:
+ 1700              	.LVL104:
+ 1701              	.LFB154:
+ 417:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 418:Middlewares/Algorithm/Include/user_lib.c ****  * @brief
+ 419:Middlewares/Algorithm/Include/user_lib.c ****  * @param[in]
+ 420:Middlewares/Algorithm/Include/user_lib.c ****  * @retval
+ 421:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 422:Middlewares/Algorithm/Include/user_lib.c **** float Data_mapping(float intput, float intput_min, float intput_max, float map_min, float map_max)
+ 423:Middlewares/Algorithm/Include/user_lib.c **** {
+ 1702              		.loc 1 423 1 is_stmt 1 view -0
+ 1703              		.cfi_startproc
+ 1704              		@ args = 0, pretend = 0, frame = 0
+ 1705              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1706              		@ link register save eliminated.
+ 424:Middlewares/Algorithm/Include/user_lib.c ****     static float output;
+ 1707              		.loc 1 424 5 view .LVU569
+ 425:Middlewares/Algorithm/Include/user_lib.c ****     static float map_gain;
+ 1708              		.loc 1 425 5 view .LVU570
+ 426:Middlewares/Algorithm/Include/user_lib.c ****     map_gain = (map_max - map_min) / (intput_max - intput_min);
+ 1709              		.loc 1 426 5 view .LVU571
+ 1710              		.loc 1 426 25 is_stmt 0 view .LVU572
+ 1711 0000 72EE611A 		vsub.f32	s3, s4, s3
+ 1712              	.LVL105:
+ 1713              		.loc 1 426 50 view .LVU573
+ 1714 0004 31EE607A 		vsub.f32	s14, s2, s1
+ 1715              		.loc 1 426 36 view .LVU574
+ 1716 0008 C1EE877A 		vdiv.f32	s15, s3, s14
+ 1717              		.loc 1 426 14 view .LVU575
+ 1718 000c 114B     		ldr	r3, .L115
+ 1719 000e C3ED007A 		vstr.32	s15, [r3]
+ 427:Middlewares/Algorithm/Include/user_lib.c ****     output = intput * map_gain;
+ 1720              		.loc 1 427 5 is_stmt 1 view .LVU576
+ 1721              		.loc 1 427 21 is_stmt 0 view .LVU577
+ 1722 0012 67EE807A 		vmul.f32	s15, s15, s0
+ 1723              		.loc 1 427 12 view .LVU578
+ 1724 0016 104B     		ldr	r3, .L115+4
+ 1725 0018 C3ED007A 		vstr.32	s15, [r3]
+ 428:Middlewares/Algorithm/Include/user_lib.c ****     if (intput < intput_min || intput > intput_max)
+ 1726              		.loc 1 428 5 is_stmt 1 view .LVU579
+ 1727              		.loc 1 428 8 is_stmt 0 view .LVU580
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 39
+
+
+ 1728 001c F4EEC00A 		vcmpe.f32	s1, s0
+ 1729 0020 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1730 0024 04DC     		bgt	.L109
+ 1731              		.loc 1 428 29 discriminator 1 view .LVU581
+ 1732 0026 B4EEC01A 		vcmpe.f32	s2, s0
+ 1733 002a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1734 002e 02D5     		bpl	.L110
+ 1735              	.L109:
+ 429:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 430:Middlewares/Algorithm/Include/user_lib.c ****         output = 0;
+ 1736              		.loc 1 430 9 is_stmt 1 view .LVU582
+ 1737              		.loc 1 430 16 is_stmt 0 view .LVU583
+ 1738 0030 094B     		ldr	r3, .L115+4
+ 1739 0032 0022     		movs	r2, #0
+ 1740 0034 1A60     		str	r2, [r3]	@ float
+ 1741              	.L110:
+ 431:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 432:Middlewares/Algorithm/Include/user_lib.c ****     if (output > map_max)
+ 1742              		.loc 1 432 5 is_stmt 1 view .LVU584
+ 1743              		.loc 1 432 16 is_stmt 0 view .LVU585
+ 1744 0036 084B     		ldr	r3, .L115+4
+ 1745 0038 D3ED007A 		vldr.32	s15, [r3]
+ 1746              		.loc 1 432 8 view .LVU586
+ 1747 003c F4EEC27A 		vcmpe.f32	s15, s4
+ 1748 0040 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1749 0044 01DD     		ble	.L112
+ 433:Middlewares/Algorithm/Include/user_lib.c ****     {
+ 434:Middlewares/Algorithm/Include/user_lib.c ****         output = map_max;
+ 1750              		.loc 1 434 9 is_stmt 1 view .LVU587
+ 1751              		.loc 1 434 16 is_stmt 0 view .LVU588
+ 1752 0046 83ED002A 		vstr.32	s4, [r3]
+ 1753              	.L112:
+ 435:Middlewares/Algorithm/Include/user_lib.c ****     }
+ 436:Middlewares/Algorithm/Include/user_lib.c ****     return output;
+ 1754              		.loc 1 436 5 is_stmt 1 view .LVU589
+ 437:Middlewares/Algorithm/Include/user_lib.c **** }
+ 1755              		.loc 1 437 1 is_stmt 0 view .LVU590
+ 1756 004a 034B     		ldr	r3, .L115+4
+ 1757 004c 93ED000A 		vldr.32	s0, [r3]
+ 1758              	.LVL106:
+ 1759              		.loc 1 437 1 view .LVU591
+ 1760 0050 7047     		bx	lr
+ 1761              	.L116:
+ 1762 0052 00BF     		.align	2
+ 1763              	.L115:
+ 1764 0054 00000000 		.word	map_gain.1
+ 1765 0058 00000000 		.word	output.0
+ 1766              		.cfi_endproc
+ 1767              	.LFE154:
+ 1769              		.section	.text.float_to_uint16,"ax",%progbits
+ 1770              		.align	1
+ 1771              		.global	float_to_uint16
+ 1772              		.syntax unified
+ 1773              		.thumb
+ 1774              		.thumb_func
+ 1776              	float_to_uint16:
+ 1777              	.LVL107:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 40
+
+
+ 1778              	.LFB155:
+ 438:Middlewares/Algorithm/Include/user_lib.c **** 
+ 439:Middlewares/Algorithm/Include/user_lib.c **** uint16_t float_to_uint16(float x, float x_min, float x_max, uint8_t bits)
+ 440:Middlewares/Algorithm/Include/user_lib.c **** {
+ 1779              		.loc 1 440 1 is_stmt 1 view -0
+ 1780              		.cfi_startproc
+ 1781              		@ args = 0, pretend = 0, frame = 0
+ 1782              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1783              		@ link register save eliminated.
+ 441:Middlewares/Algorithm/Include/user_lib.c ****     if (x_max <= x_min)
+ 1784              		.loc 1 441 5 view .LVU593
+ 1785              		.loc 1 441 8 is_stmt 0 view .LVU594
+ 1786 0000 B4EEE01A 		vcmpe.f32	s2, s1
+ 1787 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1788 0008 23D9     		bls	.L121
+ 442:Middlewares/Algorithm/Include/user_lib.c ****         return 0;
+ 443:Middlewares/Algorithm/Include/user_lib.c ****     float span = x_max - x_min;
+ 1789              		.loc 1 443 5 is_stmt 1 view .LVU595
+ 1790              		.loc 1 443 11 is_stmt 0 view .LVU596
+ 1791 000a 31EE607A 		vsub.f32	s14, s2, s1
+ 1792              	.LVL108:
+ 444:Middlewares/Algorithm/Include/user_lib.c ****     if (x < x_min)
+ 1793              		.loc 1 444 5 is_stmt 1 view .LVU597
+ 1794              		.loc 1 444 8 is_stmt 0 view .LVU598
+ 1795 000e F4EEC00A 		vcmpe.f32	s1, s0
+ 1796 0012 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1797 0016 01DD     		ble	.L119
+ 445:Middlewares/Algorithm/Include/user_lib.c ****         x = x_min;
+ 1798              		.loc 1 445 11 view .LVU599
+ 1799 0018 B0EE600A 		vmov.f32	s0, s1
+ 1800              	.LVL109:
+ 1801              	.L119:
+ 446:Middlewares/Algorithm/Include/user_lib.c ****     if (x > x_max)
+ 1802              		.loc 1 446 5 is_stmt 1 view .LVU600
+ 1803              		.loc 1 446 8 is_stmt 0 view .LVU601
+ 1804 001c B4EEC10A 		vcmpe.f32	s0, s2
+ 1805 0020 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1806 0024 01DC     		bgt	.L120
+ 1807 0026 B0EE401A 		vmov.f32	s2, s0
+ 1808              	.LVL110:
+ 1809              	.L120:
+ 447:Middlewares/Algorithm/Include/user_lib.c ****         x = x_max;
+ 448:Middlewares/Algorithm/Include/user_lib.c ****     return (uint16_t)((x - x_min) * ((float)((1u << bits) - 1)) / span);
+ 1810              		.loc 1 448 5 is_stmt 1 view .LVU602
+ 1811              		.loc 1 448 26 is_stmt 0 view .LVU603
+ 1812 002a 31EE601A 		vsub.f32	s2, s2, s1
+ 1813              	.LVL111:
+ 1814              		.loc 1 448 50 view .LVU604
+ 1815 002e 0123     		movs	r3, #1
+ 1816 0030 03FA00F0 		lsl	r0, r3, r0
+ 1817              	.LVL112:
+ 1818              		.loc 1 448 59 view .LVU605
+ 1819 0034 0138     		subs	r0, r0, #1
+ 1820              		.loc 1 448 38 view .LVU606
+ 1821 0036 07EE900A 		vmov	s15, r0	@ int
+ 1822 003a F8EE677A 		vcvt.f32.u32	s15, s15
+ 1823              		.loc 1 448 35 view .LVU607
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 41
+
+
+ 1824 003e 21EE271A 		vmul.f32	s2, s2, s15
+ 1825              		.loc 1 448 65 view .LVU608
+ 1826 0042 C1EE077A 		vdiv.f32	s15, s2, s14
+ 1827              		.loc 1 448 12 view .LVU609
+ 1828 0046 FCEEE77A 		vcvt.u32.f32	s15, s15
+ 1829 004a 17EE903A 		vmov	r3, s15	@ int
+ 1830 004e 98B2     		uxth	r0, r3
+ 1831 0050 7047     		bx	lr
+ 1832              	.LVL113:
+ 1833              	.L121:
+ 442:Middlewares/Algorithm/Include/user_lib.c ****     float span = x_max - x_min;
+ 1834              		.loc 1 442 16 view .LVU610
+ 1835 0052 0020     		movs	r0, #0
+ 1836              	.LVL114:
+ 449:Middlewares/Algorithm/Include/user_lib.c **** }
+ 1837              		.loc 1 449 1 view .LVU611
+ 1838 0054 7047     		bx	lr
+ 1839              		.cfi_endproc
+ 1840              	.LFE155:
+ 1842              		.section	.text.uint16_to_float,"ax",%progbits
+ 1843              		.align	1
+ 1844              		.global	uint16_to_float
+ 1845              		.syntax unified
+ 1846              		.thumb
+ 1847              		.thumb_func
+ 1849              	uint16_to_float:
+ 1850              	.LVL115:
+ 1851              	.LFB156:
+ 450:Middlewares/Algorithm/Include/user_lib.c **** 
+ 451:Middlewares/Algorithm/Include/user_lib.c **** float uint16_to_float(int x_int, float x_min, float x_max, int bits)
+ 452:Middlewares/Algorithm/Include/user_lib.c **** {
+ 1852              		.loc 1 452 1 is_stmt 1 view -0
+ 1853              		.cfi_startproc
+ 1854              		@ args = 0, pretend = 0, frame = 8
+ 1855              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1856              		@ link register save eliminated.
+ 1857              		.loc 1 452 1 is_stmt 0 view .LVU613
+ 1858 0000 82B0     		sub	sp, sp, #8
+ 1859              	.LCFI2:
+ 1860              		.cfi_def_cfa_offset 8
+ 1861 0002 0190     		str	r0, [sp, #4]
+ 453:Middlewares/Algorithm/Include/user_lib.c ****     if (bits <= 0)
+ 1862              		.loc 1 453 5 is_stmt 1 view .LVU614
+ 1863              		.loc 1 453 8 is_stmt 0 view .LVU615
+ 1864 0004 0029     		cmp	r1, #0
+ 1865              		.loc 1 453 8 view .LVU616
+ 1866 0006 16DD     		ble	.L123
+ 454:Middlewares/Algorithm/Include/user_lib.c ****         return x_min;
+ 455:Middlewares/Algorithm/Include/user_lib.c ****     float span = x_max - x_min;
+ 1867              		.loc 1 455 5 is_stmt 1 view .LVU617
+ 1868              		.loc 1 455 11 is_stmt 0 view .LVU618
+ 1869 0008 70EEC00A 		vsub.f32	s1, s1, s0
+ 1870              	.LVL116:
+ 456:Middlewares/Algorithm/Include/user_lib.c ****     return ((float)x_int + 0.5f) * span / ((float)((1u << bits) - 1)) + x_min;
+ 1871              		.loc 1 456 5 is_stmt 1 view .LVU619
+ 1872              		.loc 1 456 13 is_stmt 0 view .LVU620
+ 1873 000c 07EE900A 		vmov	s15, r0	@ int
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 42
+
+
+ 1874 0010 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 1875              		.loc 1 456 26 view .LVU621
+ 1876 0014 B6EE007A 		vmov.f32	s14, #5.0e-1
+ 1877 0018 77EE877A 		vadd.f32	s15, s15, s14
+ 1878              		.loc 1 456 34 view .LVU622
+ 1879 001c 67EEA07A 		vmul.f32	s15, s15, s1
+ 1880              		.loc 1 456 56 view .LVU623
+ 1881 0020 0123     		movs	r3, #1
+ 1882 0022 8B40     		lsls	r3, r3, r1
+ 1883              		.loc 1 456 65 view .LVU624
+ 1884 0024 013B     		subs	r3, r3, #1
+ 1885              		.loc 1 456 44 view .LVU625
+ 1886 0026 07EE103A 		vmov	s14, r3	@ int
+ 1887 002a B8EE477A 		vcvt.f32.u32	s14, s14
+ 1888              		.loc 1 456 41 view .LVU626
+ 1889 002e C7EE876A 		vdiv.f32	s13, s15, s14
+ 1890              		.loc 1 456 71 view .LVU627
+ 1891 0032 36EE800A 		vadd.f32	s0, s13, s0
+ 1892              	.LVL117:
+ 1893              	.L123:
+ 457:Middlewares/Algorithm/Include/user_lib.c **** }
+ 1894              		.loc 1 457 1 view .LVU628
+ 1895 0036 02B0     		add	sp, sp, #8
+ 1896              	.LCFI3:
+ 1897              		.cfi_def_cfa_offset 0
+ 1898              		@ sp needed
+ 1899 0038 7047     		bx	lr
+ 1900              		.cfi_endproc
+ 1901              	.LFE156:
+ 1903              		.section	.text.f2u,"ax",%progbits
+ 1904              		.align	1
+ 1905              		.global	f2u
+ 1906              		.syntax unified
+ 1907              		.thumb
+ 1908              		.thumb_func
+ 1910              	f2u:
+ 1911              	.LVL118:
+ 1912              	.LFB157:
+ 458:Middlewares/Algorithm/Include/user_lib.c **** 
+ 459:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 460:Middlewares/Algorithm/Include/user_lib.c ****  * @brief float_to_uint
+ 461:Middlewares/Algorithm/Include/user_lib.c ****  *
+ 462:Middlewares/Algorithm/Include/user_lib.c ****  * @param x 需要变化的值
+ 463:Middlewares/Algorithm/Include/user_lib.c ****  * @param x_min 最小值
+ 464:Middlewares/Algorithm/Include/user_lib.c ****  * @param x_max 最大值
+ 465:Middlewares/Algorithm/Include/user_lib.c ****  * @param bits 位数(8, 16, 32)
+ 466:Middlewares/Algorithm/Include/user_lib.c ****  * @return uint32_t
+ 467:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 468:Middlewares/Algorithm/Include/user_lib.c **** uint32_t f2u(float x, float x_min, float x_max, uint8_t bits)
+ 469:Middlewares/Algorithm/Include/user_lib.c **** {
+ 1913              		.loc 1 469 1 is_stmt 1 view -0
+ 1914              		.cfi_startproc
+ 1915              		@ args = 0, pretend = 0, frame = 0
+ 1916              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1917              		@ link register save eliminated.
+ 470:Middlewares/Algorithm/Include/user_lib.c ****     if (x_max <= x_min || bits == 0 || bits > 32)
+ 1918              		.loc 1 470 5 view .LVU630
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 43
+
+
+ 1919              		.loc 1 470 8 is_stmt 0 view .LVU631
+ 1920 0000 B4EEE01A 		vcmpe.f32	s2, s1
+ 1921 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1922 0008 29D9     		bls	.L130
+ 1923              		.loc 1 470 24 discriminator 1 view .LVU632
+ 1924 000a 50B3     		cbz	r0, .L131
+ 1925              		.loc 1 470 37 discriminator 2 view .LVU633
+ 1926 000c 2028     		cmp	r0, #32
+ 1927 000e 2AD8     		bhi	.L132
+ 471:Middlewares/Algorithm/Include/user_lib.c ****         return 0;
+ 472:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 1928              		.loc 1 472 5 is_stmt 1 view .LVU634
+ 1929              		.loc 1 472 51 is_stmt 0 view .LVU635
+ 1930 0010 22D0     		beq	.L133
+ 1931              		.loc 1 472 57 discriminator 1 view .LVU636
+ 1932 0012 0123     		movs	r3, #1
+ 1933 0014 03FA00F0 		lsl	r0, r3, r0
+ 1934              	.LVL119:
+ 1935              		.loc 1 472 51 discriminator 1 view .LVU637
+ 1936 0018 0138     		subs	r0, r0, #1
+ 1937              	.L129:
+ 1938              	.LVL120:
+ 473:Middlewares/Algorithm/Include/user_lib.c ****     if (x <= x_min)
+ 1939              		.loc 1 473 5 is_stmt 1 view .LVU638
+ 1940              		.loc 1 473 8 is_stmt 0 view .LVU639
+ 1941 001a F4EEC00A 		vcmpe.f32	s1, s0
+ 1942 001e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1943 0022 22DA     		bge	.L134
+ 474:Middlewares/Algorithm/Include/user_lib.c ****         return 0;
+ 475:Middlewares/Algorithm/Include/user_lib.c ****     if (x >= x_max)
+ 1944              		.loc 1 475 5 is_stmt 1 view .LVU640
+ 1945              		.loc 1 475 8 is_stmt 0 view .LVU641
+ 1946 0024 B4EEC01A 		vcmpe.f32	s2, s0
+ 1947 0028 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1948 002c 1ED9     		bls	.L127
+ 476:Middlewares/Algorithm/Include/user_lib.c ****         return max_val;
+ 477:Middlewares/Algorithm/Include/user_lib.c ****     return (uint32_t)(((x - x_min) / (x_max - x_min)) * (float)max_val + 0.5f);
+ 1949              		.loc 1 477 5 is_stmt 1 view .LVU642
+ 1950              		.loc 1 477 27 is_stmt 0 view .LVU643
+ 1951 002e 30EE600A 		vsub.f32	s0, s0, s1
+ 1952              	.LVL121:
+ 1953              		.loc 1 477 45 view .LVU644
+ 1954 0032 31EE601A 		vsub.f32	s2, s2, s1
+ 1955              	.LVL122:
+ 1956              		.loc 1 477 36 view .LVU645
+ 1957 0036 80EE017A 		vdiv.f32	s14, s0, s2
+ 1958              		.loc 1 477 57 view .LVU646
+ 1959 003a 07EE900A 		vmov	s15, r0	@ int
+ 1960 003e F8EE677A 		vcvt.f32.u32	s15, s15
+ 1961              		.loc 1 477 55 view .LVU647
+ 1962 0042 67EE277A 		vmul.f32	s15, s14, s15
+ 1963              		.loc 1 477 72 view .LVU648
+ 1964 0046 B6EE007A 		vmov.f32	s14, #5.0e-1
+ 1965 004a 77EE877A 		vadd.f32	s15, s15, s14
+ 1966              		.loc 1 477 12 view .LVU649
+ 1967 004e FCEEE77A 		vcvt.u32.f32	s15, s15
+ 1968 0052 17EE900A 		vmov	r0, s15	@ int
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 44
+
+
+ 1969              	.LVL123:
+ 1970              		.loc 1 477 12 view .LVU650
+ 1971 0056 7047     		bx	lr
+ 1972              	.LVL124:
+ 1973              	.L133:
+ 472:Middlewares/Algorithm/Include/user_lib.c ****     if (x <= x_min)
+ 1974              		.loc 1 472 51 discriminator 2 view .LVU651
+ 1975 0058 4FF0FF30 		mov	r0, #-1
+ 1976              	.LVL125:
+ 472:Middlewares/Algorithm/Include/user_lib.c ****     if (x <= x_min)
+ 1977              		.loc 1 472 51 discriminator 2 view .LVU652
+ 1978 005c DDE7     		b	.L129
+ 1979              	.LVL126:
+ 1980              	.L130:
+ 471:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 1981              		.loc 1 471 16 view .LVU653
+ 1982 005e 0020     		movs	r0, #0
+ 1983              	.LVL127:
+ 471:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 1984              		.loc 1 471 16 view .LVU654
+ 1985 0060 7047     		bx	lr
+ 1986              	.LVL128:
+ 1987              	.L131:
+ 471:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 1988              		.loc 1 471 16 view .LVU655
+ 1989 0062 0020     		movs	r0, #0
+ 1990              	.LVL129:
+ 471:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 1991              		.loc 1 471 16 view .LVU656
+ 1992 0064 7047     		bx	lr
+ 1993              	.LVL130:
+ 1994              	.L132:
+ 471:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 1995              		.loc 1 471 16 view .LVU657
+ 1996 0066 0020     		movs	r0, #0
+ 1997              	.LVL131:
+ 471:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 1998              		.loc 1 471 16 view .LVU658
+ 1999 0068 7047     		bx	lr
+ 2000              	.LVL132:
+ 2001              	.L134:
+ 474:Middlewares/Algorithm/Include/user_lib.c ****     if (x >= x_max)
+ 2002              		.loc 1 474 16 view .LVU659
+ 2003 006a 0020     		movs	r0, #0
+ 2004              	.LVL133:
+ 2005              	.L127:
+ 478:Middlewares/Algorithm/Include/user_lib.c **** }
+ 2006              		.loc 1 478 1 view .LVU660
+ 2007 006c 7047     		bx	lr
+ 2008              		.cfi_endproc
+ 2009              	.LFE157:
+ 2011              		.section	.text.u2f,"ax",%progbits
+ 2012              		.align	1
+ 2013              		.global	u2f
+ 2014              		.syntax unified
+ 2015              		.thumb
+ 2016              		.thumb_func
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 45
+
+
+ 2018              	u2f:
+ 2019              	.LVL134:
+ 2020              	.LFB158:
+ 479:Middlewares/Algorithm/Include/user_lib.c **** 
+ 480:Middlewares/Algorithm/Include/user_lib.c **** /**
+ 481:Middlewares/Algorithm/Include/user_lib.c ****  * @brief uint_to_float
+ 482:Middlewares/Algorithm/Include/user_lib.c ****  *
+ 483:Middlewares/Algorithm/Include/user_lib.c ****  * @param x 需要转化的值
+ 484:Middlewares/Algorithm/Include/user_lib.c ****  * @param x_min 最小值
+ 485:Middlewares/Algorithm/Include/user_lib.c ****  * @param x_max 最大值
+ 486:Middlewares/Algorithm/Include/user_lib.c ****  * @param bits 位数(8, 16, 32)
+ 487:Middlewares/Algorithm/Include/user_lib.c ****  * @return float
+ 488:Middlewares/Algorithm/Include/user_lib.c ****  */
+ 489:Middlewares/Algorithm/Include/user_lib.c **** float u2f(uint32_t x, float x_min, float x_max, uint8_t bits)
+ 490:Middlewares/Algorithm/Include/user_lib.c **** {
+ 2021              		.loc 1 490 1 is_stmt 1 view -0
+ 2022              		.cfi_startproc
+ 2023              		@ args = 0, pretend = 0, frame = 8
+ 2024              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2025              		@ link register save eliminated.
+ 2026              		.loc 1 490 1 is_stmt 0 view .LVU662
+ 2027 0000 82B0     		sub	sp, sp, #8
+ 2028              	.LCFI4:
+ 2029              		.cfi_def_cfa_offset 8
+ 2030 0002 0190     		str	r0, [sp, #4]
+ 491:Middlewares/Algorithm/Include/user_lib.c ****     if (x_max <= x_min || bits == 0 || bits > 32)
+ 2031              		.loc 1 491 5 is_stmt 1 view .LVU663
+ 2032              		.loc 1 491 8 is_stmt 0 view .LVU664
+ 2033 0004 F4EEC00A 		vcmpe.f32	s1, s0
+ 2034 0008 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 2035 000c 16D9     		bls	.L136
+ 2036              		.loc 1 491 24 discriminator 1 view .LVU665
+ 2037 000e A9B1     		cbz	r1, .L136
+ 2038              		.loc 1 491 37 discriminator 2 view .LVU666
+ 2039 0010 2029     		cmp	r1, #32
+ 2040 0012 13D8     		bhi	.L136
+ 492:Middlewares/Algorithm/Include/user_lib.c ****         return x_min;
+ 493:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 2041              		.loc 1 493 5 is_stmt 1 view .LVU667
+ 2042              		.loc 1 493 51 is_stmt 0 view .LVU668
+ 2043 0014 14D0     		beq	.L138
+ 2044              		.loc 1 493 57 discriminator 1 view .LVU669
+ 2045 0016 0123     		movs	r3, #1
+ 2046 0018 8B40     		lsls	r3, r3, r1
+ 2047              		.loc 1 493 51 discriminator 1 view .LVU670
+ 2048 001a 013B     		subs	r3, r3, #1
+ 2049 001c 07EE903A 		vmov	s15, r3	@ int
+ 2050              	.L137:
+ 2051              	.LVL135:
+ 494:Middlewares/Algorithm/Include/user_lib.c ****     return (float)x / (float)max_val * (x_max - x_min) + x_min;
+ 2052              		.loc 1 494 5 is_stmt 1 view .LVU671
+ 2053              		.loc 1 494 12 is_stmt 0 view .LVU672
+ 2054 0020 9DED017A 		vldr.32	s14, [sp, #4]	@ int
+ 2055 0024 B8EE477A 		vcvt.f32.u32	s14, s14
+ 2056              		.loc 1 494 23 view .LVU673
+ 2057 0028 F8EE677A 		vcvt.f32.u32	s15, s15
+ 2058              	.LVL136:
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 46
+
+
+ 2059              		.loc 1 494 21 view .LVU674
+ 2060 002c C7EE276A 		vdiv.f32	s13, s14, s15
+ 2061              		.loc 1 494 47 view .LVU675
+ 2062 0030 70EEC00A 		vsub.f32	s1, s1, s0
+ 2063              	.LVL137:
+ 2064              		.loc 1 494 38 view .LVU676
+ 2065 0034 66EEA07A 		vmul.f32	s15, s13, s1
+ 2066              		.loc 1 494 56 view .LVU677
+ 2067 0038 30EE270A 		vadd.f32	s0, s0, s15
+ 2068              	.LVL138:
+ 2069              	.L136:
+ 495:Middlewares/Algorithm/Include/user_lib.c **** }...
+ 2070              		.loc 1 495 1 view .LVU678
+ 2071 003c 02B0     		add	sp, sp, #8
+ 2072              	.LCFI5:
+ 2073              		.cfi_remember_state
+ 2074              		.cfi_def_cfa_offset 0
+ 2075              		@ sp needed
+ 2076 003e 7047     		bx	lr
+ 2077              	.LVL139:
+ 2078              	.L138:
+ 2079              	.LCFI6:
+ 2080              		.cfi_restore_state
+ 493:Middlewares/Algorithm/Include/user_lib.c ****     uint32_t max_val = (bits == 32) ? 0xFFFFFFFFU : (1u << bits) - 1u;
+ 2081              		.loc 1 493 51 discriminator 2 view .LVU679
+ 2082 0040 DFED017A 		vldr.32	s15, .L140	@ int
+ 2083 0044 ECE7     		b	.L137
+ 2084              	.L141:
+ 2085 0046 00BF     		.align	2
+ 2086              	.L140:
+ 2087 0048 FFFFFFFF 		.word	-1
+ 2088              		.cfi_endproc
+ 2089              	.LFE158:
+ 2091              		.section	.bss.output.0,"aw",%nobits
+ 2092              		.align	2
+ 2095              	output.0:
+ 2096 0000 00000000 		.space	4
+ 2097              		.section	.bss.map_gain.1,"aw",%nobits
+ 2098              		.align	2
+ 2101              	map_gain.1:
+ 2102 0000 00000000 		.space	4
+ 2103              		.section	.bss.temp.2,"aw",%nobits
+ 2104              		.align	2
+ 2107              	temp.2:
+ 2108 0000 00000000 		.space	4
+ 2109              		.section	.bss.temp.3,"aw",%nobits
+ 2110              		.align	2
+ 2113              	temp.3:
+ 2114 0000 00000000 		.space	4
+ 2115              		.section	.bss.temp.4,"aw",%nobits
+ 2116              		.align	2
+ 2119              	temp.4:
+ 2120 0000 00000000 		.space	4
+ 2121              		.section	.bss.decimal.5,"aw",%nobits
+ 2122              		.align	2
+ 2125              	decimal.5:
+ 2126 0000 00000000 		.space	4
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 47
+
+
+ 2127              		.section	.bss.integer.6,"aw",%nobits
+ 2128              		.align	2
+ 2131              	integer.6:
+ 2132 0000 00000000 		.space	4
+ 2133              		.global	GlobalDebugMode
+ 2134              		.section	.data.GlobalDebugMode,"aw"
+ 2137              	GlobalDebugMode:
+ 2138 0000 01       		.byte	1
+ 2139              		.text
+ 2140              	.Letext0:
+ 2141              		.file 2 "C:/msys64/mingw64/lib/gcc/arm-none-eabi/13.3.0/include/stddef.h"
+ 2142              		.file 3 "C:/msys64/mingw64/arm-none-eabi/include/machine/_default_types.h"
+ 2143              		.file 4 "C:/msys64/mingw64/arm-none-eabi/include/sys/_stdint.h"
+ 2144              		.file 5 "Middlewares/Algorithm/Include/user_lib.h"
+ 2145              		.file 6 "C:/msys64/mingw64/arm-none-eabi/include/string.h"
+ 2146              		.file 7 "Middlewares/Third_Party/FreeRTOS/Source/include/portable.h"
+ 2147              		.file 8 "<built-in>"
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 48
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 user_lib.c
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:21     .text.Sqrt:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:27     .text.Sqrt:00000000 Sqrt
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:92     .text.Sqrt:00000054 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:98     .text.ramp_init:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:104    .text.ramp_init:00000000 ramp_init
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:134    .text.ramp_calc:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:140    .text.ramp_calc:00000000 ramp_calc
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:194    .text.abs_limit:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:200    .text.abs_limit:00000000 abs_limit
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:234    .text.sign:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:240    .text.sign:00000000 sign
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:269    .text.float_deadband:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:275    .text.float_deadband:00000000 float_deadband
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:302    .text.float_deadband:0000001c $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:307    .text.int16_deadband:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:313    .text.int16_deadband:00000000 int16_deadband
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:339    .text.float_constrain:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:345    .text.float_constrain:00000000 float_constrain
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:380    .text.int16_constrain:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:386    .text.int16_constrain:00000000 int16_constrain
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:419    .text.loop_float_constrain:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:425    .text.loop_float_constrain:00000000 loop_float_constrain
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:499    .text.loop_int_constrain:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:505    .text.loop_int_constrain:00000000 loop_int_constrain
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:591    .text.theta_format:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:597    .text.theta_format:00000000 theta_format
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:621    .text.theta_format:00000010 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:627    .text.float_rounding:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:633    .text.float_rounding:00000000 float_rounding
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:678    .text.float_rounding:00000038 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2131   .bss.integer.6:00000000 integer.6
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2125   .bss.decimal.5:00000000 decimal.5
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:684    .text.OLS_Init:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:690    .text.OLS_Init:00000000 OLS_Init
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:761    .text.OLS_Update:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:767    .text.OLS_Update:00000000 OLS_Update
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1045   .text.OLS_Update:0000018c $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2119   .bss.temp.4:00000000 temp.4
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1050   .text.OLS_Derivative:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1056   .text.OLS_Derivative:00000000 OLS_Derivative
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1327   .text.OLS_Derivative:0000017c $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2113   .bss.temp.3:00000000 temp.3
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1332   .text.Get_OLS_Derivative:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1338   .text.Get_OLS_Derivative:00000000 Get_OLS_Derivative
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1354   .text.OLS_Smooth:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1360   .text.OLS_Smooth:00000000 OLS_Smooth
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1651   .text.OLS_Smooth:000001a8 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2107   .bss.temp.2:00000000 temp.2
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1656   .text.Get_OLS_Smooth:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1662   .text.Get_OLS_Smooth:00000000 Get_OLS_Smooth
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1693   .text.Data_mapping:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1699   .text.Data_mapping:00000000 Data_mapping
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1764   .text.Data_mapping:00000054 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2101   .bss.map_gain.1:00000000 map_gain.1
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2095   .bss.output.0:00000000 output.0
+ARM GAS  C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s 			page 49
+
+
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1770   .text.float_to_uint16:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1776   .text.float_to_uint16:00000000 float_to_uint16
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1843   .text.uint16_to_float:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1849   .text.uint16_to_float:00000000 uint16_to_float
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1904   .text.f2u:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:1910   .text.f2u:00000000 f2u
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2012   .text.u2f:00000000 $t
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2018   .text.u2f:00000000 u2f
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2087   .text.u2f:00000048 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2092   .bss.output.0:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2098   .bss.map_gain.1:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2104   .bss.temp.2:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2110   .bss.temp.3:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2116   .bss.temp.4:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2122   .bss.decimal.5:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2128   .bss.integer.6:00000000 $d
+C:\Users\LENOVO\AppData\Local\Temp\cck96XxS.s:2137   .data.GlobalDebugMode:00000000 GlobalDebugMode
+
+UNDEFINED SYMBOLS
+pvPortMalloc
+memset
